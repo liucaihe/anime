@@ -217,9 +217,9 @@ const getPathProgess = ($path, pathProperty, offset = 0) => {
 
 /**
  * @param {TargetsParam} path
- * @param {Number} [offset]
+ * @param {Number} [offset=0]
  */
-const createMotionPath = (path, offset) => {
+const createMotionPath = (path, offset = 0) => {
   const $path = getPath(path);
   if (!$path) return;
   return {
