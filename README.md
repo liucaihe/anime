@@ -45,6 +45,12 @@ Help the project become sustainable by sponsoring us on <a target="_blank" href=
     <img align="center" src="./assets/sponsors/lambdatest-logomark-dark.png" width="150">
   </picture>
 </a>
+<a target="_blank" href="https://inspatialapp.com/?ref=animejs">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./assets/sponsors/inspatial-logomark.png">
+    <img align="center" src="./assets/sponsors/inspatial-logomark-dark.png" width="150">
+  </picture>
+</a>
 </p>
 
 ## Usage
