@@ -622,6 +622,23 @@ suite('Controls', () => {
     expect($target.style.width).to.equal('256px');
   });
 
+  test('Refresh an animation with relative values', () => {
+    const $target = /** @type {HTMLElement} */(document.querySelector('#target-id'));
+    const animation1 = animate($target, {
+      x: '+=50',
+      rotate: () => '+=10',
+      duration: 100,
+      autoplay: false
+    });
+    animation1.seek(100);
+    expect(utils.get($target, 'x')).to.equal('50px');
+    expect(utils.get($target, 'rotate')).to.equal('10deg');
+    animation1.refresh().restart().seek(100);
+    // Only function based value should refresh
+    expect(utils.get($target, 'x')).to.equal('50px');
+    expect(utils.get($target, 'rotate')).to.equal('20deg');
+  });
+
   test('Refresh a timeline', () => {
     const $target = /** @type {HTMLElement} */(document.querySelector('#target-id'));
     $target.setAttribute('data-width', '128px');

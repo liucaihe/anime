@@ -3,10 +3,10 @@
 // TODO: Do we need to check if we're running inside a worker ?
 export const isBrowser = typeof window !== 'undefined';
 
-/** @type {Object|Null} */
-export const win = isBrowser ? window : null;
+/** @type {Window & {AnimeJS: Array}|null} */
+export const win = isBrowser ? /** @type {Window & {AnimeJS: Array}} */(/** @type {unknown} */(window)) : null;
 
-/** @type {Document} */
+/** @type {Document|null} */
 export const doc = isBrowser ? document : null;
 
 // Enums
@@ -61,11 +61,13 @@ export const maxFps = 120;
 // Strings
 
 export const emptyString = '';
-export const shortTransforms = new Map();
-
-shortTransforms.set('x', 'translateX');
-shortTransforms.set('y', 'translateY');
-shortTransforms.set('z', 'translateZ');
+export const shortTransforms = /*#__PURE__*/ (() => {
+  const map = new Map();
+  map.set('x', 'translateX');
+  map.set('y', 'translateY');
+  map.set('z', 'translateZ');
+  return map;
+})();
 
 export const validTransforms = [
   'translateX',
@@ -87,7 +89,7 @@ export const validTransforms = [
   'matrix3d',
 ];
 
-export const transformsFragmentStrings = validTransforms.reduce((a, v) => ({...a, [v]: v + '('}), {});
+export const transformsFragmentStrings = /*#__PURE__*/ validTransforms.reduce((a, v) => ({...a, [v]: v + '('}), {});
 
 // Functions
 

@@ -15,14 +15,16 @@ import {
 
 import {
   isUnd,
-  floor,
   PI,
   snap,
   clamp,
   round,
+  random,
   interpolate,
+  shuffle,
   removeChild,
   forEachChildren,
+  createRefreshable,
 } from './helpers.js';
 
 import {
@@ -236,29 +238,16 @@ export const remove = (targets, renderable, propertyName) => {
 }
 
 /**
- * @param  {Number} min
- * @param  {Number} max
- * @param  {Number} [decimalLength]
- * @return {Number}
+ * @param  {(...args: any[]) => Tickable} constructor
+ * @return {(...args: any[]) => Tickable}
  */
-const random = (min, max, decimalLength) => { const m = 10 ** (decimalLength || 0); return floor((Math.random() * (max - min + (1 / m)) + min) * m) / m };
+export const keepTime = createRefreshable;
 
 /**
  * @param  {String|Array} items
  * @return {any}
  */
 const randomPick = items => items[random(0, items.length - 1)];
-
-/**
- * Adapted from https://bost.ocks.org/mike/shuffle/
- * @param  {Array} items
- * @return {Array}
- */
-const shuffle = items => {
-  let m = items.length, t, i;
-  while (m) { i = random(0, --m); t = items[m]; items[m] = items[i]; items[i] = t; }
-  return items;
-}
 
 /**
  * @param  {Number|String} v
@@ -454,6 +443,7 @@ export const utils = {
   shuffle,
   lerp,
   sync,
+  keepTime,
   clamp: /** @type {typeof clamp & ChainedClamp} */(makeChainable(clamp)),
   round: /** @type {typeof round & ChainedRound} */(makeChainable(round)),
   snap: /** @type {typeof snap & ChainedSnap} */(makeChainable(snap)),

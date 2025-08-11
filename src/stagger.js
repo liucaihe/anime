@@ -15,6 +15,9 @@ import {
   floor,
   sqrt,
   max,
+  isStr,
+  isFnc,
+  shuffle,
 } from './helpers.js';
 
 import {
@@ -22,33 +25,20 @@ import {
 } from './eases.js';
 
 import {
-  Timeline,
   parseTimelinePosition,
 } from './timeline.js';
 
-/**
- * @typedef  {Object} StaggerParameters
- * @property {Number|String} [start]
- * @property {Number|'first'|'center'|'last'} [from]
- * @property {Boolean} [reversed]
- * @property {Array.<Number>} [grid]
- * @property {('x'|'y')} [axis]
- * @property {EasingParam} [ease]
- * @property {TweenModifier} [modifier]
- */
+import {
+  getOriginalAnimatableValue,
+} from './values.js';
 
-/**
- * @callback StaggerFunction
- * @param {Target} [target]
- * @param {Number} [index]
- * @param {Number} [length]
- * @param {Timeline} [tl]
- * @return {Number|String}
- */
+import {
+  registerTargets,
+} from './targets.js';
 
 /**
  * @param  {Number|String|[Number|String,Number|String]} val
- * @param  {StaggerParameters} params
+ * @param  {StaggerParams} params
  * @return {StaggerFunction}
  */
 export const stagger = (val, params = {}) => {
@@ -62,20 +52,27 @@ export const stagger = (val, params = {}) => {
   const staggerEase = hasSpring ? /** @type {Spring} */(ease).ease : hasEasing ? parseEasings(ease) : null;
   const grid = params.grid;
   const axis = params.axis;
+  const customTotal = params.total;
   const fromFirst = isUnd(from) || from === 0 || from === 'first';
   const fromCenter = from === 'center';
   const fromLast = from === 'last';
+  const fromRandom = from === 'random';
   const isRange = isArr(val);
+  const useProp = params.use;
   const val1 = isRange ? parseNumber(val[0]) : parseNumber(val);
   const val2 = isRange ? parseNumber(val[1]) : 0;
   const unitMatch = unitsExecRgx.exec((isRange ? val[1] : val) + emptyString);
   const start = params.start || 0 + (isRange ? val1 : 0);
   let fromIndex = fromFirst ? 0 : isNum(from) ? from : 0;
-  return (_, i, t, tl) => {
-    if (fromCenter) fromIndex = (t - 1) / 2;
-    if (fromLast) fromIndex = t - 1;
+  return (target, i, t, tl) => {
+    const [ registeredTarget ] = registerTargets(target);
+    const total = isUnd(customTotal) ? t : customTotal;
+    const customIndex = !isUnd(useProp) ? isFnc(useProp) ? useProp(registeredTarget, i, total) : getOriginalAnimatableValue(registeredTarget, useProp) : false;
+    const staggerIndex = isNum(customIndex) || isStr(customIndex) && isNum(+customIndex) ? +customIndex : i;
+    if (fromCenter) fromIndex = (total - 1) / 2;
+    if (fromLast) fromIndex = total - 1;
     if (!values.length) {
-      for (let index = 0; index < t; index++) {
+      for (let index = 0; index < total; index++) {
         if (!grid) {
           values.push(abs(fromIndex - index));
         } else {
@@ -94,11 +91,12 @@ export const stagger = (val, params = {}) => {
       }
       if (staggerEase) values = values.map(val => staggerEase(val / maxValue) * maxValue);
       if (reversed) values = values.map(val => axis ? (val < 0) ? val * -1 : -val : abs(maxValue - val));
+      if (fromRandom) values = shuffle(values);
     }
     const spacing = isRange ? (val2 - val1) / maxValue : val1;
     const offset = tl ? parseTimelinePosition(tl, isUnd(params.start) ? tl.iterationDuration : start) : /** @type {Number} */(start);
     /** @type {String|Number} */
-    let output = offset + ((spacing * round(values[i], 2)) || 0);
+    let output = offset + ((spacing * round(values[staggerIndex], 2)) || 0);
     if (params.modifier) output = params.modifier(output);
     if (unitMatch) output = `${output}${unitMatch[2]}`;
     return output;

@@ -1,11 +1,17 @@
 import {
-  svg,
   animate,
+  createTimeline,
+  utils,
 } from '../../../lib/anime.esm.js';
 
-animate(svg.createDrawable('svg circle'), {
-  draw: '0 1',
-  alternate: true,
+utils.set('.square', {
+  y: 0,
+  rotate: 45,
+})
+
+animate('.square', {
+  y: '+=50',
+  rotate: () => '+=10',
   loop: true,
-  duration: 4000,
+  onLoop: self => self.refresh()
 });

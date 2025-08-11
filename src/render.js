@@ -361,7 +361,7 @@ export const tick = (tickable, time, muteCallbacks, internalRender, tickMode) =>
     if (!muteCallbacks && tlChildrenHasRendered) tl.onRender(/** @type {CallbackArgument} */(tl));
 
     // Triggers the timeline onComplete() once all chindren all completed and the current time has reached the end
-    if (tlChildrenHaveCompleted && tl._currentTime >= tl.duration) {
+    if ((tlChildrenHaveCompleted || tlIsRunningBackwards) && tl._currentTime >= tl.duration) {
       // Make sure the paused flag is false in case it has been skipped in the render function
       tl.paused = true;
       if (!tl.completed) {

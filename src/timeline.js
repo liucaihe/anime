@@ -24,7 +24,6 @@ import {
   clampInfinity,
   normalizeTime,
   isStr,
-  round,
 } from './helpers.js';
 
 import {

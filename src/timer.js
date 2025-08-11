@@ -22,6 +22,7 @@ import {
 } from './helpers.js';
 
 import {
+  scope,
   globals,
 } from './globals.js';
 
@@ -111,7 +112,7 @@ export class Timer extends Clock {
       onUpdate,
     } = parameters;
 
-    if (globals.scope) globals.scope.revertibles.push(this);
+    if (scope.current) scope.current.register(this);
 
     const timerInitTime = parent ? 0 : engine._elapsedTime;
     const timerDefaults = parent ? parent.defaults : globals.defaults;
@@ -241,7 +242,7 @@ export class Timer extends Clock {
   }
 
   get progress() {
-    return clamp(round(this._currentTime / this.duration, 5), 0, 1);
+    return clamp(round(this._currentTime / this.duration, 10), 0, 1);
   }
 
   /** @param {Number} progress  */
@@ -250,7 +251,7 @@ export class Timer extends Clock {
   }
 
   get iterationProgress() {
-    return clamp(round(this._iterationTime / this.iterationDuration, 5), 0, 1);
+    return clamp(round(this._iterationTime / this.iterationDuration, 10), 0, 1);
   }
 
   /** @param {Number} progress  */

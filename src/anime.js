@@ -10,5 +10,6 @@ export { createSpring, Spring } from './spring.js';
 export { waapi, WAAPIAnimation } from './waapi.js';
 export { utils } from './utils.js';
 export { svg } from './svg.js';
+export { text, TextSplitter } from './text.js';
 export { stagger } from './stagger.js';
 export { eases } from './eases.js';

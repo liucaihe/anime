@@ -36,13 +36,16 @@ export const defaults = {
   onRender: noop,
 }
 
+export const scope = {
+  /** @type {Scope} */
+  current: null,
+  /** @type {Document|DOMTarget} */
+  root: doc,
+}
+
 export const globals = {
   /** @type {DefaultsParams} */
   defaults,
-  /** @type {Document|DOMTarget} */
-  root: doc,
-  /** @type {Scope} */
-  scope: null,
   /** @type {Number} */
   precision: 4,
   /** @type {Number} */

@@ -70,6 +70,7 @@ declare function getTargetValue(targetSelector: TargetsParam, propName: string, 
 declare function sync(callback?: Callback<Timer>): Timer;
 declare function setTargetValues(targets: TargetsParam, parameters: AnimationParams): JSAnimation;
 declare function remove(targets: TargetsParam, renderable?: Renderable | WAAPIAnimation, propertyName?: string): TargetsArray;
+declare const keepTime: (constructor: (...args: any[]) => Tickable | ((...args: any[]) => void)) => (...args: any[]) => Tickable | ((...args: any[]) => void);
 declare function lerp(start: number, end: number, amount: number, renderable?: Renderable | boolean): number;
 declare namespace utils {
     export { registerTargets as $ };
@@ -82,6 +83,7 @@ declare namespace utils {
     export { shuffle };
     export { lerp };
     export { sync };
+    export { keepTime };
     export let clamp: ((v: number, min: number, max: number) => number) & ChainedClamp;
     export let round: ((v: number, decimalLength: number) => number) & ChainedRound;
     export let snap: ((v: number, increment: number | number[]) => number) & ChainedSnap;
@@ -199,8 +201,8 @@ declare function registerTargets(targets: DOMTargetsParam): DOMTargetsArray;
 declare function registerTargets(targets: JSTargetsParam): JSTargetsArray;
 declare function registerTargets(targets: TargetsParam): TargetsArray;
 declare function random(min: number, max: number, decimalLength?: number): number;
-declare function randomPick(items: string | any[]): any;
 declare function shuffle(items: any[]): any[];
+declare function randomPick(items: string | any[]): any;
 declare namespace svg {
     export { morphTo };
     export { createMotionPath };
@@ -216,39 +218,7 @@ declare function createDrawable(selector: TargetsParam, start?: number, end?: nu
 declare function stagger(val: number | string | [
     number | string,
     number | string
-], params?: StaggerParameters): StaggerFunction;
-type StaggerParameters = {
-    start?: number | string;
-    from?: number | "first" | "center" | "last";
-    reversed?: boolean;
-    grid?: Array<number>;
-    axis?: ("x" | "y");
-    ease?: EasingParam;
-    modifier?: TweenModifier;
-};
-type StaggerFunction = (target?: Target, index?: number, length?: number, tl?: Timeline) => number | string;
-declare class Timeline extends Timer {
-    constructor(parameters?: TimelineParams);
-    labels: Record<string, number>;
-    defaults: DefaultsParams;
-    onRender: Callback<this>;
-    _ease: EasingFunction;
-    add(a1: TargetsParam, a2: AnimationParams, a3?: TimePosition): this;
-    add(a1: TimerParams, a2?: TimePosition): this;
-    sync(synced?: Tickable, position?: TimePosition): this;
-    sync(synced?: globalThis.Animation, position?: TimePosition): this;
-    sync(synced?: WAAPIAnimation, position?: TimePosition): this;
-    set(targets: TargetsParam, parameters: AnimationParams, position?: TimePosition): this;
-    call(callback: Callback<Timer>, position?: TimePosition): this;
-    label(labelName: string, position?: TimePosition): this;
-    remove(targets: TargetsParam, propertyName?: string): this;
-    stretch(newDuration: number): this;
-    refresh(): this;
-    revert(): this;
-    then(callback?: Callback<this>): Promise<any>;
-}
-declare function createTimeline(parameters?: TimelineParams): Timeline;
-type TimePosition = number | string | Function;
+], params?: StaggerParams): StaggerFunction;
 declare namespace eases {
     export let linear: (...args?: (string | number)[]) => EasingFunction;
     export let irregular: (length?: number, randomness?: number) => EasingFunction;
@@ -337,50 +307,18 @@ declare class Animatable {
     revert(): this;
 }
 declare function createAnimatable(targets: TargetsParam, parameters: AnimatableParams): AnimatableObject;
-type Revertible = Animatable | Tickable | Draggable | ScrollObserver | Scope;
-type DraggableAxisParam = {
-    mapTo?: string;
+type Revertible = Animatable | Tickable | Draggable | ScrollObserver | TextSplitter | Scope;
+type StaggerFunction = (target?: Target, index?: number, length?: number, tl?: Timeline) => number | string;
+type StaggerParams = {
+    start?: number | string;
+    from?: number | 'first' | 'center' | 'last' | 'random';
+    reversed?: boolean;
+    grid?: Array<number>;
+    axis?: ('x' | 'y');
+    use?: string | StaggerFunction;
+    total?: number;
+    ease?: EasingParam;
     modifier?: TweenModifier;
-    composition?: TweenComposition;
-    snap?: number | number[] | ((draggable: Draggable) => number | Array<number>);
-};
-type DraggableCursorParams = {
-    onHover?: string;
-    onGrab?: string;
-};
-type DraggableParams = {
-    trigger?: DOMTargetSelector;
-    container?: number[] | DOMTargetSelector | ((draggable: Draggable) => DOMTargetSelector | Array<number>);
-    x?: boolean | DraggableAxisParam;
-    y?: boolean | DraggableAxisParam;
-    modifier?: TweenModifier;
-    snap?: number | number[] | ((draggable: Draggable) => number | Array<number>);
-    containerPadding?: number | number[] | ((draggable: Draggable) => number | Array<number>);
-    containerFriction?: number | ((draggable: Draggable) => number);
-    releaseContainerFriction?: number | ((draggable: Draggable) => number);
-    dragSpeed?: number | ((draggable: Draggable) => number);
-    scrollSpeed?: number | ((draggable: Draggable) => number);
-    scrollThreshold?: number | ((draggable: Draggable) => number);
-    minVelocity?: number | ((draggable: Draggable) => number);
-    maxVelocity?: number | ((draggable: Draggable) => number);
-    velocityMultiplier?: number | ((draggable: Draggable) => number);
-    releaseMass?: number;
-    releaseStiffness?: number;
-    releaseDamping?: number;
-    releaseEase?: EasingParam;
-    cursor?: boolean | DraggableCursorParams | ((draggable: Draggable) => boolean | DraggableCursorParams);
-    onGrab?: Callback<Draggable>;
-    onDrag?: Callback<Draggable>;
-    onRelease?: Callback<Draggable>;
-    onUpdate?: Callback<Draggable>;
-    onSettle?: Callback<Draggable>;
-    onSnap?: Callback<Draggable>;
-    onResize?: Callback<Draggable>;
-    onAfterResize?: Callback<Draggable>;
-};
-type DrawableSVGGeometry = SVGGeometryElement & {
-    setAttribute(name: 'draw', value: `${number} ${number}`): void;
-    draw: `${number} ${number}`;
 };
 type EasingFunction = (time: number) => number;
 type EaseStringParamNames = ('linear' | 'linear(x1, x2 25%, x3)' | 'in' | 'out' | 'inOut' | 'inQuad' | 'outQuad' | 'inOutQuad' | 'inCubic' | 'outCubic' | 'inOutCubic' | 'inQuart' | 'outQuart' | 'inOutQuart' | 'inQuint' | 'outQuint' | 'inOutQuint' | 'inSine' | 'outSine' | 'inOutSine' | 'inCirc' | 'outCirc' | 'inOutCirc' | 'inExpo' | 'outExpo' | 'inOutExpo' | 'inBounce' | 'outBounce' | 'inOutBounce' | 'inBack' | 'outBack' | 'inOutBack' | 'inElastic' | 'outElastic' | 'inOutElastic' | 'irregular' | 'cubicBezier' | 'steps' | 'in(p = 1.675)' | 'out(p = 1.675)' | 'inOut(p = 1.675)' | 'inBack(overshoot = 1.70158)' | 'outBack(overshoot = 1.70158)' | 'inOutBack(overshoot = 1.70158)' | 'inElastic(amplitude = 1, period = .3)' | 'outElastic(amplitude = 1, period = .3)' | 'inOutElastic(amplitude = 1, period = .3)' | 'irregular(length = 10, randomness = 1)' | 'cubicBezier(x1, y1, x2, y2)' | 'steps(steps = 10)');
@@ -396,9 +334,6 @@ type JSTargetsParam = Array<JSTarget> | JSTarget;
 type JSTargetsArray = Array<JSTarget>;
 type TargetsParam = Array<TargetSelector> | TargetSelector;
 type TargetsArray = Array<Target>;
-type FunctionValue = (target: Target, index: number, length: number) => number | string | TweenObjectValue | Array<number | string | TweenObjectValue>;
-type TweenModifier = (value: number) => number | string;
-type ColorArray = [number, number, number, number];
 type Callback<T> = (self: T, e?: PointerEvent) => any;
 type TickableCallbacks<T extends unknown> = {
     onBegin?: Callback<T>;
@@ -411,6 +346,26 @@ type TickableCallbacks<T extends unknown> = {
 type RenderableCallbacks<T extends unknown> = {
     onRender?: Callback<T>;
 };
+type TimerOptions = {
+    id?: number | string;
+    duration?: TweenParamValue;
+    delay?: TweenParamValue;
+    loopDelay?: number;
+    reversed?: boolean;
+    alternate?: boolean;
+    loop?: boolean | number;
+    autoplay?: boolean | ScrollObserver;
+    frameRate?: number;
+    playbackRate?: number;
+};
+/**
+ *
+ * /**
+ */
+type TimerParams = TimerOptions & TickableCallbacks<Timer>;
+type FunctionValue = (target: Target, index: number, length: number) => number | string | TweenObjectValue | Array<number | string | TweenObjectValue>;
+type TweenModifier = (value: number) => number | string;
+type ColorArray = [number, number, number, number];
 type Tween = {
     id: number;
     parent: JSAnimation;
@@ -480,23 +435,6 @@ type TweenPropertySiblings = {
 type TweenLookups = Record<string, TweenPropertySiblings>;
 type TweenReplaceLookups = WeakMap<Target, TweenLookups>;
 type TweenAdditiveLookups = Map<Target, TweenLookups>;
-type TimerOptions = {
-    id?: number | string;
-    duration?: TweenParamValue;
-    delay?: TweenParamValue;
-    loopDelay?: number;
-    reversed?: boolean;
-    alternate?: boolean;
-    loop?: boolean | number;
-    autoplay?: boolean | ScrollObserver;
-    frameRate?: number;
-    playbackRate?: number;
-};
-/**
- *
- * /**
- */
-type TimerParams = TimerOptions & TickableCallbacks<Timer>;
 type TweenParamValue = number | string | FunctionValue;
 type TweenPropValue = TweenParamValue | [TweenParamValue, TweenParamValue];
 type TweenComposition = (string & {}) | 'none' | 'replace' | 'blend' | compositionTypes;
@@ -548,6 +486,102 @@ type AnimatablePropertyParamsOptions = {
     composition?: TweenComposition;
 };
 type AnimatableParams = Record<string, TweenParamValue | EasingParam | TweenModifier | TweenComposition | AnimatablePropertyParamsOptions> & AnimatablePropertyParamsOptions;
+type ReactRef = {
+    current?: HTMLElement | SVGElement | null;
+};
+type AngularRef = {
+    nativeElement?: HTMLElement | SVGElement;
+};
+type ScopeParams = {
+    root?: DOMTargetSelector | ReactRef | AngularRef;
+    defaults?: DefaultsParams;
+    mediaQueries?: Record<string, string>;
+};
+type ScopedCallback<T> = (scope: Scope) => T;
+type ScopeCleanupCallback = (scope?: Scope) => any;
+type ScopeConstructorCallback = (scope?: Scope) => ScopeCleanupCallback | void;
+type ScopeMethod = (...args: any[]) => ScopeCleanupCallback | void;
+type DraggableAxisParam = {
+    mapTo?: string;
+    modifier?: TweenModifier;
+    composition?: TweenComposition;
+    snap?: number | number[] | ((draggable: Draggable) => number | Array<number>);
+};
+type DraggableCursorParams = {
+    onHover?: string;
+    onGrab?: string;
+};
+type DraggableParams = {
+    trigger?: DOMTargetSelector;
+    container?: number[] | DOMTargetSelector | ((draggable: Draggable) => DOMTargetSelector | Array<number>);
+    x?: boolean | DraggableAxisParam;
+    y?: boolean | DraggableAxisParam;
+    modifier?: TweenModifier;
+    snap?: number | number[] | ((draggable: Draggable) => number | Array<number>);
+    containerPadding?: number | number[] | ((draggable: Draggable) => number | Array<number>);
+    containerFriction?: number | ((draggable: Draggable) => number);
+    releaseContainerFriction?: number | ((draggable: Draggable) => number);
+    dragSpeed?: number | ((draggable: Draggable) => number);
+    scrollSpeed?: number | ((draggable: Draggable) => number);
+    scrollThreshold?: number | ((draggable: Draggable) => number);
+    minVelocity?: number | ((draggable: Draggable) => number);
+    maxVelocity?: number | ((draggable: Draggable) => number);
+    velocityMultiplier?: number | ((draggable: Draggable) => number);
+    releaseMass?: number;
+    releaseStiffness?: number;
+    releaseDamping?: number;
+    releaseEase?: EasingParam;
+    cursor?: boolean | DraggableCursorParams | ((draggable: Draggable) => boolean | DraggableCursorParams);
+    onGrab?: Callback<Draggable>;
+    onDrag?: Callback<Draggable>;
+    onRelease?: Callback<Draggable>;
+    onUpdate?: Callback<Draggable>;
+    onSettle?: Callback<Draggable>;
+    onSnap?: Callback<Draggable>;
+    onResize?: Callback<Draggable>;
+    onAfterResize?: Callback<Draggable>;
+};
+type splitTemplateParams = {
+    class?: false | string;
+    wrap?: boolean | 'hidden' | 'clip' | 'visible' | 'scroll' | 'auto';
+    clone?: boolean | 'top' | 'right' | 'bottom' | 'left' | 'center';
+};
+type SplitValue = boolean | string;
+type SplitFunctionValue = (value?: Node | HTMLElement) => any;
+type TextSplitterParams = {
+    lines?: SplitValue | splitTemplateParams | SplitFunctionValue;
+    words?: SplitValue | splitTemplateParams | SplitFunctionValue;
+    chars?: SplitValue | splitTemplateParams | SplitFunctionValue;
+    accessible?: boolean;
+    includeSpaces?: boolean;
+    debug?: boolean;
+};
+type DrawableSVGGeometry = SVGGeometryElement & {
+    setAttribute(name: 'draw', value: `${number} ${number}`): void;
+    draw: `${number} ${number}`;
+};
+declare class Timeline extends Timer {
+    constructor(parameters?: TimelineParams);
+    labels: Record<string, number>;
+    defaults: DefaultsParams;
+    onRender: Callback<this>;
+    _ease: EasingFunction;
+    add(a1: TargetsParam, a2: AnimationParams, a3?: TimePosition): this;
+    add(a1: TimerParams, a2?: TimePosition): this;
+    sync(synced?: Tickable, position?: TimePosition): this;
+    sync(synced?: globalThis.Animation, position?: TimePosition): this;
+    sync(synced?: WAAPIAnimation, position?: TimePosition): this;
+    set(targets: TargetsParam, parameters: AnimationParams, position?: TimePosition): this;
+    call(callback: Callback<Timer>, position?: TimePosition): this;
+    label(labelName: string, position?: TimePosition): this;
+    remove(targets: TargetsParam, propertyName?: string): this;
+    stretch(newDuration: number): this;
+    refresh(): this;
+    revert(): this;
+    then(callback?: Callback<this>): Promise<any>;
+}
+declare function createTimeline(parameters?: TimelineParams): Timeline;
+type TimePosition = number | string | Function;
 declare class Draggable {
     constructor(target: TargetsParam, parameters?: DraggableParams);
     containerArray: number[];
@@ -759,35 +793,29 @@ declare class Scope {
     constructor(parameters?: ScopeParams);
     defaults: DefaultsParams;
     root: Document | DOMTarget;
-    constructors: Array<ScopeConstructor>;
-    revertConstructors: Array<Function>;
+    constructors: Array<ScopeConstructorCallback>;
+    revertConstructors: Array<ScopeCleanupCallback>;
     revertibles: Array<Revertible>;
-    methods: Record<string, Function>;
+    constructorsOnce: (ScopeConstructorCallback | ((scope: this) => Tickable))[];
+    revertConstructorsOnce: Array<ScopeCleanupCallback>;
+    revertiblesOnce: Array<Revertible>;
+    once: boolean;
+    onceIndex: number;
+    methods: Record<string, ScopeMethod>;
     matches: Record<string, boolean>;
     mediaQueryLists: Record<string, MediaQueryList>;
     data: Record<string, any>;
-    execute(cb: (scope: this) => any): this;
+    register(revertible: Revertible): void;
+    execute<T>(cb: ScopedCallback<T>): T;
     refresh(): this;
     add(a1: string, a2: ScopeMethod): this;
-    add(a1: (self: this) => any): this;
+    add(a1: ScopeConstructorCallback): this;
+    addOnce(scopeConstructorCallback: ScopeConstructorCallback): this;
+    keepTime(cb: (scope: this) => Tickable): Tickable;
     handleEvent(e: Event): void;
     revert(): void;
 }
 declare function createScope(params?: ScopeParams): Scope;
-type ReactRef = {
-    current?: HTMLElement | SVGElement | null;
-};
-type AngularRef = {
-    nativeElement?: HTMLElement | SVGElement;
-};
-type ScopeParams = {
-    root?: DOMTargetSelector | ReactRef | AngularRef;
-    defaults?: DefaultsParams;
-    mediaQueries?: Record<string, string>;
-};
-type ScopeCleanup = (scope?: Scope) => any;
-type ScopeConstructor = (scope?: Scope) => ScopeCleanup | void;
-type ScopeMethod = (...args: any[]) => ScopeCleanup | void;
 declare const scrollContainers: Map<any, any>;
 declare class ScrollObserver {
     constructor(parameters?: ScrollObserverParams);
@@ -823,7 +851,6 @@ declare class ScrollObserver {
     isInView: boolean;
     forceEnter: boolean;
     hasEntered: boolean;
-    offsets: Array<number>;
     offset: number;
     offsetStart: number;
     offsetEnd: number;
@@ -1020,4 +1047,35 @@ type WAAPIAnimationOptions = {
 };
 type WAAPIAnimationParams = Record<string, WAAPIKeyframeValue | WAAPIAnimationOptions | boolean | ScrollObserver | WAAPICallback | EasingParam | WAAPITweenOptions> & WAAPIAnimationOptions;
 declare function easingToLinear(fn: EasingFunction, samples?: number): string;
-export { engine, utils, svg, stagger, eases, DefaultsParams, Renderable, Tickable, CallbackArgument, Revertible, DraggableAxisParam, DraggableCursorParams, DraggableParams, DrawableSVGGeometry, EasingFunction, EaseStringParamNames, EasingParam, DOMTarget, JSTarget, Target, TargetSelector, DOMTargetSelector, DOMTargetsParam, DOMTargetsArray, JSTargetsParam, JSTargetsArray, TargetsParam, TargetsArray, FunctionValue, TweenModifier, ColorArray, Callback, TickableCallbacks, RenderableCallbacks, Tween, TweenDecomposedValue, TweenPropertySiblings, TweenLookups, TweenReplaceLookups, TweenAdditiveLookups, TimerOptions, TimerParams, TweenParamValue, TweenPropValue, TweenComposition, TweenParamsOptions, TweenValues, TweenKeyValue, ArraySyntaxValue, TweenOptions, TweenObjectValue, PercentageKeyframeOptions, PercentageKeyframeParams, PercentageKeyframes, DurationKeyframes, AnimationOptions, AnimationParams, TimelineOptions, TimelineParams, AnimatablePropertySetter, AnimatablePropertyGetter, AnimatableProperty, AnimatableObject, AnimatablePropertyParamsOptions, AnimatableParams, createTimer, Timer, animate, JSAnimation, createTimeline, Timeline, createAnimatable, Animatable, createDraggable, Draggable, createScope, Scope, onScroll, ScrollObserver, scrollContainers, createSpring, Spring, waapi, WAAPIAnimation };
+declare class TextSplitter {
+    constructor(target: HTMLElement | NodeList | string | Array<HTMLElement>, parameters?: TextSplitterParams);
+    debug: boolean;
+    includeSpaces: boolean;
+    accessible: boolean;
+    linesOnly: boolean;
+    lineTemplate: string | false | SplitFunctionValue;
+    wordTemplate: string | false | SplitFunctionValue;
+    charTemplate: string | false | SplitFunctionValue;
+    $target: HTMLElement;
+    html: string;
+    lines: any[];
+    words: any[];
+    chars: any[];
+    effects: any[];
+    effectsCleanups: any[];
+    cache: string;
+    ready: boolean;
+    width: number;
+    resizeTimeout: NodeJS.Timeout;
+    resizeObserver: ResizeObserver;
+    addEffect(effect: (...args: any[]) => Tickable | (() => void)): void | this;
+    revert(): this;
+    splitNode(node: Node): void;
+    split(clearCache?: boolean): this;
+    refresh(): void;
+}
+declare function split(target: HTMLElement | NodeList | string | Array<HTMLElement>, parameters?: TextSplitterParams): TextSplitter;
+declare namespace text {
+    export { split };
+}
+export { engine, utils, svg, stagger, eases, DefaultsParams, Renderable, Tickable, CallbackArgument, Revertible, StaggerFunction, StaggerParams, EasingFunction, EaseStringParamNames, EasingParam, DOMTarget, JSTarget, Target, TargetSelector, DOMTargetSelector, DOMTargetsParam, DOMTargetsArray, JSTargetsParam, JSTargetsArray, TargetsParam, TargetsArray, Callback, TickableCallbacks, RenderableCallbacks, TimerOptions, TimerParams, FunctionValue, TweenModifier, ColorArray, Tween, TweenDecomposedValue, TweenPropertySiblings, TweenLookups, TweenReplaceLookups, TweenAdditiveLookups, TweenParamValue, TweenPropValue, TweenComposition, TweenParamsOptions, TweenValues, TweenKeyValue, ArraySyntaxValue, TweenOptions, TweenObjectValue, PercentageKeyframeOptions, PercentageKeyframeParams, PercentageKeyframes, DurationKeyframes, AnimationOptions, AnimationParams, TimelineOptions, TimelineParams, AnimatablePropertySetter, AnimatablePropertyGetter, AnimatableProperty, AnimatableObject, AnimatablePropertyParamsOptions, AnimatableParams, ReactRef, AngularRef, ScopeParams, ScopedCallback, ScopeCleanupCallback, ScopeConstructorCallback, ScopeMethod, DraggableAxisParam, DraggableCursorParams, DraggableParams, splitTemplateParams, SplitValue, SplitFunctionValue, TextSplitterParams, DrawableSVGGeometry, createTimer, Timer, animate, JSAnimation, createTimeline, Timeline, createAnimatable, Animatable, createDraggable, Draggable, createScope, Scope, onScroll, ScrollObserver, scrollContainers, createSpring, Spring, waapi, WAAPIAnimation, text, TextSplitter };

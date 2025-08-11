@@ -3,10 +3,8 @@ import filesize from 'rollup-plugin-filesize';
 import ts from 'rollup-plugin-ts';
 import pkg from './package.json' assert { type: 'json' };
 import fs from 'fs';
-import path from 'path';
 
 const inputPath = 'src/anime.js';
-// const inputPathGUI = 'src/gui/gui.js';
 const outputName = 'anime';
 const jsDocTypes = fs.readFileSync('./src/types.js', 'utf-8').split('/* Exports */')[1];
 
@@ -19,24 +17,6 @@ const banner = (format, addTypes) => {
   const date = new Date();
   return `/**
  * anime.js - ${ format }
- * @version v${ pkg.version }
- * @author Julian Garnier
- * @license MIT
- * @copyright (c) ${ date.getFullYear() } Julian Garnier
- * @see https://animejs.com
- */${addTypes ? jsDocTypes : ''}
-`
-}
-
-/**
- * @param {String} format
- * @param {Boolean} [addTypes]
- * @return {String}
- */
-const GUIBanner = (format, addTypes) => {
-  const date = new Date();
-  return `/**
- * anime.js GUI - ${ format }
  * @version v${ pkg.version }
  * @author Julian Garnier
  * @license MIT
@@ -79,13 +59,6 @@ const cleanupOptions = {
 const cleanup = {
   name: 'cleanup',
   generateBundle(_, bundle) {
-    if (process.env.release) {
-      const guiPath = path.resolve('./lib/gui');
-      if (fs.existsSync(guiPath)) {
-        fs.rmSync(guiPath, { recursive: true, force: true });
-        console.log('Removed GUI folder from lib directory in release mode');
-      }
-    }
     Object.keys(bundle).forEach((fileName) => {
       const file = bundle[fileName];
       let code = file.code;
@@ -118,16 +91,6 @@ tasks.push( // ESM
     plugins: [prependTypes, cleanup]
   },
 );
-
-// if (!process.env.release) {
-//   tasks.push( // GUI ESM
-//     {
-//       input: inputPathGUI,
-//       output: { file: 'lib/gui/index.js', format: 'esm', banner: GUIBanner('ESM', true) },
-//       plugins: [prependTypes, cleanup]
-//     },
-//   );
-// }
 
 if (process.env.types) {
   tasks.push( // TYPES

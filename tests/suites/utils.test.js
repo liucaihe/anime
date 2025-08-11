@@ -480,4 +480,27 @@ suite('Utils', () => {
     utils.remove('#target-id', animation, 'y');
   });
 
+  test('Track instance loop alternate progress with a Timekeeper', () => {
+    const timekeeper = utils.keepTime((duration) => animate('#target-id', {
+      x: 100, ease: 'linear', duration, loop: true, alternate: true,
+    }));
+    let animation = timekeeper(1000);
+    expect(animation.currentTime).to.equal(0);
+    animation.seek(500);
+    expect(animation.currentTime).to.equal(500);
+    animation = timekeeper(2000);
+    expect(animation.currentTime).to.equal(1000);
+    animation.seek(500);
+    expect(animation.currentTime).to.equal(500);
+    animation = timekeeper(500);
+    expect(animation.currentTime).to.equal(125);
+    animation.seek(875);
+    expect(animation.currentTime).to.equal(875);
+    expect(animation.iterationProgress).to.equal(.25); // It alternates, so we should be at the begining
+    animation.seek(1375);
+    expect(animation.currentTime).to.equal(1375);
+    expect(animation.iterationProgress).to.equal(.75); // It alternates, so we should now be at the end
+    animation.pause();
+  });
+
 });

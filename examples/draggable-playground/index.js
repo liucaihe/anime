@@ -295,6 +295,7 @@ utils.set('#map-props .carousel-item', {
 });
 
 const carousel = createDraggable('#map-props .carousel', {
+  trigger: '#map-props',
   x: { mapTo: 'rotateY' },
   y: false,
   snap: itemAngle,

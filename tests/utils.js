@@ -30,6 +30,10 @@ export const getChildLength = (parent) => {
   return i;
 }
 
+export const browserIs = {
+  firefox: /firefox|fxios/i.test(navigator.userAgent) && !/seamonkey/i.test(navigator.userAgent),
+}
+
 // export const getTweenDelay = t => (t.parent._offset + t._startTime) - t._absoluteStartTime;
 
 // export const getTweenDelay = t => {
