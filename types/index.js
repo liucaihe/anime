@@ -1033,6 +1033,8 @@ function getNodeList(v) {
 function parseTargets(targets) {
     if (isNil(targets))
         return /** @type {TargetsArray} */ ([]);
+    if (!isBrowser)
+        return /** @type {JSTargetsArray} */ (isArr(targets) && targets.flat(Infinity) || [targets]);
     if (isArr(targets)) {
         const flattened = targets.flat(Infinity);
         /** @type {TargetsArray} */
@@ -1074,8 +1076,6 @@ function parseTargets(targets) {
         }
         return parsed;
     }
-    if (!isBrowser)
-        return /** @type {JSTargetsArray} */ ([targets]);
     const nodeList = getNodeList(targets);
     if (nodeList)
         return /** @type {DOMTargetsArray} */ (Array.from(nodeList));
@@ -4480,6 +4480,7 @@ const createAnimatable = (targets, parameters) => /** @type {AnimatableObject} *
  * Spring ease solver adapted from https://webkit.org/demos/spring/spring.js
  * Webkit Copyright © 2016 Apple Inc
  */
+const maxSpringParamValue = K * 10;
 /**
  * @typedef {Object} SpringParams
  * @property {Number} [mass=1] - Mass, default 1
@@ -4498,10 +4499,10 @@ class Spring {
         this.maxDuration = 60000; // The maximum allowed spring duration in ms (default 1 min)
         this.maxRestSteps = this.restDuration / this.timeStep / K; // How many steps allowed after reaching restThreshold before stopping the duration calculation
         this.maxIterations = this.maxDuration / this.timeStep / K; // Calculate the maximum iterations allowed based on maxDuration
-        this.m = clamp(setValue(parameters.mass, 1), 0, K);
-        this.s = clamp(setValue(parameters.stiffness, 100), 1, K);
-        this.d = clamp(setValue(parameters.damping, 10), .1, K);
-        this.v = clamp(setValue(parameters.velocity, 0), -1e3, K);
+        this.m = clamp(setValue(parameters.mass, 1), 0, maxSpringParamValue);
+        this.s = clamp(setValue(parameters.stiffness, 100), 1, maxSpringParamValue);
+        this.d = clamp(setValue(parameters.damping, 10), .1, maxSpringParamValue);
+        this.v = clamp(setValue(parameters.velocity, 0), -1e4, maxSpringParamValue);
         this.w0 = 0;
         this.zeta = 0;
         this.wd = 0;
@@ -4550,28 +4551,28 @@ class Spring {
         return this.m;
     }
     set mass(v) {
-        this.m = clamp(setValue(v, 1), 0, K);
+        this.m = clamp(setValue(v, 1), 0, maxSpringParamValue);
         this.compute();
     }
     get stiffness() {
         return this.s;
     }
     set stiffness(v) {
-        this.s = clamp(setValue(v, 100), 1, K);
+        this.s = clamp(setValue(v, 100), 1, maxSpringParamValue);
         this.compute();
     }
     get damping() {
         return this.d;
     }
     set damping(v) {
-        this.d = clamp(setValue(v, 10), .1, K);
+        this.d = clamp(setValue(v, 10), .1, maxSpringParamValue);
         this.compute();
     }
     get velocity() {
         return this.v;
     }
     set velocity(v) {
-        this.v = clamp(setValue(v, 0), -1e3, K);
+        this.v = clamp(setValue(v, 0), -1e4, maxSpringParamValue);
         this.compute();
     }
 }
@@ -6861,7 +6862,7 @@ class ScrollObserver {
 const onScroll = (parameters = {}) => new ScrollObserver(parameters);
 
 
-const segmenter = !isUnd(Intl) && Intl.Segmenter;
+const segmenter = (typeof Intl !== 'undefined') && Intl.Segmenter;
 const valueRgx = /\{value\}/g;
 const indexRgx = /\{i\}/g;
 const whiteSpaceGroupRgx = /(\s+)/;
