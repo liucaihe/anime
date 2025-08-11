@@ -275,7 +275,7 @@ const shuffle = items => {
  * @param  {Number} v
  * @return {Number}
  */
-const clampInfinity = v => v === Infinity ? maxValue : v === -Infinity ? -maxValue : v;
+const clampInfinity = v => v === Infinity ? maxValue : v === -Infinity ? -1e12 : v;
 /**
  * @param  {Number} v
  * @return {Number}
@@ -1211,7 +1211,7 @@ const createDrawableProxy = ($el, start, end) => {
                         // const v1 = round(+value.slice(0, spaceIndex), precision);
                         // const v2 = round(+value.slice(spaceIndex + 1), precision);
                         const scaleFactor = getScaleFactor($scalled);
-                        const os = v1 * -pathLength * scaleFactor;
+                        const os = v1 * -1e3 * scaleFactor;
                         const d1 = (v2 * pathLength * scaleFactor) + os;
                         const d2 = (pathLength * scaleFactor +
                             ((v1 === 0 && v2 === 1) || (v1 === 1 && v2 === 0) ? 0 : 10 * scaleFactor) - d1);
@@ -4844,7 +4844,7 @@ class Draggable {
         /** @type {[Number, Number, Number, Number]} */
         this.dragArea = [0, 0, 0, 0]; // x, y, w, h
         /** @type {[Number, Number, Number, Number]} */
-        this.containerBounds = [-maxValue, maxValue, maxValue, -maxValue]; // t, r, b, l
+        this.containerBounds = [-1e12, maxValue, maxValue, -1e12]; // t, r, b, l
         /** @type {[Number, Number, Number, Number]} */
         this.scrollBounds = [0, 0, 0, 0]; // t, r, b, l
         /** @type {[Number, Number, Number, Number]} */
@@ -5309,10 +5309,10 @@ class Draggable {
         const canScroll = this.canScroll;
         if (!this.containerArray && this.isOutOfBounds(scrollBounds, x, y)) {
             const [st, sr, sb, sl] = scrollBounds;
-            const t = round(clamp(y - st, -maxValue, 0), 0);
+            const t = round(clamp(y - st, -1e12, 0), 0);
             const r = round(clamp(x - sr, 0, maxValue), 0);
             const b = round(clamp(y - sb, 0, maxValue), 0);
-            const l = round(clamp(x - sl, -maxValue, 0), 0);
+            const l = round(clamp(x - sl, -1e12, 0), 0);
             new JSAnimation(scroll, {
                 x: round(scroll.x + (l ? l - gap : r ? r + gap : 0), 0),
                 y: round(scroll.y + (t ? t - gap : b ? b + gap : 0), 0),
@@ -6760,7 +6760,7 @@ class ScrollObserver {
             if (syncSmooth && isNum(syncSmooth)) {
                 if ( /** @type {Number} */(syncSmooth) < 1) {
                     const step = 0.0001;
-                    const snap = lp < p && p === 1 ? step : lp > p && !p ? -step : 0;
+                    const snap = lp < p && p === 1 ? step : lp > p && !p ? -1e-4 : 0;
                     p = round(lerp(lp, p, interpolate(.01, .2, /** @type {Number} */ (syncSmooth)), false) + snap, 6);
                 }
             }
