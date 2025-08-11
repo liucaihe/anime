@@ -349,13 +349,15 @@
       }
     }
 
-    .ease-button {
+    button.ease-button {
       position: relative;
       display: flex;
+      flex-shrink: 0;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       width: calc(25% - .25rem);
+      height: auto;
       margin: .125rem;
       padding: .5rem;
       background-color: rgba(255, 255, 255, .05);
@@ -367,29 +369,29 @@
     }
 
     @media (min-width: 1280px) {
-      .ease-button {
+      button.ease-button {
         width: calc(12.5% - .25rem);
       }
     }
 
-    .ease-button:hover {
+    button.ease-button:hover {
       background-color: rgba(255, 255, 255, .1);
       transition: background-color .05s ease-out;
     }
 
-    .ease-button.is-active {
+    button.ease-button.is-active {
       background: var(--red);
       color: var(--black);
     }
 
-    .ease-button .ease-config {
+    button.ease-button .ease-config {
       position: absolute;
       top: .25rem;
       right: .41rem;
       font-size: .75rem;
     }
 
-    .ease-button svg {
+    button.ease-button svg {
       overflow: visible;
       width: calc(100% - 3rem);
       margin-top: 0.25rem;
@@ -397,18 +399,18 @@
     }
 
     @media (min-width: 640px) {
-      .ease-button svg {
+      button.ease-button svg {
         width: calc(100% - 2rem);
         margin-top: 1rem;
         margin-bottom: 1rem;
       }
     }
 
-    .ease-button svg polyline {
+    button.ease-button svg polyline {
       stroke: var(--red);
     }
 
-    .ease-button.is-active svg polyline {
+    button.ease-button.is-active svg polyline {
       stroke: var(--black);
     }
 

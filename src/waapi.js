@@ -12,9 +12,11 @@ import {
   removeChild,
   stringStartsWith,
   toLowerCase,
+  isNil,
 } from './helpers.js';
 
 import {
+  scope,
   globals,
 } from './globals.js';
 
@@ -36,7 +38,6 @@ import {
 
 import {
   isBrowser,
-  doc,
   K,
   noop,
   emptyString,
@@ -167,31 +168,9 @@ const commonDefaultPXProperties = [
   ...transformsShorthands
 ]
 
-const validIndividualTransforms = [...transformsShorthands, ...validTransforms.filter(t => ['X', 'Y', 'Z'].some(axis => t.endsWith(axis)))];
+const validIndividualTransforms = /*#__PURE__*/ (() => [...transformsShorthands, ...validTransforms.filter(t => ['X', 'Y', 'Z'].some(axis => t.endsWith(axis)))])();
 
-// Setting it to true in case CSS.registerProperty is not supported will automatically skip the registration and fallback to no animation
-let transformsPropertiesRegistered = isBrowser && (isUnd(CSS) || !Object.hasOwnProperty.call(CSS, 'registerProperty'));
-
-const registerTransformsProperties = () => {
-  if (transformsPropertiesRegistered) return;
-  validTransforms.forEach(t => {
-    const isSkew = stringStartsWith(t, 'skew');
-    const isScale = stringStartsWith(t, 'scale');
-    const isRotate = stringStartsWith(t, 'rotate');
-    const isTranslate = stringStartsWith(t, 'translate');
-    const isAngle = isRotate || isSkew;
-    const syntax = isAngle ? '<angle>' : isScale ? "<number>" : isTranslate ? "<length-percentage>" : "*";
-    try {
-      CSS.registerProperty({
-        name: '--' + t,
-        syntax,
-        inherits: false,
-        initialValue: isTranslate ? '0px' : isAngle ? '0deg' : isScale ? '1' : '0',
-      });
-    } catch {};
-  });
-  transformsPropertiesRegistered = true;
-}
+let transformsPropertiesRegistered = null;
 
 const WAAPIAnimationsLookups = {
   _head: null,
@@ -303,9 +282,32 @@ export class WAAPIAnimation {
  */
   constructor(targets, params) {
 
-    if (globals.scope) globals.scope.revertibles.push(this);
+    if (scope.current) scope.current.register(this);
 
-    registerTransformsProperties();
+    // Skip the registration and fallback to no animation in case CSS.registerProperty is not supported
+    if (isNil(transformsPropertiesRegistered)) {
+      if (isBrowser && (isUnd(CSS) || !Object.hasOwnProperty.call(CSS, 'registerProperty'))) {
+        transformsPropertiesRegistered = false;
+      } else {
+        validTransforms.forEach(t => {
+          const isSkew = stringStartsWith(t, 'skew');
+          const isScale = stringStartsWith(t, 'scale');
+          const isRotate = stringStartsWith(t, 'rotate');
+          const isTranslate = stringStartsWith(t, 'translate');
+          const isAngle = isRotate || isSkew;
+          const syntax = isAngle ? '<angle>' : isScale ? "<number>" : isTranslate ? "<length-percentage>" : "*";
+          try {
+            CSS.registerProperty({
+              name: '--' + t,
+              syntax,
+              inherits: false,
+              initialValue: isTranslate ? '0px' : isAngle ? '0deg' : isScale ? '1' : '0',
+            });
+          } catch {};
+        });
+        transformsPropertiesRegistered = true;
+      }
+    }
 
     const parsedTargets = registerTargets(targets);
     const targetsLength = parsedTargets.length;

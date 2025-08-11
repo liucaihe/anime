@@ -7,6 +7,7 @@ import {
 } from './consts.js';
 
 import {
+  scope,
   globals,
 } from './globals.js';
 
@@ -63,7 +64,7 @@ import {
  * @return {Number}
  */
 const getMaxViewHeight = () => {
-  const $el = document.createElement('div');
+  const $el = doc.createElement('div');
   doc.body.appendChild($el);
   $el.style.height = '100lvh';
   const height = $el.offsetHeight;
@@ -262,7 +263,7 @@ class ScrollContainer {
     this.dataTimer.cancel();
     this.resizeTicker.cancel();
     this.wakeTicker.cancel();
-    this.resizeObserver.unobserve(this.element);
+    this.resizeObserver.disconnect();
     (this.useWin ? win : this.element).removeEventListener('scroll', this);
     scrollContainers.delete(this.element);
   }
@@ -413,7 +414,7 @@ export class ScrollObserver {
    * @param {ScrollObserverParams} parameters
    */
   constructor(parameters = {}) {
-    if (globals.scope) globals.scope.revertibles.push(this);
+    if (scope.current) scope.current.register(this);
     const syncMode = setValue(parameters.sync, 'play pause');
     const ease = syncMode ? parseEasings(/** @type {EasingParam} */(syncMode)) : null;
     const isLinear = syncMode && (syncMode === 'linear' || syncMode === none);
@@ -491,8 +492,8 @@ export class ScrollObserver {
     this.forceEnter = false;
     /** @type {Boolean} */
     this.hasEntered = false;
-    /** @type {Array.<Number>} */
-    this.offsets = [];
+    // /** @type {Array.<Number>} */
+    // this.offsets = [];
     /** @type {Number} */
     this.offset = 0;
     /** @type {Number} */
@@ -736,33 +737,46 @@ export class ScrollObserver {
     const linked = this.linked;
     let linkedTime;
     let $el = $target;
-    let offsetX = 0;
-    let offsetY = 0;
+    // let offsetX = 0;
+    // let offsetY = 0;
+    // let $offsetParent = $el;
     /** @type {Element} */
-    let $offsetParent = $el;
     if (linked) {
       linkedTime = linked.currentTime;
       linked.seek(0, true);
     }
-    const isContainerStatic = getTargetValue(container.element, 'position') === 'static' ? setTargetValues(container.element, { position: 'relative '}) : false;
+    /* Old implementation to get offset and targetSize before fixing https://github.com/juliangarnier/anime/issues/1021
+    // const isContainerStatic = getTargetValue(container.element, 'position') === 'static' ? setTargetValues(container.element, { position: 'relative '}) : false;
+    // while ($el && $el !== container.element && $el !== doc.body) {
+    //   const isSticky = getTargetValue($el, 'position') === 'sticky' ?
+    //                    setTargetValues($el, { position: 'static' }) :
+    //                    false;
+    //   if ($el === $offsetParent) {
+    //     offsetX += $el.offsetLeft || 0;
+    //     offsetY += $el.offsetTop || 0;
+    //     $offsetParent = $el.offsetParent;
+    //   }
+    //   $el = /** @type {HTMLElement} */($el.parentElement);
+    //   if (isSticky) {
+    //     if (!stickys) stickys = [];
+    //     stickys.push(isSticky);
+    //   }
+    // }
+    // if (isContainerStatic) isContainerStatic.revert();
+    // const offset = isHori ? offsetX : offsetY;
+    // const targetSize = isHori ? $target.offsetWidth : $target.offsetHeight;
+
     while ($el && $el !== container.element && $el !== doc.body) {
-      const isSticky = getTargetValue($el, 'position') === 'sticky' ?
-                       setTargetValues($el, { position: 'static' }) :
-                       false;
-      if ($el === $offsetParent) {
-        offsetX += $el.offsetLeft || 0;
-        offsetY += $el.offsetTop || 0;
-        $offsetParent = $el.offsetParent;
-      }
-      $el = /** @type {HTMLElement} */($el.parentElement);
+      const isSticky = getTargetValue($el, 'position') === 'sticky' ? setTargetValues($el, { position: 'static' }) : false;
+      $el = $el.parentElement;
       if (isSticky) {
         if (!stickys) stickys = [];
         stickys.push(isSticky);
       }
     }
-    if (isContainerStatic) isContainerStatic.revert();
-    const offset = isHori ? offsetX : offsetY;
-    const targetSize = isHori ? $target.offsetWidth : $target.offsetHeight;
+    const rect = $target.getBoundingClientRect();
+    const offset = isHori ? rect.left + container.scrollX - container.left : rect.top + container.scrollY - container.top;
+    const targetSize = isHori ? rect.width : rect.height;
     const containerSize = isHori ? container.width : container.height;
     const scrollSize = isHori ? container.scrollWidth : container.scrollHeight;
     const maxScroll = scrollSize - containerSize;
@@ -811,8 +825,8 @@ export class ScrollObserver {
     const offsetStart = parsedEnterTarget + offset - parsedEnterContainer;
     const offsetEnd = parsedLeaveTarget + offset - parsedLeaveContainer;
     const scrollDelta = offsetEnd - offsetStart;
-    this.offsets[0] = offsetX;
-    this.offsets[1] = offsetY;
+    // this.offsets[0] = offsetX;
+    // this.offsets[1] = offsetY;
     this.offset = offset;
     this.offsetStart = offsetStart;
     this.offsetEnd = offsetEnd;

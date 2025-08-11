@@ -1,6 +1,7 @@
 import './suites/engine.test.js';
 import './suites/seconds.test.js';
 import './suites/draggables.test.js';
+import './suites/scroll.test.js';
 import './suites/waapi.test.js';
 import './suites/scope.test.js';
 import './suites/targets.test.js';
@@ -18,6 +19,7 @@ import './suites/parameters.test.js';
 import './suites/promises.test.js';
 import './suites/stagger.test.js';
 import './suites/svg.test.js';
+import './suites/text.test.js';
 import './suites/units.test.js';
 import './suites/utils.test.js';
 import './suites/values.test.js';

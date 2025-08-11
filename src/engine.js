@@ -29,8 +29,8 @@ import {
   tick,
 } from './render.js';
 
-export const engineTickMethod = isBrowser ? requestAnimationFrame : setImmediate;
-export const engineCancelMethod = isBrowser ? cancelAnimationFrame : clearImmediate;
+export const engineTickMethod = /*#__PURE__*/ (() => isBrowser ? requestAnimationFrame : setImmediate)();
+export const engineCancelMethod = /*#__PURE__*/ (() => isBrowser ? cancelAnimationFrame : clearImmediate)();
 
 export class Engine extends Clock {
 

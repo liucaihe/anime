@@ -272,7 +272,36 @@ suite('Callbacks', () => {
     expect(animation.completed).to.equal(true);
   });
 
-  test('onComplete on looped revered alternate animation', () => {
+  test('onComplete on reversed animation', () => {
+    let callbackCheck = 0;
+    const animation = animate('#target-id', { reversed: true, ...setupAnimationCallBack('onComplete', () => { callbackCheck += 1; }) });
+    expect(callbackCheck).to.equal(0);
+    expect(animation.completed).to.equal(false);
+    animation.seek(10);
+    expect(callbackCheck).to.equal(0);
+    expect(animation.completed).to.equal(false);
+    animation.seek(80);
+    expect(callbackCheck).to.equal(1);
+    expect(animation.completed).to.equal(true);
+  });
+
+  test('onComplete after caling animation.reverse()', () => {
+    let callbackCheck = 0;
+    const animation = animate('#target-id', { reversed: true, ...setupAnimationCallBack('onComplete', () => { callbackCheck += 1; }) });
+    expect(callbackCheck).to.equal(0);
+    expect(animation.completed).to.equal(false);
+    animation.seek(20);
+    expect(callbackCheck).to.equal(0);
+    expect(animation.completed).to.equal(false);
+    animation.reverse();
+    expect(callbackCheck).to.equal(0);
+    expect(animation.completed).to.equal(false);
+    animation.seek(80);
+    expect(callbackCheck).to.equal(1);
+    expect(animation.completed).to.equal(true);
+  });
+
+  test('onComplete on looped reversed alternate animation', () => {
     let callbackCheck = 0;
     const animation = animate('#target-id', { loop: 1, alternate: true, reversed: true, ...setupAnimationCallBack('onComplete', () => { callbackCheck += 1; }) });
     expect(callbackCheck).to.equal(0);
@@ -518,6 +547,151 @@ suite('Callbacks', () => {
     expect(child1OnCompleteCheck).to.equal(2);
     expect(child2OnBeginCheck).to.equal(2);
     expect(child2OnCompleteCheck).to.equal(1);
+  });
+
+  test('onComplete on reversed timeline should complete and ignore children', () => {
+    let tlOnBeginCheck = 0;
+    let tlOnCompleteCheck = 0;
+    let child1OnBeginCheck = 0;
+    let child1OnCompleteCheck = 0;
+    let child2OnBeginCheck = 0;
+    let child2OnCompleteCheck = 0;
+
+    const tl = createTimeline({
+      reversed: true,
+      defaults: {
+        ease: 'linear',
+        duration: 100
+      },
+      onBegin: () => { tlOnBeginCheck += 1; },
+      onComplete: () => { tlOnCompleteCheck += 1; },
+    })
+    .add('.target-class:nth-child(1)', {
+      y: 100,
+      onBegin: () => { child1OnBeginCheck += 1; },
+      onComplete: () => { child1OnCompleteCheck += 1; }
+    })
+    .add('.target-class:nth-child(2)', {
+      y: 100,
+      onBegin: () => { child2OnBeginCheck += 1; },
+      onComplete: () => { child2OnCompleteCheck += 1; }
+    })
+    // .init();
+
+    expect(tlOnBeginCheck).to.equal(0);
+    expect(tlOnCompleteCheck).to.equal(0);
+    expect(child1OnBeginCheck).to.equal(0);
+    expect(child1OnCompleteCheck).to.equal(0);
+    expect(child2OnBeginCheck).to.equal(0);
+    expect(child2OnCompleteCheck).to.equal(0);
+    tl.seek(5);
+    expect(tlOnBeginCheck).to.equal(1);
+    expect(tlOnCompleteCheck).to.equal(0);
+    expect(child1OnBeginCheck).to.equal(0);
+    expect(child1OnCompleteCheck).to.equal(0);
+    expect(child2OnBeginCheck).to.equal(0);
+    expect(child2OnCompleteCheck).to.equal(0);
+    tl.seek(10);
+    expect(tlOnBeginCheck).to.equal(1);
+    expect(tlOnCompleteCheck).to.equal(0);
+    expect(child1OnBeginCheck).to.equal(0);
+    expect(child1OnCompleteCheck).to.equal(0);
+    expect(child2OnBeginCheck).to.equal(0);
+    expect(child2OnCompleteCheck).to.equal(0);
+    tl.seek(100);
+    expect(tlOnBeginCheck).to.equal(1);
+    expect(tlOnCompleteCheck).to.equal(0);
+    expect(child1OnBeginCheck).to.equal(0);
+    expect(child1OnCompleteCheck).to.equal(0);
+    expect(child2OnBeginCheck).to.equal(0);
+    expect(child2OnCompleteCheck).to.equal(0);
+    tl.seek(110);
+    expect(tlOnBeginCheck).to.equal(1);
+    expect(tlOnCompleteCheck).to.equal(0);
+    expect(child1OnBeginCheck).to.equal(0);
+    expect(child1OnCompleteCheck).to.equal(0);
+    expect(child2OnBeginCheck).to.equal(0);
+    expect(child2OnCompleteCheck).to.equal(0);
+    tl.seek(200);
+    expect(tlOnBeginCheck).to.equal(1);
+    expect(tlOnCompleteCheck).to.equal(1);
+    expect(child1OnBeginCheck).to.equal(0);
+    expect(child1OnCompleteCheck).to.equal(0);
+    expect(child2OnBeginCheck).to.equal(0);
+    expect(child2OnCompleteCheck).to.equal(0);
+  });
+
+  test('onComplete on timeline after caling reverse()', () => {
+    let tlOnBeginCheck = 0;
+    let tlOnCompleteCheck = 0;
+    let child1OnBeginCheck = 0;
+    let child1OnCompleteCheck = 0;
+    let child2OnBeginCheck = 0;
+    let child2OnCompleteCheck = 0;
+
+    const tl = createTimeline({
+      defaults: {
+        ease: 'linear',
+        duration: 100
+      },
+      // autoplay: false,
+      onBegin: () => { tlOnBeginCheck += 1; },
+      onComplete: () => { tlOnCompleteCheck += 1; },
+    })
+    .add('.target-class:nth-child(1)', {
+      y: 100,
+      onBegin: () => { child1OnBeginCheck += 1; },
+      onComplete: () => { child1OnCompleteCheck += 1; }
+    })
+    .add('.target-class:nth-child(2)', {
+      y: 100,
+      onBegin: () => { child2OnBeginCheck += 1; },
+      onComplete: () => { child2OnCompleteCheck += 1; }
+    })
+    // .init();
+
+    expect(tlOnBeginCheck).to.equal(0);
+    expect(tlOnCompleteCheck).to.equal(0);
+    expect(child1OnBeginCheck).to.equal(0);
+    expect(child1OnCompleteCheck).to.equal(0);
+    expect(child2OnBeginCheck).to.equal(0);
+    expect(child2OnCompleteCheck).to.equal(0);
+    tl.seek(5);
+    expect(tlOnBeginCheck).to.equal(1);
+    expect(tlOnCompleteCheck).to.equal(0);
+    expect(child1OnBeginCheck).to.equal(1);
+    expect(child1OnCompleteCheck).to.equal(0);
+    expect(child2OnBeginCheck).to.equal(0);
+    expect(child2OnCompleteCheck).to.equal(0);
+    tl.seek(10);
+    expect(tlOnBeginCheck).to.equal(1);
+    expect(tlOnCompleteCheck).to.equal(0);
+    expect(child1OnBeginCheck).to.equal(1);
+    expect(child1OnCompleteCheck).to.equal(0);
+    expect(child2OnBeginCheck).to.equal(0);
+    expect(child2OnCompleteCheck).to.equal(0);
+    tl.seek(100);
+    expect(tlOnBeginCheck).to.equal(1);
+    expect(tlOnCompleteCheck).to.equal(0);
+    expect(child1OnBeginCheck).to.equal(1);
+    expect(child1OnCompleteCheck).to.equal(1);
+    expect(child2OnBeginCheck).to.equal(0);
+    expect(child2OnCompleteCheck).to.equal(0);
+    tl.seek(110);
+    expect(tlOnBeginCheck).to.equal(1);
+    expect(tlOnCompleteCheck).to.equal(0);
+    expect(child1OnBeginCheck).to.equal(1);
+    expect(child1OnCompleteCheck).to.equal(1);
+    expect(child2OnBeginCheck).to.equal(1);
+    expect(child2OnCompleteCheck).to.equal(0);
+    tl.reverse();
+    tl.seek(200);
+    expect(tlOnBeginCheck).to.equal(1);
+    expect(tlOnCompleteCheck).to.equal(1);
+    expect(child1OnBeginCheck).to.equal(1);
+    expect(child1OnCompleteCheck).to.equal(1);
+    expect(child2OnBeginCheck).to.equal(1);
+    expect(child2OnCompleteCheck).to.equal(0);
   });
 
   test('onBegin and onComplete on alternate timeline with reversed children', () => {

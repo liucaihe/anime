@@ -3,13 +3,16 @@
 import {
   doc,
   win,
+  noop,
 } from './consts.js';
 
 import {
+  scope,
   globals,
 } from './globals.js';
 
 import {
+    createRefreshable,
   isFnc,
   mergeObjects,
 } from './helpers.js';
@@ -18,44 +21,10 @@ import {
   parseTargets,
 } from './targets.js';
 
-/**
- * @typedef {Object} ReactRef
- * @property {HTMLElement|SVGElement|null} [current]
- */
-
-/**
- * @typedef {Object} AngularRef
- * @property {HTMLElement|SVGElement} [nativeElement]
- */
-
-/**
- * @typedef {Object} ScopeParams
- * @property {DOMTargetSelector|ReactRef|AngularRef} [root]
- * @property {DefaultsParams} [defaults]
- * @property {Record<String, String>} [mediaQueries]
- */
-
-/**
- * @callback ScopeCleanup
- * @param {Scope} [scope]
- */
-
-/**
- * @callback ScopeConstructor
- * @param {Scope} [scope]
- * @return {ScopeCleanup|void}
- */
-
-/**
- * @callback ScopeMethod
- * @param {...*} args
- * @return {ScopeCleanup|void}
- */
-
 export class Scope {
   /** @param {ScopeParams} [parameters] */
   constructor(parameters = {}) {
-    if (globals.scope) globals.scope.revertibles.push(this);
+    if (scope.current) scope.current.register(this);
     const rootParam = parameters.root;
     /** @type {Document|DOMTarget} */
     let root = doc;
@@ -72,13 +41,23 @@ export class Scope {
     this.defaults = scopeDefaults ? mergeObjects(scopeDefaults, globalDefault) : globalDefault;
     /** @type {Document|DOMTarget} */
     this.root = root;
-    /** @type {Array<ScopeConstructor>} */
+    /** @type {Array<ScopeConstructorCallback>} */
     this.constructors = [];
-    /** @type {Array<Function>} */
+    /** @type {Array<ScopeCleanupCallback>} */
     this.revertConstructors = [];
     /** @type {Array<Revertible>} */
     this.revertibles = [];
-    /** @type {Record<String, Function>} */
+    /** @type {Array<ScopeConstructorCallback | ((scope: this) => Tickable)>} */
+    this.constructorsOnce = [];
+    /** @type {Array<ScopeCleanupCallback>} */
+    this.revertConstructorsOnce = [];
+    /** @type {Array<Revertible>} */
+    this.revertiblesOnce = [];
+    /** @type {Boolean} */
+    this.once = false;
+    /** @type {Number} */
+    this.onceIndex = 0;
+    /** @type {Record<String, ScopeMethod>} */
     this.methods = {};
     /** @type {Record<String, Boolean>} */
     this.matches = {};
@@ -96,25 +75,30 @@ export class Scope {
   }
 
   /**
-   * @callback ScoppedCallback
-   * @param {this} scope
-   * @return {any}
-   *
-   * @param {ScoppedCallback} cb
-   * @return {this}
+   * @param {Revertible} revertible
+   */
+  register(revertible) {
+    const store = this.once ? this.revertiblesOnce : this.revertibles;
+    store.push(revertible);
+  }
+
+  /**
+   * @template T
+   * @param {ScopedCallback<T>} cb
+   * @return {T}
    */
   execute(cb) {
-    let activeScope = globals.scope;
-    let activeRoot = globals.root;
+    let activeScope = scope.current;
+    let activeRoot = scope.root;
     let activeDefaults = globals.defaults;
-    globals.scope = this;
-    globals.root = this.root;
+    scope.current = this;
+    scope.root = this.root;
     globals.defaults = this.defaults;
     const mqs = this.mediaQueryLists;
     for (let mq in mqs) this.matches[mq] = mqs[mq].matches;
     const returned = cb(this);
-    globals.scope = activeScope;
-    globals.root = activeRoot;
+    scope.current = activeScope;
+    scope.root = activeRoot;
     globals.defaults = activeDefaults;
     return returned;
   }
@@ -123,6 +107,7 @@ export class Scope {
    * @return {this}
    */
   refresh() {
+    this.onceIndex = 0;
     this.execute(() => {
       let i = this.revertibles.length;
       let y = this.revertConstructors.length;
@@ -130,9 +115,9 @@ export class Scope {
       while (y--) this.revertConstructors[y](this);
       this.revertibles.length = 0;
       this.revertConstructors.length = 0;
-      this.constructors.forEach( constructor => {
+      this.constructors.forEach((/** @type {ScopeConstructorCallback} */constructor) => {
         const revertConstructor = constructor(this);
-        if (revertConstructor) {
+        if (isFnc(revertConstructor)) {
           this.revertConstructors.push(revertConstructor);
         }
       });
@@ -141,28 +126,26 @@ export class Scope {
   }
 
   /**
-   * @callback contructorCallback
-   * @param {this} self
-   *
    * @overload
    * @param {String} a1
    * @param {ScopeMethod} a2
    * @return {this}
    *
    * @overload
-   * @param {contructorCallback} a1
+   * @param {ScopeConstructorCallback} a1
    * @return {this}
    *
-   * @param {String|contructorCallback} a1
+   * @param {String|ScopeConstructorCallback} a1
    * @param {ScopeMethod} [a2]
    */
   add(a1, a2) {
+    this.once = false;
     if (isFnc(a1)) {
-      const constructor = /** @type {contructorCallback} */(a1);
+      const constructor = /** @type {ScopeConstructorCallback} */(a1);
       this.constructors.push(constructor);
       this.execute(() => {
         const revertConstructor = constructor(this);
-        if (revertConstructor) {
+        if (isFnc(revertConstructor)) {
           this.revertConstructors.push(revertConstructor);
         }
       });
@@ -170,6 +153,46 @@ export class Scope {
       this.methods[/** @type {String} */(a1)] = (/** @type {any} */...args) => this.execute(() => a2(...args));
     }
     return this;
+  }
+
+  /**
+   * @param {ScopeConstructorCallback} scopeConstructorCallback
+   * @return {this}
+   */
+  addOnce(scopeConstructorCallback) {
+    this.once = true;
+    if (isFnc(scopeConstructorCallback)) {
+      const currentIndex = this.onceIndex++;
+      const tracked = this.constructorsOnce[currentIndex];
+      if (tracked) return this;
+      const constructor = /** @type {ScopeConstructorCallback} */(scopeConstructorCallback);
+      this.constructorsOnce[currentIndex] = constructor;
+      this.execute(() => {
+        const revertConstructor = constructor(this);
+        if (isFnc(revertConstructor)) {
+          this.revertConstructorsOnce.push(revertConstructor);
+        }
+      });
+    }
+    return this;
+  }
+
+  /**
+   * @param  {(scope: this) => Tickable} cb
+   * @return {Tickable}
+   */
+  keepTime(cb) {
+    this.once = true;
+    const currentIndex = this.onceIndex++;
+    const tracked = /** @type {(scope: this) => Tickable} */(this.constructorsOnce[currentIndex]);
+    if (isFnc(tracked)) return tracked(this);
+    const constructor = /** @type {(scope: this) => Tickable} */(createRefreshable(cb));
+    this.constructorsOnce[currentIndex] = constructor;
+    let trackedTickable;
+    this.execute(() => {
+      trackedTickable = constructor(this);
+    });
+    return trackedTickable;
   }
 
   /**
@@ -186,15 +209,25 @@ export class Scope {
   revert() {
     const revertibles = this.revertibles;
     const revertConstructors = this.revertConstructors;
+    const revertiblesOnce = this.revertiblesOnce;
+    const revertConstructorsOnce = this.revertConstructorsOnce;
     const mqs = this.mediaQueryLists;
     let i = revertibles.length;
-    let y = revertConstructors.length;
+    let j = revertConstructors.length;
+    let k = revertiblesOnce.length;
+    let l = revertConstructorsOnce.length;
     while (i--) revertibles[i].revert();
-    while (y--) revertConstructors[y](this);
+    while (j--) revertConstructors[j](this);
+    while (k--) revertiblesOnce[k].revert();
+    while (l--) revertConstructorsOnce[l](this);
     for (let mq in mqs) mqs[mq].removeEventListener('change', this);
     revertibles.length = 0;
     revertConstructors.length = 0;
     this.constructors.length = 0;
+    revertiblesOnce.length = 0;
+    revertConstructorsOnce.length = 0;
+    this.constructorsOnce.length = 0;
+    this.onceIndex = 0;
     this.matches = {};
     this.methods = {};
     this.mediaQueryLists = {};

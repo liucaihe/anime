@@ -4,6 +4,7 @@ import {
   hexTestRgx,
   maxValue,
   minValue,
+  noop,
 } from './consts.js';
 
 import {
@@ -123,6 +124,25 @@ export const snap = (v, increment) => isArr(increment) ? increment.reduce((close
 export const interpolate = (start, end, progress) => start + (end - start) * progress;
 
 /**
+ * @param  {Number} min
+ * @param  {Number} max
+ * @param  {Number} [decimalLength]
+ * @return {Number}
+ */
+export const random = (min, max, decimalLength) => { const m = 10 ** (decimalLength || 0); return floor((Math.random() * (max - min + (1 / m)) + min) * m) / m };
+
+/**
+ * Adapted from https://bost.ocks.org/mike/shuffle/
+ * @param  {Array} items
+ * @return {Array}
+ */
+export const shuffle = items => {
+  let m = items.length, t, i;
+  while (m) { i = random(0, --m); t = items[m]; items[m] = items[i]; items[i] = t; }
+  return items;
+}
+
+/**
  * @param  {Number} v
  * @return {Number}
  */
@@ -217,4 +237,30 @@ export const addChild = (parent, child, sortMethod, prevProp = '_prev', nextProp
   next ? next[prevProp] = child : parent._tail = child;
   child[prevProp] = prev;
   child[nextProp] = next;
+}
+
+/**
+ * @param  {(...args: any[]) => Tickable | ((...args: any[]) => void)} constructor
+ * @return {(...args: any[]) => Tickable | ((...args: any[]) => void)}
+ */
+export const createRefreshable = constructor => {
+  /** @type {Tickable} */
+  let tracked;
+  return (...args) => {
+    let currentIteration, currentIterationProgress, reversed, alternate;
+    if (tracked) {
+      currentIteration = tracked.currentIteration;
+      currentIterationProgress = tracked.iterationProgress;
+      reversed = tracked.reversed;
+      alternate = tracked._alternate;
+      tracked.revert();
+    }
+    const cleanup = constructor(...args);
+    if (cleanup && !isFnc(cleanup) && cleanup.revert) tracked = cleanup;
+    if (!isUnd(currentIterationProgress)) {
+      /** @type {Tickable} */(tracked).currentIteration = currentIteration;
+      /** @type {Tickable} */(tracked).iterationProgress = (alternate ? !(currentIteration % 2) ? reversed : !reversed : reversed) ? 1 - currentIterationProgress : currentIterationProgress;
+    }
+    return cleanup || noop;
+  }
 }

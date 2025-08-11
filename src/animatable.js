@@ -6,7 +6,7 @@ import {
 } from './consts.js';
 
 import {
-  globals,
+  scope,
 } from './globals.js';
 
 import {
@@ -33,7 +33,7 @@ export class Animatable {
    * @param {AnimatableParams} parameters
    */
   constructor(targets, parameters) {
-    if (globals.scope) globals.scope.revertibles.push(this);
+    if (scope.current) scope.current.register(this);
     /** @type {AnimationParams} */
     const globalParams = {};
     const properties = {};

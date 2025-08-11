@@ -5,8 +5,15 @@
     <title>Anime.js tests</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="../node_modules/mocha/mocha.css" />
-    <link rel="icon" href="./favicon.png?v=5">
+    <link rel="icon" href="./assets/favicon.png?v=5">
     <style>
+      @font-face {
+        font-family: "Altinn";
+        src: url(./assets/Altinn-DINExp.woff2) format("woff2");
+        font-weight: normal;
+        font-style: normal;
+        font-display: swap;
+      }
       :root {
         --color-white: #F6F4F2; /* White */
         --color-black: #2E2C2C; /* Black */
@@ -36,6 +43,7 @@
       }
       html,
       body {
+        font-family: "Altinn";
         font-size: 16px;
         background-color: var(--color-black);
         color: var(--color-white);
@@ -77,12 +85,16 @@
         opacity: 1;
       }
       #mocha {
+        font-family: inherit;
         position: relative;
         right: 0;
         z-index: 1;
         width: 100%;
         margin: 0 0 0 auto;
         padding: 0 1rem 1rem 1rem;
+      }
+      #mocha em {
+        font-style: normal;
       }
       #mocha-stats {
         top: 0;
@@ -183,7 +195,7 @@
       /* Tests specific styles */
       #tests {
         opacity: .0001;
-        position: fixed;
+        position: absolute;
         display: flex;
         flex-wrap: wrap;
         z-index: 0;
@@ -258,7 +270,7 @@
         background-color: var(--color-darkgreen);
         border: 1px solid var(--color-black);
       }
-      @media (min-width: 1000px) {
+      @media (min-width: 600px) {
         #mocha,
         #tests {
           width: 50%;

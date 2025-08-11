@@ -29,7 +29,7 @@ createTimeline({
     enter: 'top top',
     leave: 'bottom bottom',
     sync: .5,
-    // debug: true,
+    debug: true,
   }),
 })
 .add('.stack', {

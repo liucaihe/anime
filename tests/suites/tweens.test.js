@@ -13,7 +13,7 @@ import {
 } from '../../src/anime.js';
 
 import {
-    compositionTypes,
+  compositionTypes,
   valueTypes,
 } from '../../src/consts.js';
 
