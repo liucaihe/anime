@@ -10,6 +10,7 @@ import {
   addChild,
   removeChild,
   forEachChildren,
+  round,
 } from './helpers.js';
 
 import {
@@ -118,12 +119,16 @@ export const composeTween = (tween, siblings) => {
 
         const prevChangeStartTime = prevSibling._startTime;
         const prevTLOffset = prevAbsEndTime - (prevChangeStartTime + prevSibling._updateDuration);
+        // Rounding is necessary here to minimize floating point errors when working in seconds
+        const updatedPrevChangeDuration = round(absoluteUpdateStartTime - prevTLOffset - prevChangeStartTime, 12);
 
-        prevSibling._changeDuration = absoluteUpdateStartTime - prevTLOffset - prevChangeStartTime;
-        prevSibling._currentTime = prevSibling._changeDuration;
+        prevSibling._changeDuration = updatedPrevChangeDuration;
+        prevSibling._currentTime = updatedPrevChangeDuration;
         prevSibling._isOverlapped = 1;
 
-        if (prevSibling._changeDuration < minValue) {
+        // Override the previous tween if its new _changeDuration is lower than minValue
+        // TODO: See if it's even neceseeary to test against minValue, checking for 0 might be enough
+        if (updatedPrevChangeDuration < minValue) {
           overrideTween(prevSibling);
         }
       }
@@ -154,7 +159,7 @@ export const composeTween = (tween, siblings) => {
           prevParent.cancel();
           // Previously, calling .cancel() on a timeline child would affect the render order of other children
           // Worked around this by marking it as .completed and using .pause() for safe removal in the engine loop
-          // This is no longer needed since timeline tween composition is now handled separatly
+          // This is no longer needed since timeline tween composition is now handled separately
           // Keeping this here for reference
           // prevParent.completed = true;
           // prevParent.pause();

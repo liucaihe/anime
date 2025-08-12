@@ -1,6 +1,6 @@
-import { animate, createTimer, createTimeline, eases, stagger, utils } from '../../../lib/anime.esm.js';
+import { animate, createTimer, createTimeline, eases, stagger, utils } from '../../../../lib/anime.esm.js';
 
-import { inspect } from '../../../lib/gui/index.js';
+// import { inspect } from '../../../lib/gui/index.js';
 
 
 const A = animate('.square:nth-child(1)', { x: 200, onBegin: () => console.log('A BEGAN'), onComplete: () => console.log('A COMPLETE') })

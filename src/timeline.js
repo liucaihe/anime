@@ -56,10 +56,6 @@ import {
 } from './utils.js';
 
 /**
- * @typedef {Number|String|Function} TimePosition
- */
-
-/**
  * Timeline's children offsets positions parser
  * @param  {Timeline} timeline
  * @param  {String} timePosition
@@ -76,7 +72,7 @@ const getPrevChildOffset = (timeline, timePosition) => {
 
 /**
  * @param  {Timeline} timeline
- * @param  {TimePosition} [timePosition]
+ * @param  {TimelinePosition} [timePosition]
  * @return {Number}
  */
 export const parseTimelinePosition = (timeline, timePosition) => {
@@ -182,17 +178,17 @@ export class Timeline extends Timer {
    * @overload
    * @param {TargetsParam} a1
    * @param {AnimationParams} a2
-   * @param {TimePosition} [a3]
+   * @param {TimelinePosition|StaggerFunction<Number|String>} [a3]
    * @return {this}
    *
    * @overload
    * @param {TimerParams} a1
-   * @param {TimePosition} [a2]
+   * @param {TimelinePosition} [a2]
    * @return {this}
    *
    * @param {TargetsParam|TimerParams} a1
-   * @param {AnimationParams|TimePosition} a2
-   * @param {TimePosition} [a3]
+   * @param {TimelinePosition|AnimationParams} a2
+   * @param {TimelinePosition|StaggerFunction<Number|String>} [a3]
    */
   add(a1, a2, a3) {
     const isAnim = isObj(a2);
@@ -203,7 +199,7 @@ export class Timeline extends Timer {
         const childParams = /** @type {AnimationParams} */(a2);
         // Check for function for children stagger positions
         if (isFnc(a3)) {
-          const staggeredPosition = /** @type {Function} */(a3);
+          const staggeredPosition = a3;
           const parsedTargetsArray = parseTargets(/** @type {TargetsParam} */(a1));
           // Store initial duration before adding new children that will change the duration
           const tlDuration = this.duration;
@@ -212,7 +208,8 @@ export class Timeline extends Timer {
           // Store the original id in order to add specific indexes to the new animations ids
           const id = childParams.id;
           let i = 0;
-          const parsedLength = parsedTargetsArray.length;
+          /** @type {Number} */
+          const parsedLength = (parsedTargetsArray.length);
           parsedTargetsArray.forEach((/** @type {Target} */target) => {
             // Create a new parameter object for each staggered children
             const staggeredChildParams = { ...childParams };
@@ -223,7 +220,7 @@ export class Timeline extends Timer {
             addTlChild(
               staggeredChildParams,
               this,
-              staggeredPosition(target, i, parsedLength, this),
+              parseTimelinePosition(this, staggeredPosition(target, i, parsedLength, this)),
               target,
               i,
               parsedLength
@@ -243,7 +240,7 @@ export class Timeline extends Timer {
         addTlChild(
           /** @type TimerParams */(a1),
           this,
-          parseTimelinePosition(this,/** @type TimePosition */(a2)),
+          parseTimelinePosition(this,a2),
         );
       }
       return this.init(1); // 1 = internalRender
@@ -253,21 +250,21 @@ export class Timeline extends Timer {
   /**
    * @overload
    * @param {Tickable} [synced]
-   * @param {TimePosition} [position]
+   * @param {TimelinePosition} [position]
    * @return {this}
    *
    * @overload
    * @param {globalThis.Animation} [synced]
-   * @param {TimePosition} [position]
+   * @param {TimelinePosition} [position]
    * @return {this}
    *
    * @overload
    * @param {WAAPIAnimation} [synced]
-   * @param {TimePosition} [position]
+   * @param {TimelinePosition} [position]
    * @return {this}
    *
    * @param {Tickable|WAAPIAnimation|globalThis.Animation} [synced]
-   * @param {TimePosition} [position]
+   * @param {TimelinePosition} [position]
    */
   sync(synced, position) {
     if (isUnd(synced) || synced && isUnd(synced.pause)) return this;
@@ -279,7 +276,7 @@ export class Timeline extends Timer {
   /**
    * @param  {TargetsParam} targets
    * @param  {AnimationParams} parameters
-   * @param  {TimePosition} [position]
+   * @param  {TimelinePosition} [position]
    * @return {this}
    */
   set(targets, parameters, position) {
@@ -291,7 +288,7 @@ export class Timeline extends Timer {
 
   /**
    * @param {Callback<Timer>} callback
-   * @param {TimePosition} [position]
+   * @param {TimelinePosition} [position]
    * @return {this}
    */
   call(callback, position) {
@@ -301,13 +298,13 @@ export class Timeline extends Timer {
 
   /**
    * @param {String} labelName
-   * @param {TimePosition} [position]
+   * @param {TimelinePosition} [position]
    * @return {this}
    *
    */
   label(labelName, position) {
     if (isUnd(labelName) || labelName && !isStr(labelName)) return this;
-    this.labels[labelName] = parseTimelinePosition(this,/** @type TimePosition */(position));
+    this.labels[labelName] = parseTimelinePosition(this, position);
     return this;
   }
 

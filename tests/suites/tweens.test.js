@@ -10,6 +10,7 @@ import {
   animate,
   createTimer,
   createTimeline,
+  engine,
 } from '../../src/anime.js';
 
 import {
@@ -162,7 +163,7 @@ suite('Tweens', () => {
     });
   });
 
-  test('Re-add tween siblings on play after animation complete', resolve => {
+  test('Re-add tween siblings on restart after animation completes', resolve => {
     const animation1 = animate('#target-id', { translateX: 200, duration: 50 });
     const animation2 = animate('#target-id', { translateX: 200, duration: 50, delay: 10 });
     createTimer({
@@ -184,6 +185,36 @@ suite('Tweens', () => {
             expect(animation2._cancelled).to.equal(0);
             expect(animation2._head._nextRep).to.not.be.null;
             resolve();
+          }
+        });
+      }
+    });
+  });
+
+  test('Re-add tween siblings on restart after animation completes in seconds', resolve => {
+    engine.timeUnit = 's';
+    const animation1 = animate('#target-id', { translateX: 200, duration: .05 });
+    const animation2 = animate('#target-id', { translateX: 200, duration: .05, delay: .01 });
+    createTimer({
+      duration: .1,
+      onComplete: () => {
+        expect(animation1._cancelled).to.equal(1);
+        expect(animation2._cancelled).to.equal(1);
+        animation1.restart();
+        animation2.restart();
+        createTimer({
+          duration: .02,
+          onComplete: () => {
+            animation1.pause();
+            animation2.pause();
+            expect(animation1.paused).to.equal(true);
+            expect(animation1._cancelled).to.equal(0);
+            expect(animation1._head._prevRep).to.not.be.null;
+            expect(animation2.paused).to.equal(true);
+            expect(animation2._cancelled).to.equal(0);
+            expect(animation2._head._nextRep).to.not.be.null;
+            resolve();
+            engine.timeUnit = 'ms';
           }
         });
       }

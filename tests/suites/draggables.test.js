@@ -10,6 +10,13 @@ import {
   utils,
 } from '../../src/anime.js';
 
+const createMouseEvent = ($target, name, x, y) => $target.dispatchEvent(new MouseEvent('mouse' + name, {
+  clientX: x,
+  clientY: y,
+  bubbles: true,
+  cancelable: true
+}));
+
 suite('Draggables', () => {
   test('Triggering a reset in the onSettle callback should correctly set the values', resolve => {
     const draggable = createDraggable('#target-id', {
@@ -44,6 +51,17 @@ suite('Draggables', () => {
     }, 200)
   });
 
+  test('Removing the parent should not throw an error', resolve => {
+    const draggable = createDraggable('#target-id', { container: '#css-tests' });
+    setTimeout(() => {
+      document.querySelector('#css-tests').remove();
+    }, 0);
+    setTimeout(() => {
+      resolve();
+      draggable.revert();
+    }, 200);
+  });
+
   test('onUpdate should only trigger when the dragged element actually moves', resolve => {
     const [ $target ] = utils.$('#target-id');
     const [ $container ] = utils.$('#css-tests');
@@ -54,11 +72,8 @@ suite('Draggables', () => {
 
     const draggable = createDraggable($target, {
       container: $container,
-      onUpdate: self => {
+      onUpdate: () => {
         updates++;
-        if (self.deltaX || self.deltaY) {
-          console.log('only called whe the draggable position updates');
-        }
       },
       onGrab: () => grabbed++,
       onDrag: () => dragged++,
@@ -66,13 +81,6 @@ suite('Draggables', () => {
     });
 
     expect(updates).to.equal(0);
-
-    const createMouseEvent = ($target, name, x, y) => $target.dispatchEvent(new MouseEvent('mouse' + name, {
-      clientX: x,
-      clientY: y,
-      bubbles: true,
-      cancelable: true
-    }));
 
     createMouseEvent($target, 'down', 0, 0);
 
@@ -84,11 +92,48 @@ suite('Draggables', () => {
         createMouseEvent(document, 'up', 10, 10);
         expect(grabbed).to.equal(1);
         expect(released).to.equal(1);
-        expect(updates).to.equal(1);
+        expect(updates).to.equal(2);
         resolve();
         draggable.revert();
       },
-      duration: 50,
+      duration: 33,
     });
   });
+
+  test('onUpdate should properly trigger when the dragged element only moves horizontally', resolve => {
+    const [ $target ] = utils.$('#target-id');
+    const [ $container ] = utils.$('#css-tests');
+    let updates = 0;
+    let x = 0;
+    let y = 0;
+
+    const draggable = createDraggable($target, {
+      container: $container,
+      releaseDamping: 2000,
+      releaseStiffness: 2000,
+      onUpdate: () => {
+        updates++;
+      },
+      onSettle: () => {
+        expect(updates).to.be.above(1);
+        resolve();
+        draggable.revert();
+      }
+    });
+
+    expect(updates).to.equal(0);
+
+    createMouseEvent($target, 'down', x, y);
+
+    createTimer({
+      onBegin: () => createMouseEvent(document, 'move', ++x, 0),
+      onUpdate: () => createMouseEvent(document, 'move', ++x, 0),
+      onComplete: () => {
+        createMouseEvent(document, 'move', ++x, 0);
+        createMouseEvent(document, 'up', ++x, 0);
+      },
+      duration: 33,
+    });
+  });
+
 });

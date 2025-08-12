@@ -216,11 +216,14 @@ declare function createMotionPath(path: TargetsParam): {
 };
 declare function createDrawable(selector: TargetsParam, start?: number, end?: number): Array<DrawableSVGGeometry>;
 declare function stagger(val: number | string | [
-    number | string,
-    number | string
-], params?: StaggerParams): StaggerFunction;
+    number,
+    number
+] | [
+    string,
+    string
+], params?: StaggerParams): StaggerFunction<number | string>;
 declare namespace eases {
-    export let linear: (...args?: (string | number)[]) => EasingFunction;
+    export let linear: (...args: (string | number)[]) => EasingFunction;
     export let irregular: (length?: number, randomness?: number) => EasingFunction;
     export let steps: (steps?: number, fromStart?: boolean) => EasingFunction;
     export let cubicBezier: (mX1?: number, mY1?: number, mX2?: number, mY2?: number) => EasingFunction;
@@ -304,18 +307,19 @@ declare class Animatable {
     constructor(targets: TargetsParam, parameters: AnimatableParams);
     targets: (HTMLElement | SVGElement | JSTarget)[];
     animations: {};
+    callbacks: JSAnimation | null;
     revert(): this;
 }
 declare function createAnimatable(targets: TargetsParam, parameters: AnimatableParams): AnimatableObject;
-type Revertible = Animatable | Tickable | Draggable | ScrollObserver | TextSplitter | Scope;
-type StaggerFunction = (target?: Target, index?: number, length?: number, tl?: Timeline) => number | string;
+type Revertible = Animatable | Tickable | WAAPIAnimation | Draggable | ScrollObserver | TextSplitter | Scope;
+type StaggerFunction<T> = (target?: Target, index?: number, length?: number, tl?: Timeline) => T;
 type StaggerParams = {
     start?: number | string;
     from?: number | 'first' | 'center' | 'last' | 'random';
     reversed?: boolean;
     grid?: Array<number>;
     axis?: ('x' | 'y');
-    use?: string | StaggerFunction;
+    use?: string | ((target: Target, i: number, length: number) => number);
     total?: number;
     ease?: EasingParam;
     modifier?: TweenModifier;
@@ -334,6 +338,24 @@ type JSTargetsParam = Array<JSTarget> | JSTarget;
 type JSTargetsArray = Array<JSTarget>;
 type TargetsParam = Array<TargetSelector> | TargetSelector;
 type TargetsArray = Array<Target>;
+type SpringParams = {
+    /**
+     * - Mass, default 1
+     */
+    mass?: number;
+    /**
+     * - Stiffness, default 100
+     */
+    stiffness?: number;
+    /**
+     * - Damping, default 10
+     */
+    damping?: number;
+    /**
+     * - Initial velocity, default 0
+     */
+    velocity?: number;
+};
 type Callback<T> = (self: T, e?: PointerEvent) => any;
 type TickableCallbacks<T extends unknown> = {
     onBegin?: Callback<T>;
@@ -469,11 +491,61 @@ type AnimationOptions = {
     playbackEase?: EasingParam;
 };
 type AnimationParams = Record<string, TweenOptions | Callback<JSAnimation> | TweenModifier | boolean | PercentageKeyframes | (Record<string, boolean | TweenModifier | TweenOptions> & TweenParamsOptions)[] | ScrollObserver> & TimerOptions & AnimationOptions & TweenParamsOptions & TickableCallbacks<JSAnimation> & RenderableCallbacks<JSAnimation>;
+/**
+ * Accepts:<br>
+ * - `Number` - Absolute position in milliseconds (e.g., `500` places element at exactly 500ms)<br>
+ * - `'+=Number'` - Addition: Position element X ms after the last element (e.g., `'+=100'`)<br>
+ * - `'-=Number'` - Subtraction: Position element X ms before the last element's end (e.g., `'-=100'`)<br>
+ * - `'*=Number'` - Multiplier: Position element at a fraction of the total duration (e.g., `'*=.5'` for halfway)<br>
+ * - `'<'` - Previous end: Position element at the end position of the previous element<br>
+ * - `'<<'` - Previous start: Position element at the start position of the previous element<br>
+ * - `'<<+=Number'` - Combined: Position element relative to previous element's start (e.g., `'<<+=250'`)<br>
+ * - `'label'` - Label: Position element at a named label position (e.g., `'My Label'`)
+ */
+type TimelinePosition = number | `+=${number}` | `-=${number}` | `*=${number}` | '<' | '<<' | `<<+=${number}` | `<<-=${number}` | string;
+/**
+ * Accepts:<br>
+ * - `Number` - Absolute position in milliseconds (e.g., `500` places animation at exactly 500ms)<br>
+ * - `'+=Number'` - Addition: Position animation X ms after the last animation (e.g., `'+=100'`)<br>
+ * - `'-=Number'` - Subtraction: Position animation X ms before the last animation's end (e.g., `'-=100'`)<br>
+ * - `'*=Number'` - Multiplier: Position animation at a fraction of the total duration (e.g., `'*=.5'` for halfway)<br>
+ * - `'<'` - Previous end: Position animation at the end position of the previous animation<br>
+ * - `'<<'` - Previous start: Position animation at the start position of the previous animation<br>
+ * - `'<<+=Number'` - Combined: Position animation relative to previous animation's start (e.g., `'<<+=250'`)<br>
+ * - `'label'` - Label: Position animation at a named label position (e.g., `'My Label'`)<br>
+ * - `stagger(String|Nummber)` - Stagger multi-elements animation positions (e.g., 10, 20, 30...)
+ */
+type TimelineAnimationPosition = TimelinePosition | StaggerFunction<number | string>;
 type TimelineOptions = {
     defaults?: DefaultsParams;
     playbackEase?: EasingParam;
 };
 type TimelineParams = TimerOptions & TimelineOptions & TickableCallbacks<Timeline> & RenderableCallbacks<Timeline>;
+type WAAPITweenValue = string | number | Array<string> | Array<number>;
+type WAAPIFunctionValue = (target: DOMTarget, index: number, length: number) => WAAPITweenValue;
+type WAAPIKeyframeValue = WAAPITweenValue | WAAPIFunctionValue | Array<string | number | WAAPIFunctionValue>;
+type WAAPICallback = (animation: WAAPIAnimation) => void;
+type WAAPITweenOptions = {
+    to?: WAAPIKeyframeValue;
+    from?: WAAPIKeyframeValue;
+    duration?: number | WAAPIFunctionValue;
+    delay?: number | WAAPIFunctionValue;
+    ease?: EasingParam;
+    composition?: CompositeOperation;
+};
+type WAAPIAnimationOptions = {
+    loop?: number | boolean;
+    Reversed?: boolean;
+    Alternate?: boolean;
+    autoplay?: boolean | ScrollObserver;
+    playbackRate?: number;
+    duration?: number | WAAPIFunctionValue;
+    delay?: number | WAAPIFunctionValue;
+    ease?: EasingParam;
+    composition?: CompositeOperation;
+    onComplete?: WAAPICallback;
+};
+type WAAPIAnimationParams = Record<string, WAAPIKeyframeValue | WAAPIAnimationOptions | boolean | ScrollObserver | WAAPICallback | EasingParam | WAAPITweenOptions> & WAAPIAnimationOptions;
 type AnimatablePropertySetter = (to: number | Array<number>, duration?: number, ease?: EasingParam) => AnimatableObject;
 type AnimatablePropertyGetter = () => number | Array<number>;
 type AnimatableProperty = AnimatablePropertySetter & AnimatablePropertyGetter;
@@ -501,6 +573,32 @@ type ScopedCallback<T> = (scope: Scope) => T;
 type ScopeCleanupCallback = (scope?: Scope) => any;
 type ScopeConstructorCallback = (scope?: Scope) => ScopeCleanupCallback | void;
 type ScopeMethod = (...args: any[]) => ScopeCleanupCallback | void;
+type ScrollThresholdValue = string | number;
+type ScrollThresholdParam = {
+    target?: ScrollThresholdValue;
+    container?: ScrollThresholdValue;
+};
+type ScrollObserverAxisCallback = (self: ScrollObserver) => 'x' | 'y';
+type ScrollThresholdCallback = (self: ScrollObserver) => ScrollThresholdValue | ScrollThresholdParam;
+type ScrollObserverParams = {
+    id?: number | string;
+    sync?: boolean | number | string | EasingParam;
+    container?: TargetsParam;
+    target?: TargetsParam;
+    axis?: "x" | "y" | ScrollObserverAxisCallback | ((observer: ScrollObserver) => 'x' | 'y' | ScrollObserverAxisCallback);
+    enter?: ScrollThresholdValue | ScrollThresholdParam | ScrollThresholdCallback | ((observer: ScrollObserver) => ScrollThresholdValue | ScrollThresholdParam | ScrollThresholdCallback);
+    leave?: ScrollThresholdValue | ScrollThresholdParam | ScrollThresholdCallback | ((observer: ScrollObserver) => ScrollThresholdValue | ScrollThresholdParam | ScrollThresholdCallback);
+    repeat?: boolean | ((observer: ScrollObserver) => boolean);
+    debug?: boolean;
+    onEnter?: Callback<ScrollObserver>;
+    onLeave?: Callback<ScrollObserver>;
+    onEnterForward?: Callback<ScrollObserver>;
+    onLeaveForward?: Callback<ScrollObserver>;
+    onEnterBackward?: Callback<ScrollObserver>;
+    onLeaveBackward?: Callback<ScrollObserver>;
+    onUpdate?: Callback<ScrollObserver>;
+    onSyncComplete?: Callback<ScrollObserver>;
+};
 type DraggableAxisParam = {
     mapTo?: string;
     modifier?: TweenModifier;
@@ -566,14 +664,14 @@ declare class Timeline extends Timer {
     defaults: DefaultsParams;
     onRender: Callback<this>;
     _ease: EasingFunction;
-    add(a1: TargetsParam, a2: AnimationParams, a3?: TimePosition): this;
-    add(a1: TimerParams, a2?: TimePosition): this;
-    sync(synced?: Tickable, position?: TimePosition): this;
-    sync(synced?: globalThis.Animation, position?: TimePosition): this;
-    sync(synced?: WAAPIAnimation, position?: TimePosition): this;
-    set(targets: TargetsParam, parameters: AnimationParams, position?: TimePosition): this;
-    call(callback: Callback<Timer>, position?: TimePosition): this;
-    label(labelName: string, position?: TimePosition): this;
+    add(a1: TargetsParam, a2: AnimationParams, a3?: TimelinePosition | StaggerFunction<number | string>): this;
+    add(a1: TimerParams, a2?: TimelinePosition): this;
+    sync(synced?: Tickable, position?: TimelinePosition): this;
+    sync(synced?: globalThis.Animation, position?: TimelinePosition): this;
+    sync(synced?: WAAPIAnimation, position?: TimelinePosition): this;
+    set(targets: TargetsParam, parameters: AnimationParams, position?: TimelinePosition): this;
+    call(callback: Callback<Timer>, position?: TimelinePosition): this;
+    label(labelName: string, position?: TimelinePosition): this;
     remove(targets: TargetsParam, propertyName?: string): this;
     stretch(newDuration: number): this;
     refresh(): this;
@@ -581,7 +679,6 @@ declare class Timeline extends Timer {
     then(callback?: Callback<this>): Promise<any>;
 }
 declare function createTimeline(parameters?: TimelineParams): Timeline;
-type TimePosition = number | string | Function;
 declare class Draggable {
     constructor(target: TargetsParam, parameters?: DraggableParams);
     containerArray: number[];
@@ -707,11 +804,10 @@ declare class Draggable {
         x: number;
         y: number;
     };
-    overshootXTicker: Timer;
-    overshootYTicker: Timer;
-    updateTicker: Timer;
+    overshootTicker: Timer;
     updated: boolean;
     manual: boolean;
+    updateTicker: Timer;
     contained: boolean;
     grabbed: boolean;
     dragged: boolean;
@@ -882,32 +978,6 @@ declare class ScrollObserver {
     revert(): this;
 }
 declare function onScroll(parameters?: ScrollObserverParams): ScrollObserver;
-type ScrollThresholdValue = string | number;
-type ScrollThresholdParam = {
-    target?: ScrollThresholdValue;
-    container?: ScrollThresholdValue;
-};
-type ScrollObserverAxisCallback = (self: ScrollObserver) => "x" | "y";
-type ScrollThresholdCallback = (self: ScrollObserver) => ScrollThresholdValue | ScrollThresholdParam;
-type ScrollObserverParams = {
-    id?: number | string;
-    sync?: boolean | number | string | EasingParam;
-    container?: TargetsParam;
-    target?: TargetsParam;
-    axis?: "x" | "y" | ScrollObserverAxisCallback | ((observer: ScrollObserver) => "x" | "y" | ScrollObserverAxisCallback);
-    enter?: ScrollThresholdParam | ScrollThresholdValue | ScrollThresholdCallback | ((observer: ScrollObserver) => ScrollThresholdValue | ScrollThresholdParam | ScrollThresholdCallback);
-    leave?: ScrollThresholdParam | ScrollThresholdValue | ScrollThresholdCallback | ((observer: ScrollObserver) => ScrollThresholdValue | ScrollThresholdParam | ScrollThresholdCallback);
-    repeat?: boolean | ((observer: ScrollObserver) => boolean);
-    debug?: boolean;
-    onEnter?: Callback<ScrollObserver>;
-    onLeave?: Callback<ScrollObserver>;
-    onEnterForward?: Callback<ScrollObserver>;
-    onLeaveForward?: Callback<ScrollObserver>;
-    onEnterBackward?: Callback<ScrollObserver>;
-    onLeaveBackward?: Callback<ScrollObserver>;
-    onUpdate?: Callback<ScrollObserver>;
-    onSyncComplete?: Callback<ScrollObserver>;
-};
 declare class ScrollContainer {
     constructor($el: HTMLElement);
     element: HTMLElement;
@@ -1021,31 +1091,6 @@ declare namespace waapi {
     export function animate(targets: DOMTargetsParam, params: WAAPIAnimationParams): WAAPIAnimation;
     export { easingToLinear as convertEase };
 }
-type WAAPITweenValue = string | number | Array<string> | Array<number>;
-type WAAPIFunctionvalue = (target: DOMTarget, index: number, length: number) => WAAPITweenValue;
-type WAAPIKeyframeValue = WAAPITweenValue | WAAPIFunctionvalue | Array<string | number | WAAPIFunctionvalue>;
-type WAAPICallback = (animation: WAAPIAnimation) => void;
-type WAAPITweenOptions = {
-    to?: WAAPIKeyframeValue;
-    from?: WAAPIKeyframeValue;
-    duration?: number | WAAPIFunctionvalue;
-    delay?: number | WAAPIFunctionvalue;
-    ease?: EasingParam;
-    composition?: CompositeOperation;
-};
-type WAAPIAnimationOptions = {
-    loop?: number | boolean;
-    Reversed?: boolean;
-    Alternate?: boolean;
-    autoplay?: boolean | ScrollObserver;
-    playbackRate?: number;
-    duration?: number | WAAPIFunctionvalue;
-    delay?: number | WAAPIFunctionvalue;
-    ease?: EasingParam;
-    composition?: CompositeOperation;
-    onComplete?: WAAPICallback;
-};
-type WAAPIAnimationParams = Record<string, WAAPIKeyframeValue | WAAPIAnimationOptions | boolean | ScrollObserver | WAAPICallback | EasingParam | WAAPITweenOptions> & WAAPIAnimationOptions;
 declare function easingToLinear(fn: EasingFunction, samples?: number): string;
 declare class TextSplitter {
     constructor(target: HTMLElement | NodeList | string | Array<HTMLElement>, parameters?: TextSplitterParams);
@@ -1078,4 +1123,4 @@ declare function split(target: HTMLElement | NodeList | string | Array<HTMLEleme
 declare namespace text {
     export { split };
 }
-export { engine, utils, svg, stagger, eases, DefaultsParams, Renderable, Tickable, CallbackArgument, Revertible, StaggerFunction, StaggerParams, EasingFunction, EaseStringParamNames, EasingParam, DOMTarget, JSTarget, Target, TargetSelector, DOMTargetSelector, DOMTargetsParam, DOMTargetsArray, JSTargetsParam, JSTargetsArray, TargetsParam, TargetsArray, Callback, TickableCallbacks, RenderableCallbacks, TimerOptions, TimerParams, FunctionValue, TweenModifier, ColorArray, Tween, TweenDecomposedValue, TweenPropertySiblings, TweenLookups, TweenReplaceLookups, TweenAdditiveLookups, TweenParamValue, TweenPropValue, TweenComposition, TweenParamsOptions, TweenValues, TweenKeyValue, ArraySyntaxValue, TweenOptions, TweenObjectValue, PercentageKeyframeOptions, PercentageKeyframeParams, PercentageKeyframes, DurationKeyframes, AnimationOptions, AnimationParams, TimelineOptions, TimelineParams, AnimatablePropertySetter, AnimatablePropertyGetter, AnimatableProperty, AnimatableObject, AnimatablePropertyParamsOptions, AnimatableParams, ReactRef, AngularRef, ScopeParams, ScopedCallback, ScopeCleanupCallback, ScopeConstructorCallback, ScopeMethod, DraggableAxisParam, DraggableCursorParams, DraggableParams, splitTemplateParams, SplitValue, SplitFunctionValue, TextSplitterParams, DrawableSVGGeometry, createTimer, Timer, animate, JSAnimation, createTimeline, Timeline, createAnimatable, Animatable, createDraggable, Draggable, createScope, Scope, onScroll, ScrollObserver, scrollContainers, createSpring, Spring, waapi, WAAPIAnimation, text, TextSplitter };
+export { engine, utils, svg, stagger, eases, DefaultsParams, Renderable, Tickable, CallbackArgument, Revertible, StaggerFunction, StaggerParams, EasingFunction, EaseStringParamNames, EasingParam, DOMTarget, JSTarget, Target, TargetSelector, DOMTargetSelector, DOMTargetsParam, DOMTargetsArray, JSTargetsParam, JSTargetsArray, TargetsParam, TargetsArray, SpringParams, Callback, TickableCallbacks, RenderableCallbacks, TimerOptions, TimerParams, FunctionValue, TweenModifier, ColorArray, Tween, TweenDecomposedValue, TweenPropertySiblings, TweenLookups, TweenReplaceLookups, TweenAdditiveLookups, TweenParamValue, TweenPropValue, TweenComposition, TweenParamsOptions, TweenValues, TweenKeyValue, ArraySyntaxValue, TweenOptions, TweenObjectValue, PercentageKeyframeOptions, PercentageKeyframeParams, PercentageKeyframes, DurationKeyframes, AnimationOptions, AnimationParams, TimelinePosition, TimelineAnimationPosition, TimelineOptions, TimelineParams, WAAPITweenValue, WAAPIFunctionValue, WAAPIKeyframeValue, WAAPICallback, WAAPITweenOptions, WAAPIAnimationOptions, WAAPIAnimationParams, AnimatablePropertySetter, AnimatablePropertyGetter, AnimatableProperty, AnimatableObject, AnimatablePropertyParamsOptions, AnimatableParams, ReactRef, AngularRef, ScopeParams, ScopedCallback, ScopeCleanupCallback, ScopeConstructorCallback, ScopeMethod, ScrollThresholdValue, ScrollThresholdParam, ScrollObserverAxisCallback, ScrollThresholdCallback, ScrollObserverParams, DraggableAxisParam, DraggableCursorParams, DraggableParams, splitTemplateParams, SplitValue, SplitFunctionValue, TextSplitterParams, DrawableSVGGeometry, createTimer, Timer, animate, JSAnimation, createTimeline, Timeline, createAnimatable, Animatable, createDraggable, Draggable, createScope, Scope, onScroll, ScrollObserver, scrollContainers, createSpring, Spring, waapi, WAAPIAnimation, text, TextSplitter };
