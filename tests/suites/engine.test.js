@@ -8,8 +8,40 @@ import {
   utils,
 } from '../../src/anime.js';
 
+const defaultEnginePauseState = engine.paused;
+const defaultEngineReqId = engine.reqId;
+
 suite('Engine', () => {
+
+  test('Initial offset position should be properly calculated on cold start', resolve => {
+
+    setTimeout(() => {
+      const animation1 = animate('#target-id', {
+        x: 100,
+        duration: 20,
+        onComplete: () => {
+          const animation2 = animate('#target-id', {
+            x: 100,
+            duration: 20,
+          });
+          expect(animation1._offset).to.be.above(50); // Above the setTimeout value
+          expect(animation1._offset).to.be.below(animation2._offset); // Below animation2._offset
+          expect(animation2._offset).to.be.above(animation1._offset + 15);
+          resolve();
+        }
+      });
+    }, 50);
+
+  });
+
   test('Set useDefaultMainLoop to false should prevent animations from running', resolve => {
+
+    // Needed to kill the engine
+    engine.pause();
+
+    // Needed to reset engine to its original state
+    engine.paused = defaultEnginePauseState;
+    engine.reqId = defaultEngineReqId;
 
     engine.useDefaultMainLoop = false;
 

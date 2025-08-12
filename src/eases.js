@@ -56,10 +56,10 @@ const binarySubdivide = (aX, mX1, mX2) => {
 }
 
 /**
- * @param  {Number} [mX1]
- * @param  {Number} [mY1]
- * @param  {Number} [mX2]
- * @param  {Number} [mY2]
+ * @param  {Number} [mX1] The x coordinate of the first point
+ * @param  {Number} [mY1] The y coordinate of the first point
+ * @param  {Number} [mX2] The x coordinate of the second point
+ * @param  {Number} [mY2] The y coordinate of the second point
  * @return {EasingFunction}
  */
 
@@ -82,7 +82,7 @@ export const steps = (steps = 10, fromStart) => {
 /**
  * Without parameters, the linear function creates a non-eased transition.
  * Parameters, if used, creates a piecewise linear easing by interpolating linearly between the specified points.
- * @param  {...String|Number} [args] - Points
+ * @param  {...(String|Number)} args - Points
  * @return {EasingFunction}
  */
 const linear = (...args) => {

@@ -28,6 +28,8 @@ import {
  * Webkit Copyright © 2016 Apple Inc
  */
 
+const maxSpringParamValue = K * 10;
+
 /**
  * @typedef {Object} SpringParams
  * @property {Number} [mass=1] - Mass, default 1
@@ -35,7 +37,6 @@ import {
  * @property {Number} [damping=10] - Damping, default 10
  * @property {Number} [velocity=0] - Initial velocity, default 0
  */
-
 export class Spring {
   /**
    * @param {SpringParams} [parameters]
@@ -47,10 +48,10 @@ export class Spring {
     this.maxDuration = 60000; // The maximum allowed spring duration in ms (default 1 min)
     this.maxRestSteps = this.restDuration / this.timeStep / K; // How many steps allowed after reaching restThreshold before stopping the duration calculation
     this.maxIterations = this.maxDuration / this.timeStep / K; // Calculate the maximum iterations allowed based on maxDuration
-    this.m = clamp(setValue(parameters.mass, 1), 0, K);
-    this.s = clamp(setValue(parameters.stiffness, 100), 1, K);
-    this.d = clamp(setValue(parameters.damping, 10), .1, K);
-    this.v = clamp(setValue(parameters.velocity, 0), -K, K);
+    this.m = clamp(setValue(parameters.mass, 1), 0, maxSpringParamValue);
+    this.s = clamp(setValue(parameters.stiffness, 100), 1, maxSpringParamValue);
+    this.d = clamp(setValue(parameters.damping, 10), .1, maxSpringParamValue);
+    this.v = clamp(setValue(parameters.velocity, 0), -maxSpringParamValue, maxSpringParamValue);
     this.w0 = 0;
     this.zeta = 0;
     this.wd = 0;
@@ -101,7 +102,7 @@ export class Spring {
   }
 
   set mass(v) {
-    this.m = clamp(setValue(v, 1), 0, K);
+    this.m = clamp(setValue(v, 1), 0, maxSpringParamValue);
     this.compute();
   }
 
@@ -110,7 +111,7 @@ export class Spring {
   }
 
   set stiffness(v) {
-    this.s = clamp(setValue(v, 100), 1, K);
+    this.s = clamp(setValue(v, 100), 1, maxSpringParamValue);
     this.compute();
   }
 
@@ -119,7 +120,7 @@ export class Spring {
   }
 
   set damping(v) {
-    this.d = clamp(setValue(v, 10), .1, K);
+    this.d = clamp(setValue(v, 10), .1, maxSpringParamValue);
     this.compute();
   }
 
@@ -128,7 +129,7 @@ export class Spring {
   }
 
   set velocity(v) {
-    this.v = clamp(setValue(v, 0), -K, K);
+    this.v = clamp(setValue(v, 0), -maxSpringParamValue, maxSpringParamValue);
     this.compute();
   }
 }

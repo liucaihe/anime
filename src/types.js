@@ -14,7 +14,7 @@
 
 /* Exports */
 
-// Global types ///////////////////////////////////////////////////////////////
+// Global types ////////////////////////////////////////////////////////////////
 
 /**
  * @typedef {Object} DefaultsParams
@@ -45,17 +45,18 @@
 /** @typedef {JSAnimation|Timeline} Renderable */
 /** @typedef {Timer|Renderable} Tickable */
 /** @typedef {Timer&JSAnimation&Timeline} CallbackArgument */
-/** @typedef {import('./animatable.js').Animatable|Tickable|Draggable|ScrollObserver|TextSplitter|Scope} Revertible */
+/** @typedef {import('./animatable.js').Animatable|Tickable|WAAPIAnimation|Draggable|ScrollObserver|TextSplitter|Scope} Revertible */
 
-// Stagger types //////////////////////////////////////////////////////////////
+// Stagger types ///////////////////////////////////////////////////////////////
 
 /**
+ * @template T
  * @callback StaggerFunction
  * @param {Target} [target]
  * @param {Number} [index]
  * @param {Number} [length]
  * @param {Timeline} [tl]
- * @return {Number|String}
+ * @return {T}
  */
 
 /**
@@ -65,13 +66,13 @@
  * @property {Boolean} [reversed]
  * @property {Array.<Number>} [grid]
  * @property {('x'|'y')} [axis]
- * @property {String|StaggerFunction} [use]
+ * @property {String|((target: Target, i: Number, length: Number) => Number)} [use]
  * @property {Number} [total]
  * @property {EasingParam} [ease]
  * @property {TweenModifier} [modifier]
  */
 
-// Eases types ////////////////////////////////////////////////////////////////
+// Eases types /////////////////////////////////////////////////////////////////
 
 /**
  * @callback EasingFunction
@@ -99,7 +100,17 @@
 /** @typedef {Array.<TargetSelector>|TargetSelector} TargetsParam */
 /** @typedef {Array.<Target>} TargetsArray */
 
- // Callback types ////////////////////////////////////////////////////////////
+// Spring types ////////////////////////////////////////////////////////////////
+
+/**
+ * @typedef {Object} SpringParams
+ * @property {Number} [mass=1] - Mass, default 1
+ * @property {Number} [stiffness=100] - Stiffness, default 100
+ * @property {Number} [damping=10] - Damping, default 10
+ * @property {Number} [velocity=0] - Initial velocity, default 0
+ */
+
+ // Callback types //////////////////////////////////////////////////////////////
 
 /**
  * @template T
@@ -126,7 +137,7 @@
  * @property {Callback<T>} [onRender]
  */
 
-// Timer types ////////////////////////////////////////////////////////////////
+// Timer types /////////////////////////////////////////////////////////////////
 
 /**
  * @typedef {Object} TimerOptions
@@ -148,7 +159,7 @@
  * @typedef {TimerOptions & TickableCallbacks<Timer>} TimerParams
  */
 
-// Tween types ////////////////////////////////////////////////////////////////
+// Tween types /////////////////////////////////////////////////////////////////
 
 /**
  * @callback FunctionValue
@@ -219,7 +230,7 @@
 /** @typedef {WeakMap.<Target, TweenLookups>} TweenReplaceLookups */
 /** @typedef {Map.<Target, TweenLookups>} TweenAdditiveLookups */
 
-// Animation types ////////////////////////////////////////////////////////////
+// JSAnimation types ///////////////////////////////////////////////////////////
 
 /**
  * @typedef {Number|String|FunctionValue} TweenParamValue
@@ -293,7 +304,36 @@
  * @typedef {Record<String, TweenOptions | Callback<JSAnimation> | TweenModifier | boolean | PercentageKeyframes | DurationKeyframes | ScrollObserver> & TimerOptions & AnimationOptions & TweenParamsOptions & TickableCallbacks<JSAnimation> & RenderableCallbacks<JSAnimation>} AnimationParams
  */
 
-// Timeline types /////////////////////////////////////////////////////////////
+// Timeline types //////////////////////////////////////////////////////////////
+
+/**
+ * Accepts:<br>
+ * - `Number` - Absolute position in milliseconds (e.g., `500` places element at exactly 500ms)<br>
+ * - `'+=Number'` - Addition: Position element X ms after the last element (e.g., `'+=100'`)<br>
+ * - `'-=Number'` - Subtraction: Position element X ms before the last element's end (e.g., `'-=100'`)<br>
+ * - `'*=Number'` - Multiplier: Position element at a fraction of the total duration (e.g., `'*=.5'` for halfway)<br>
+ * - `'<'` - Previous end: Position element at the end position of the previous element<br>
+ * - `'<<'` - Previous start: Position element at the start position of the previous element<br>
+ * - `'<<+=Number'` - Combined: Position element relative to previous element's start (e.g., `'<<+=250'`)<br>
+ * - `'label'` - Label: Position element at a named label position (e.g., `'My Label'`)
+ *
+ * @typedef {Number|`+=${Number}`|`-=${Number}`|`*=${Number}`|'<'|'<<'|`<<+=${Number}`|`<<-=${Number}`|String} TimelinePosition
+ */
+
+/**
+ * Accepts:<br>
+ * - `Number` - Absolute position in milliseconds (e.g., `500` places animation at exactly 500ms)<br>
+ * - `'+=Number'` - Addition: Position animation X ms after the last animation (e.g., `'+=100'`)<br>
+ * - `'-=Number'` - Subtraction: Position animation X ms before the last animation's end (e.g., `'-=100'`)<br>
+ * - `'*=Number'` - Multiplier: Position animation at a fraction of the total duration (e.g., `'*=.5'` for halfway)<br>
+ * - `'<'` - Previous end: Position animation at the end position of the previous animation<br>
+ * - `'<<'` - Previous start: Position animation at the start position of the previous animation<br>
+ * - `'<<+=Number'` - Combined: Position animation relative to previous animation's start (e.g., `'<<+=250'`)<br>
+ * - `'label'` - Label: Position animation at a named label position (e.g., `'My Label'`)<br>
+ * - `stagger(String|Nummber)` - Stagger multi-elements animation positions (e.g., 10, 20, 30...)
+ *
+ * @typedef {TimelinePosition | StaggerFunction<Number|String>} TimelineAnimationPosition
+ */
 
 /**
  * @typedef {Object} TimelineOptions
@@ -305,7 +345,57 @@
  * @typedef {TimerOptions & TimelineOptions & TickableCallbacks<Timeline> & RenderableCallbacks<Timeline>} TimelineParams
  */
 
-// Animatable types ///////////////////////////////////////////////////////////
+// WAAPIAnimation types ////////////////////////////////////////////////////////
+
+/**
+ * @typedef {String|Number|Array<String>|Array<Number>} WAAPITweenValue
+ */
+
+/**
+ * @callback WAAPIFunctionValue
+ * @param {DOMTarget} target - The animated target
+ * @param {Number} index - The target index
+ * @param {Number} length - The total number of animated targets
+ * @return {WAAPITweenValue}
+ */
+
+/**
+ * @typedef {WAAPITweenValue|WAAPIFunctionValue|Array<String|Number|WAAPIFunctionValue>} WAAPIKeyframeValue
+ */
+
+/**
+ * @typedef {(animation: WAAPIAnimation) => void} WAAPICallback
+ */
+
+/**
+ * @typedef {Object} WAAPITweenOptions
+ * @property {WAAPIKeyframeValue} [to]
+ * @property {WAAPIKeyframeValue} [from]
+ * @property {Number|WAAPIFunctionValue} [duration]
+ * @property {Number|WAAPIFunctionValue} [delay]
+ * @property {EasingParam} [ease]
+ * @property {CompositeOperation} [composition]
+ */
+
+/**
+ * @typedef {Object} WAAPIAnimationOptions
+ * @property {Number|Boolean} [loop]
+ * @property {Boolean} [Reversed]
+ * @property {Boolean} [Alternate]
+ * @property {Boolean|ScrollObserver} [autoplay]
+ * @property {Number} [playbackRate]
+ * @property {Number|WAAPIFunctionValue} [duration]
+ * @property {Number|WAAPIFunctionValue} [delay]
+ * @property {EasingParam} [ease]
+ * @property {CompositeOperation} [composition]
+ * @property {WAAPICallback} [onComplete]
+ */
+
+/**
+ * @typedef {Record<String, WAAPIKeyframeValue | WAAPIAnimationOptions | Boolean | ScrollObserver | WAAPICallback | EasingParam | WAAPITweenOptions> & WAAPIAnimationOptions} WAAPIAnimationParams
+ */
+
+// Animatable types ////////////////////////////////////////////////////////////
 
 /**
  * @callback AnimatablePropertySetter
@@ -341,7 +431,7 @@
  * @typedef {Record<String, TweenParamValue | EasingParam | TweenModifier | TweenComposition | AnimatablePropertyParamsOptions> & AnimatablePropertyParamsOptions} AnimatableParams
  */
 
-// Scope types ////////////////////////////////////////////////////////////////
+// Scope types /////////////////////////////////////////////////////////////////
 
 /**
  * @typedef {Object} ReactRef
@@ -384,7 +474,52 @@
  * @return {ScopeCleanupCallback|void}
  */
 
-// Draggable types ////////////////////////////////////////////////////////////
+// Scroll types ////////////////////////////////////////////////////////////////
+
+/**
+ * @typedef {String|Number} ScrollThresholdValue
+ */
+
+/**
+ * @typedef {Object} ScrollThresholdParam
+ * @property {ScrollThresholdValue} [target]
+ * @property {ScrollThresholdValue} [container]
+ */
+
+/**
+ * @callback ScrollObserverAxisCallback
+ * @param {ScrollObserver} self
+ * @return {'x'|'y'}
+ */
+
+/**
+ * @callback ScrollThresholdCallback
+ * @param {ScrollObserver} self
+ * @return {ScrollThresholdValue|ScrollThresholdParam}
+ */
+
+/**
+ * @typedef {Object} ScrollObserverParams
+ * @property {Number|String} [id]
+ * @property {Boolean|Number|String|EasingParam} [sync]
+ * @property {TargetsParam} [container]
+ * @property {TargetsParam} [target]
+ * @property {'x'|'y'|ScrollObserverAxisCallback|((observer: ScrollObserver) => 'x'|'y'|ScrollObserverAxisCallback)} [axis]
+ * @property {ScrollThresholdValue|ScrollThresholdParam|ScrollThresholdCallback|((observer: ScrollObserver) => ScrollThresholdValue|ScrollThresholdParam|ScrollThresholdCallback)} [enter]
+ * @property {ScrollThresholdValue|ScrollThresholdParam|ScrollThresholdCallback|((observer: ScrollObserver) => ScrollThresholdValue|ScrollThresholdParam|ScrollThresholdCallback)} [leave]
+ * @property {Boolean|((observer: ScrollObserver) => Boolean)} [repeat]
+ * @property {Boolean} [debug]
+ * @property {Callback<ScrollObserver>} [onEnter]
+ * @property {Callback<ScrollObserver>} [onLeave]
+ * @property {Callback<ScrollObserver>} [onEnterForward]
+ * @property {Callback<ScrollObserver>} [onLeaveForward]
+ * @property {Callback<ScrollObserver>} [onEnterBackward]
+ * @property {Callback<ScrollObserver>} [onLeaveBackward]
+ * @property {Callback<ScrollObserver>} [onUpdate]
+ * @property {Callback<ScrollObserver>} [onSyncComplete]
+ */
+
+// Draggable types /////////////////////////////////////////////////////////////
 
 /**
  * @typedef {Object} DraggableAxisParam
@@ -433,7 +568,7 @@
  * @property {Callback<Draggable>} [onAfterResize]
  */
 
-// Text types /////////////////////////////////////////////////////////////////
+// Text types //////////////////////////////////////////////////////////////////
 
 /**
  * @typedef {Object} splitTemplateParams
@@ -462,7 +597,7 @@
  * @property {Boolean} [debug]
  */
 
-// SVG types //////////////////////////////////////////////////////////////////
+// SVG types ///////////////////////////////////////////////////////////////////
 
 /**
  * @typedef {SVGGeometryElement & {

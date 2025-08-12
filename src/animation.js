@@ -399,7 +399,8 @@ export class JSAnimation extends Timer {
             const isFromToArray = isArr(tweenToValue);
             const isFromToValue = isFromToArray || (hasFromvalue && hasToValue);
             const tweenStartTime = prevTween ? lastTweenChangeEndTime + tweenDelay : tweenDelay;
-            const absoluteStartTime = absoluteOffsetTime + tweenStartTime;
+            // Rounding is necessary here to minimize floating point errors when working in seconds
+            const absoluteStartTime = round(absoluteOffsetTime + tweenStartTime, 12);
 
             // Force a onRender callback if the animation contains at least one from value and autoplay is set to false
             if (!shouldTriggerRender && (hasFromvalue || isFromToArray)) shouldTriggerRender = 1;
@@ -527,7 +528,7 @@ export class JSAnimation extends Timer {
 
             // Tween factory
 
-            // Rounding is necessary here to minimize floating point errors
+            // Rounding is necessary here to minimize floating point errors when working in seconds
             const tweenUpdateDuration = round(+tweenDuration || minValue, 12);
 
             /** @type {Tween} */
@@ -576,7 +577,7 @@ export class JSAnimation extends Timer {
             if (isNaN(firstTweenChangeStartTime)) {
               firstTweenChangeStartTime = tween._startTime;
             }
-            // Rounding is necessary here to minimize floating point errors
+            // Rounding is necessary here to minimize floating point errors when working in seconds
             lastTweenChangeEndTime = round(tweenStartTime + tweenUpdateDuration, 12);
             prevTween = tween;
             animationAnimationLength++;

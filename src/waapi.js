@@ -67,7 +67,7 @@ const WAAPIEasesLookups = {
 
 const WAAPIeases = /*#__PURE__*/(() => {
   const list = {};
-  for (let type in easeTypes) list[type] = a => easeTypes[type](easeInPower(a));
+  for (let type in easeTypes) list[type] = (/** @type {String|Number} */p) => easeTypes[type](easeInPower(p));
   return /** @type {Record<String, EasingFunction>} */(list);
 })();
 
@@ -102,54 +102,6 @@ const parseWAAPIEasing = (ease) => {
   }
   return parsedEase;
 }
-
-/**
- * @typedef {String|Number|Array<String>|Array<Number>} WAAPITweenValue
- */
-
-/**
- * @callback WAAPIFunctionvalue
- * @param {DOMTarget} target - The animated target
- * @param {Number} index - The target index
- * @param {Number} length - The total number of animated targets
- * @return {WAAPITweenValue}
- */
-
-/**
- * @typedef {WAAPITweenValue|WAAPIFunctionvalue|Array<String|Number|WAAPIFunctionvalue>} WAAPIKeyframeValue
- */
-
-/**
- * @typedef {(animation: WAAPIAnimation) => void} WAAPICallback
- */
-
-/**
- * @typedef {Object} WAAPITweenOptions
- * @property {WAAPIKeyframeValue} [to]
- * @property {WAAPIKeyframeValue} [from]
- * @property {Number|WAAPIFunctionvalue} [duration]
- * @property {Number|WAAPIFunctionvalue} [delay]
- * @property {EasingParam} [ease]
- * @property {CompositeOperation} [composition]
- */
-
-/**
- * @typedef {Object} WAAPIAnimationOptions
- * @property {Number|Boolean} [loop]
- * @property {Boolean} [Reversed]
- * @property {Boolean} [Alternate]
- * @property {Boolean|ScrollObserver} [autoplay]
- * @property {Number} [playbackRate]
- * @property {Number|WAAPIFunctionvalue} [duration]
- * @property {Number|WAAPIFunctionvalue} [delay]
- * @property {EasingParam} [ease]
- * @property {CompositeOperation} [composition]
- * @property {WAAPICallback} [onComplete]
- */
-
-/**
- * @typedef {Record<String, WAAPIKeyframeValue | WAAPIAnimationOptions | Boolean | ScrollObserver | WAAPICallback | EasingParam | WAAPITweenOptions> & WAAPIAnimationOptions} WAAPIAnimationParams
- */
 
 const transformsShorthands = ['x', 'y', 'z'];
 const commonDefaultPXProperties = [
@@ -450,7 +402,7 @@ export class WAAPIAnimation {
    * @return {this}
    */
   forEach(callback) {
-    const cb = isStr(callback) ? a => a[callback]() : callback;
+    const cb = isStr(callback) ? (/** @type {globalThis.Animation} */a) => a[callback]() : callback;
     this.animations.forEach(cb);
     return this;
   }

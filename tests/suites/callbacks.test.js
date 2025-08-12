@@ -180,7 +180,9 @@ suite('Callbacks', () => {
       onComplete: () => {
         const endTime = new Date().getTime();
         tlCompleteCheck += 1;
-        expect(endTime - startTime).to.be.at.least(90);
+        // Using a range between 50 and 100 instead of 75 because of time calculation inconsistencies
+        expect(endTime - startTime).to.be.above(50);
+        expect(endTime - startTime).to.be.below(100);
         expect(tlBeginCheck).to.equal(1);
         expect(tlCompleteCheck).to.equal(1);
         expect(tlAnim1BeginCheck).to.equal(1);
@@ -196,7 +198,7 @@ suite('Callbacks', () => {
     })
     .init();
 
-    tl.seek(-100);
+    tl.seek(-75);
 
     expect(tlBeginCheck).to.equal(0);
     expect(tlCompleteCheck).to.equal(0);

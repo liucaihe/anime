@@ -41,9 +41,10 @@ export class Engine extends Clock {
     this.pauseOnDocumentHidden = true;
     /** @type {DefaultsParams} */
     this.defaults = defaults;
-    this.paused = isBrowser && doc.hidden ? true  : false;
+    // this.paused = isBrowser && doc.hidden ? true  : false;
+    this.paused = true;
     /** @type {Number|NodeJS.Immediate} */
-    this.reqId = null;
+    this.reqId = 0;
   }
 
   update() {
@@ -78,13 +79,16 @@ export class Engine extends Clock {
   }
 
   wake() {
-    if (this.useDefaultMainLoop && !this.reqId && !this.paused) {
+    if (this.useDefaultMainLoop && !this.reqId) {
+      // Imediatly request a tick to update engine._elapsedTime and get accurate offsetPosition calculation in timer.js
+      this.requestTick(now());
       this.reqId = engineTickMethod(tickEngine);
     }
     return this;
   }
 
   pause() {
+    if (!this.reqId) return;
     this.paused = true;
     return killEngine();
   }

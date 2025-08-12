@@ -37,9 +37,33 @@ import {
 } from './targets.js';
 
 /**
- * @param  {Number|String|[Number|String,Number|String]} val
- * @param  {StaggerParams} params
- * @return {StaggerFunction}
+ * @overload
+ * @param {Number} val
+ * @param {StaggerParams} [params]
+ * @return {StaggerFunction<Number>}
+ */
+/**
+ * @overload
+ * @param {String} val
+ * @param {StaggerParams} [params]
+ * @return {StaggerFunction<String>}
+ */
+/**
+ * @overload
+ * @param {[Number, Number]} val
+ * @param {StaggerParams} [params]
+ * @return {StaggerFunction<Number>}
+ */
+/**
+ * @overload
+ * @param {[String, String]} val
+ * @param {StaggerParams} [params]
+ * @return {StaggerFunction<String>}
+ */
+/**
+ * @param {Number|String|[Number, Number]|[String, String]} val The staggered value or range
+ * @param {StaggerParams} [params] The stagger parameters
+ * @return {StaggerFunction<Number|String>}
  */
 export const stagger = (val, params = {}) => {
   let values = [];

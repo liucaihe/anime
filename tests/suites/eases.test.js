@@ -214,6 +214,42 @@ suite('Eases', () => {
     expect(spring.duration).to.equal(1680);
   });
 
+  test('Spring parameters must be clamped at 10000', () => {
+    const spring = createSpring({
+      mass: 15000,
+      stiffness: 15000,
+      damping: 15000,
+      velocity: 15000,
+    });
+    expect(spring.mass).to.equal(10000);
+    expect(spring.stiffness).to.equal(10000);
+    expect(spring.damping).to.equal(10000);
+    expect(spring.velocity).to.equal(10000);
+    expect(spring.duration).to.be.above(0);
+
+    spring.mass = 20000;
+    spring.stiffness = 20000;
+    spring.damping = 20000;
+    spring.velocity = 20000;
+
+    expect(spring.mass).to.equal(10000);
+    expect(spring.stiffness).to.equal(10000);
+    expect(spring.damping).to.equal(10000);
+    expect(spring.velocity).to.equal(10000);
+    expect(spring.duration).to.be.above(0);
+  });
+
+  test('Spring velocity can be negative', () => {
+    const spring = createSpring({
+      velocity: -15000,
+    });
+    expect(spring.velocity).to.equal(-10000);
+    expect(spring.duration).to.be.above(0);
+    spring.velocity = -20000;
+    expect(spring.velocity).to.equal(-10000);
+    expect(spring.duration).to.be.above(0);
+  });
+
   test('Cubic bézier in: "cubicBezier(1,0,1,0)" / eases.cubicBezier(1,0,1,0)', () => {
     const cubicBezierIn = animate('#target-id', createEasingParam(eases.cubicBezier(1,0,1,0)));
     cubicBezierIn.seek(50);
