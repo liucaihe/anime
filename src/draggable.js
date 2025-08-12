@@ -936,17 +936,23 @@ export class Draggable {
     let canTouchScroll = false;
 
     while (touches && $parent && $parent !== this.$trigger) {
-      const overflowY = getTargetValue($parent, 'overflow-y');
-      if (overflowY !== 'hidden' && overflowY !== 'visible') {
-        const { scrollTop, scrollHeight, clientHeight } = $parent;
-        if (scrollHeight > clientHeight) {
-          canTouchScroll = true;
-          isAtTop = scrollTop <= 3;
-          isAtBottom = scrollTop >= (scrollHeight - clientHeight) - 3;
-          break;
+      if ($parent.nodeType === Node.ELEMENT_NODE) {
+        const overflowY = getTargetValue($parent, 'overflow-y');
+        if (overflowY !== 'hidden' && overflowY !== 'visible') {
+          const { scrollTop, scrollHeight, clientHeight } = $parent;
+          if (scrollHeight > clientHeight) {
+            canTouchScroll = true;
+            isAtTop = scrollTop <= 3;
+            isAtBottom = scrollTop >= (scrollHeight - clientHeight) - 3;
+            break;
+          }
         }
       }
-      $parent = /** @type {HTMLElement} */($parent.parentNode);
+      const nextParent = $parent.parentNode;
+      if (!nextParent || nextParent.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+        break;
+      }
+      $parent = /** @type {HTMLElement} */(nextParent);
     }
 
     if (canTouchScroll && ((!isAtTop && !isAtBottom) || (isAtTop && movedY < 0) || (isAtBottom && movedY > 0))) {

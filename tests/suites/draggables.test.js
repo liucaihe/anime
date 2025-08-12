@@ -91,4 +91,58 @@ suite('Draggables', () => {
       duration: 50,
     });
   });
+
+  test('Touch dragging should work in Shadow DOM', resolve => {
+    const $container = document.querySelector('#css-tests');
+    const $host = document.createElement('div');
+    $container.appendChild($host);
+    
+    const shadowRoot = $host.attachShadow({ mode: 'open' });
+    const $target = document.createElement('div');
+    $target.style.cssText = 'width: 100px; height: 100px;';
+    shadowRoot.appendChild($target);
+    
+    let updates = 0;
+    
+    const draggable = createDraggable($target, {
+      onUpdate: () => updates++,
+      onSettle: () => {
+        expect(updates).to.be.above(0);
+        draggable.revert();
+        $host.remove();
+        resolve();
+      }
+    });
+    
+    const createTouchEvent = ($el, type, x, y) => {
+      const touch = new Touch({
+        identifier: 1,
+        target: $el,
+        clientX: x,
+        clientY: y,
+        pageX: x,
+        pageY: y,
+      });
+      
+      $el.dispatchEvent(new TouchEvent('touch' + type, {
+        touches: type === 'end' ? [] : [touch],
+        changedTouches: [touch],
+        bubbles: true,
+        composed: true,
+        cancelable: true
+      }));
+    };
+    
+    createTouchEvent($target, 'start', 50, 50);
+    
+    createTimer({
+      duration: 50,
+      onUpdate: self => {
+        createTouchEvent($target, 'move', 50, 50 + (self.progress * 50));
+      },
+      onComplete: () => {
+        createTouchEvent($target, 'end', 50, 100);
+      }
+    });
+  });
 });
