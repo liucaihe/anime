@@ -48,7 +48,7 @@ export const globals = {
   defaults,
   /** @type {Number} */
   precision: 4,
-  /** @type {Number} */
+  /** @type {Number} equals 1 in ms mode, 0.001 in s mode */
   timeScale: 1,
   /** @type {Number} */
   tickThreshold: 200,

@@ -1,6 +1,6 @@
 /**
  * anime.js - ESM
- * @version v4.1.2
+ * @version v4.1.3
  * @author Julian Garnier
  * @license MIT
  * @copyright (c) 2025 Julian Garnier
@@ -137,12 +137,12 @@ const globals = {
     defaults,
     /** @type {Number} */
     precision: 4,
-    /** @type {Number} */
+    /** @type {Number} equals 1 in ms mode, 0.001 in s mode */
     timeScale: 1,
     /** @type {Number} */
     tickThreshold: 200,
 };
-const globalVersions = { version: '4.1.2', engine: null };
+const globalVersions = { version: '4.1.3', engine: null };
 if (isBrowser) {
     if (!win.AnimeJS)
         win.AnimeJS = [];
@@ -162,7 +162,6 @@ const toLowerCase = str => str.replace(lowerCaseRgx, '$1-$2').toLowerCase();
  * @return {Boolean}
  */
 const stringStartsWith = (str, sub) => str.indexOf(sub) === 0;
-// Time
 // Note: Date.now is used instead of performance.now since it is precise enough for timings calculations, performs slightly faster and works in Node.js environement.
 const now = Date.now;
 // Types checkers
@@ -864,9 +863,10 @@ class Engine extends Clock {
         this.pauseOnDocumentHidden = true;
         /** @type {DefaultsParams} */
         this.defaults = defaults;
-        this.paused = isBrowser && doc.hidden ? true : false;
+        // this.paused = isBrowser && doc.hidden ? true  : false;
+        this.paused = true;
         /** @type {Number|NodeJS.Immediate} */
-        this.reqId = null;
+        this.reqId = 0;
     }
     update() {
         const time = this._currentTime = now();
@@ -896,12 +896,16 @@ class Engine extends Clock {
         }
     }
     wake() {
-        if (this.useDefaultMainLoop && !this.reqId && !this.paused) {
+        if (this.useDefaultMainLoop && !this.reqId) {
+            // Imediatly request a tick to update engine._elapsedTime and get accurate offsetPosition calculation in timer.js
+            this.requestTick(now());
             this.reqId = engineTickMethod(tickEngine);
         }
         return this;
     }
     pause() {
+        if (!this.reqId)
+            return;
         this.paused = true;
         return killEngine();
     }
@@ -1676,10 +1680,14 @@ const composeTween = (tween, siblings) => {
             if (prevAbsEndTime > absoluteUpdateStartTime) {
                 const prevChangeStartTime = prevSibling._startTime;
                 const prevTLOffset = prevAbsEndTime - (prevChangeStartTime + prevSibling._updateDuration);
-                prevSibling._changeDuration = absoluteUpdateStartTime - prevTLOffset - prevChangeStartTime;
-                prevSibling._currentTime = prevSibling._changeDuration;
+                // Rounding is necessary here to minimize floating point errors when working in seconds
+                const updatedPrevChangeDuration = round(absoluteUpdateStartTime - prevTLOffset - prevChangeStartTime, 12);
+                prevSibling._changeDuration = updatedPrevChangeDuration;
+                prevSibling._currentTime = updatedPrevChangeDuration;
                 prevSibling._isOverlapped = 1;
-                if (prevSibling._changeDuration < minValue) {
+                // Override the previous tween if its new _changeDuration is lower than minValue
+                // TODO: See if it's even neceseeary to test against minValue, checking for 0 might be enough
+                if (updatedPrevChangeDuration < minValue) {
                     overrideTween(prevSibling);
                 }
             }
@@ -1709,7 +1717,7 @@ const composeTween = (tween, siblings) => {
                     prevParent.cancel();
                     // Previously, calling .cancel() on a timeline child would affect the render order of other children
                     // Worked around this by marking it as .completed and using .pause() for safe removal in the engine loop
-                    // This is no longer needed since timeline tween composition is now handled separatly
+                    // This is no longer needed since timeline tween composition is now handled separately
                     // Keeping this here for reference
                     // prevParent.completed = true;
                     // prevParent.pause();
@@ -1873,13 +1881,12 @@ class Timer extends Clock {
             offsetPosition = parentPosition;
         }
         else {
-            let startTime = now();
-            // Make sure to tick the engine once if suspended to avoid big gaps with the following offsetPosition calculation
-            if (engine.paused) {
-                engine.requestTick(startTime);
-                startTime = engine._elapsedTime;
-            }
-            offsetPosition = startTime - engine._startTime;
+            // Make sure to tick the engine once if not currently running to get up to date engine._elapsedTime
+            // to avoid big gaps with the following offsetPosition calculation
+            if (!engine.reqId)
+                engine.requestTick(now());
+            // Make sure to scale the offset position with globals.timeScale to properly handle seconds unit
+            offsetPosition = (engine._elapsedTime - engine._startTime) * globals.timeScale;
         }
         // Timer's parameters
         this.id = !isUnd(id) ? id : ++timerId;
@@ -2062,6 +2069,9 @@ class Timer extends Clock {
     /** @return {this} */
     resetTime() {
         const timeScale = 1 / (this._speed * engine._speed);
+        // TODO: See if we can safely use engine._elapsedTime here
+        // if (!engine.reqId) engine.requestTick(now())
+        // this._startTime = engine._elapsedTime - (this._currentTime + this._delay) * timeScale;
         this._startTime = now() - (this._currentTime + this._delay) * timeScale;
         return this;
     }
@@ -2256,10 +2266,10 @@ const binarySubdivide = (aX, mX1, mX2) => {
     return currentT;
 };
 /**
- * @param  {Number} [mX1]
- * @param  {Number} [mY1]
- * @param  {Number} [mX2]
- * @param  {Number} [mY2]
+ * @param  {Number} [mX1] The x coordinate of the first point
+ * @param  {Number} [mY1] The y coordinate of the first point
+ * @param  {Number} [mX2] The x coordinate of the second point
+ * @param  {Number} [mY2] The y coordinate of the second point
  * @return {EasingFunction}
  */
 const cubicBezier = (mX1 = 0.5, mY1 = 0.0, mX2 = 0.5, mY2 = 1.0) => (mX1 === mY1 && mX2 === mY2) ? none :
@@ -2279,7 +2289,7 @@ const steps = (steps = 10, fromStart) => {
 /**
  * Without parameters, the linear function creates a non-eased transition.
  * Parameters, if used, creates a piecewise linear easing by interpolating linearly between the specified points.
- * @param  {...String|Number} [args] - Points
+ * @param  {...(String|Number)} args - Points
  * @return {EasingFunction}
  */
 const linear = (...args) => {
@@ -2875,7 +2885,8 @@ class JSAnimation extends Timer {
                         const isFromToArray = isArr(tweenToValue);
                         const isFromToValue = isFromToArray || (hasFromvalue && hasToValue);
                         const tweenStartTime = prevTween ? lastTweenChangeEndTime + tweenDelay : tweenDelay;
-                        const absoluteStartTime = absoluteOffsetTime + tweenStartTime;
+                        // Rounding is necessary here to minimize floating point errors when working in seconds
+                        const absoluteStartTime = round(absoluteOffsetTime + tweenStartTime, 12);
                         // Force a onRender callback if the animation contains at least one from value and autoplay is set to false
                         if (!shouldTriggerRender && (hasFromvalue || isFromToArray))
                             shouldTriggerRender = 1;
@@ -2992,7 +3003,7 @@ class JSAnimation extends Timer {
                             shortestValue.s = cloneArray(longestValue.s);
                         }
                         // Tween factory
-                        // Rounding is necessary here to minimize floating point errors
+                        // Rounding is necessary here to minimize floating point errors when working in seconds
                         const tweenUpdateDuration = round(+tweenDuration || minValue, 12);
                         /** @type {Tween} */
                         const tween = {
@@ -3038,7 +3049,7 @@ class JSAnimation extends Timer {
                         if (isNaN(firstTweenChangeStartTime)) {
                             firstTweenChangeStartTime = tween._startTime;
                         }
-                        // Rounding is necessary here to minimize floating point errors
+                        // Rounding is necessary here to minimize floating point errors when working in seconds
                         lastTweenChangeEndTime = round(tweenStartTime + tweenUpdateDuration, 12);
                         prevTween = tween;
                         animationAnimationLength++;
@@ -3202,7 +3213,7 @@ const WAAPIEasesLookups = {
 const WAAPIeases = /*#__PURE__*/ (() => {
     const list = {};
     for (let type in easeTypes)
-        list[type] = a => easeTypes[type](easeInPower(a));
+        list[type] = (/** @type {String|Number} */ p) => easeTypes[type](easeInPower(p));
     return /** @type {Record<String, EasingFunction>} */ (list);
 })();
 /**
@@ -3241,47 +3252,6 @@ const parseWAAPIEasing = (ease) => {
     }
     return parsedEase;
 };
-/**
- * @typedef {String|Number|Array<String>|Array<Number>} WAAPITweenValue
- */
-/**
- * @callback WAAPIFunctionvalue
- * @param {DOMTarget} target - The animated target
- * @param {Number} index - The target index
- * @param {Number} length - The total number of animated targets
- * @return {WAAPITweenValue}
- */
-/**
- * @typedef {WAAPITweenValue|WAAPIFunctionvalue|Array<String|Number|WAAPIFunctionvalue>} WAAPIKeyframeValue
- */
-/**
- * @typedef {(animation: WAAPIAnimation) => void} WAAPICallback
- */
-/**
- * @typedef {Object} WAAPITweenOptions
- * @property {WAAPIKeyframeValue} [to]
- * @property {WAAPIKeyframeValue} [from]
- * @property {Number|WAAPIFunctionvalue} [duration]
- * @property {Number|WAAPIFunctionvalue} [delay]
- * @property {EasingParam} [ease]
- * @property {CompositeOperation} [composition]
- */
-/**
- * @typedef {Object} WAAPIAnimationOptions
- * @property {Number|Boolean} [loop]
- * @property {Boolean} [Reversed]
- * @property {Boolean} [Alternate]
- * @property {Boolean|ScrollObserver} [autoplay]
- * @property {Number} [playbackRate]
- * @property {Number|WAAPIFunctionvalue} [duration]
- * @property {Number|WAAPIFunctionvalue} [delay]
- * @property {EasingParam} [ease]
- * @property {CompositeOperation} [composition]
- * @property {WAAPICallback} [onComplete]
- */
-/**
- * @typedef {Record<String, WAAPIKeyframeValue | WAAPIAnimationOptions | Boolean | ScrollObserver | WAAPICallback | EasingParam | WAAPITweenOptions> & WAAPIAnimationOptions} WAAPIAnimationParams
- */
 const transformsShorthands = ['x', 'y', 'z'];
 const commonDefaultPXProperties = [
     'perspective',
@@ -3575,7 +3545,7 @@ class WAAPIAnimation {
      * @return {this}
      */
     forEach(callback) {
-        const cb = isStr(callback) ? a => a[callback]() : callback;
+        const cb = isStr(callback) ? (/** @type {globalThis.Animation} */ a) => a[callback]() : callback;
         this.animations.forEach(cb);
         return this;
     }
@@ -4077,9 +4047,6 @@ const utils = {
 
 
 /**
- * @typedef {Number|String|Function} TimePosition
- */
-/**
  * Timeline's children offsets positions parser
  * @param  {Timeline} timeline
  * @param  {String} timePosition
@@ -4095,7 +4062,7 @@ const getPrevChildOffset = (timeline, timePosition) => {
 };
 /**
  * @param  {Timeline} timeline
- * @param  {TimePosition} [timePosition]
+ * @param  {TimelinePosition} [timePosition]
  * @return {Number}
  */
 const parseTimelinePosition = (timeline, timePosition) => {
@@ -4201,17 +4168,17 @@ class Timeline extends Timer {
      * @overload
      * @param {TargetsParam} a1
      * @param {AnimationParams} a2
-     * @param {TimePosition} [a3]
+     * @param {TimelinePosition|StaggerFunction<Number|String>} [a3]
      * @return {this}
      *
      * @overload
      * @param {TimerParams} a1
-     * @param {TimePosition} [a2]
+     * @param {TimelinePosition} [a2]
      * @return {this}
      *
      * @param {TargetsParam|TimerParams} a1
-     * @param {AnimationParams|TimePosition} a2
-     * @param {TimePosition} [a3]
+     * @param {TimelinePosition|AnimationParams} a2
+     * @param {TimelinePosition|StaggerFunction<Number|String>} [a3]
      */
     add(a1, a2, a3) {
         const isAnim = isObj(a2);
@@ -4222,7 +4189,7 @@ class Timeline extends Timer {
                 const childParams = /** @type {AnimationParams} */ (a2);
                 // Check for function for children stagger positions
                 if (isFnc(a3)) {
-                    const staggeredPosition = /** @type {Function} */ (a3);
+                    const staggeredPosition = a3;
                     const parsedTargetsArray = parseTargets(/** @type {TargetsParam} */ (a1));
                     // Store initial duration before adding new children that will change the duration
                     const tlDuration = this.duration;
@@ -4231,7 +4198,8 @@ class Timeline extends Timer {
                     // Store the original id in order to add specific indexes to the new animations ids
                     const id = childParams.id;
                     let i = 0;
-                    const parsedLength = parsedTargetsArray.length;
+                    /** @type {Number} */
+                    const parsedLength = (parsedTargetsArray.length);
                     parsedTargetsArray.forEach((/** @type {Target} */ target) => {
                         // Create a new parameter object for each staggered children
                         const staggeredChildParams = { ...childParams };
@@ -4240,7 +4208,7 @@ class Timeline extends Timer {
                         this.iterationDuration = tlIterationDuration;
                         if (!isUnd(id))
                             staggeredChildParams.id = id + '-' + i;
-                        addTlChild(staggeredChildParams, this, staggeredPosition(target, i, parsedLength, this), target, i, parsedLength);
+                        addTlChild(staggeredChildParams, this, parseTimelinePosition(this, staggeredPosition(target, i, parsedLength, this)), target, i, parsedLength);
                         i++;
                     });
                 }
@@ -4252,7 +4220,7 @@ class Timeline extends Timer {
             else {
                 // It's a Timer
                 addTlChild(
-                /** @type TimerParams */ (a1), this, parseTimelinePosition(this, /** @type TimePosition */ (a2)));
+                /** @type TimerParams */ (a1), this, parseTimelinePosition(this, a2));
             }
             return this.init(1); // 1 = internalRender
         }
@@ -4260,21 +4228,21 @@ class Timeline extends Timer {
     /**
      * @overload
      * @param {Tickable} [synced]
-     * @param {TimePosition} [position]
+     * @param {TimelinePosition} [position]
      * @return {this}
      *
      * @overload
      * @param {globalThis.Animation} [synced]
-     * @param {TimePosition} [position]
+     * @param {TimelinePosition} [position]
      * @return {this}
      *
      * @overload
      * @param {WAAPIAnimation} [synced]
-     * @param {TimePosition} [position]
+     * @param {TimelinePosition} [position]
      * @return {this}
      *
      * @param {Tickable|WAAPIAnimation|globalThis.Animation} [synced]
-     * @param {TimePosition} [position]
+     * @param {TimelinePosition} [position]
      */
     sync(synced, position) {
         if (isUnd(synced) || synced && isUnd(synced.pause))
@@ -4286,7 +4254,7 @@ class Timeline extends Timer {
     /**
      * @param  {TargetsParam} targets
      * @param  {AnimationParams} parameters
-     * @param  {TimePosition} [position]
+     * @param  {TimelinePosition} [position]
      * @return {this}
      */
     set(targets, parameters, position) {
@@ -4298,7 +4266,7 @@ class Timeline extends Timer {
     }
     /**
      * @param {Callback<Timer>} callback
-     * @param {TimePosition} [position]
+     * @param {TimelinePosition} [position]
      * @return {this}
      */
     call(callback, position) {
@@ -4308,14 +4276,14 @@ class Timeline extends Timer {
     }
     /**
      * @param {String} labelName
-     * @param {TimePosition} [position]
+     * @param {TimelinePosition} [position]
      * @return {this}
      *
      */
     label(labelName, position) {
         if (isUnd(labelName) || labelName && !isStr(labelName))
             return this;
-        this.labels[labelName] = parseTimelinePosition(this, /** @type TimePosition */ (position));
+        this.labels[labelName] = parseTimelinePosition(this, position);
         return this;
     }
     /**
@@ -4383,11 +4351,39 @@ class Animatable {
     constructor(targets, parameters) {
         if (scope.current)
             scope.current.register(this);
+        const beginHandler = () => {
+            if (this.callbacks.completed)
+                this.callbacks.reset();
+            this.callbacks.play();
+        };
+        const pauseHandler = () => {
+            if (this.callbacks.completed)
+                return;
+            let paused = true;
+            for (let name in this.animations) {
+                const anim = this.animations[name];
+                if (!anim.paused && paused) {
+                    paused = false;
+                    break;
+                }
+            }
+            if (paused) {
+                this.callbacks.complete();
+            }
+        };
         /** @type {AnimationParams} */
-        const globalParams = {};
+        const globalParams = {
+            onBegin: beginHandler,
+            onComplete: pauseHandler,
+            onPause: pauseHandler,
+        };
+        /** @type {AnimationParams} */
+        const callbacksAnimationParams = { v: 1, autoplay: false };
         const properties = {};
         this.targets = [];
         this.animations = {};
+        /** @type {JSAnimation|null} */
+        this.callbacks = null;
         if (isUnd(targets) || isUnd(parameters))
             return;
         for (let propName in parameters) {
@@ -4395,10 +4391,14 @@ class Animatable {
             if (isKey(propName)) {
                 properties[propName] = paramValue;
             }
+            else if (stringStartsWith(propName, 'on')) {
+                callbacksAnimationParams[propName] = paramValue;
+            }
             else {
                 globalParams[propName] = paramValue;
             }
         }
+        this.callbacks = new JSAnimation({ v: 0 }, callbacksAnimationParams);
         for (let propName in properties) {
             const propValue = properties[propName];
             const isObjValue = isObj(propValue);
@@ -4465,6 +4465,8 @@ class Animatable {
         }
         this.animations = {};
         this.targets.length = 0;
+        if (this.callbacks)
+            this.callbacks.revert();
         return this;
     }
 }
@@ -4873,36 +4875,27 @@ class Draggable {
         this.touchActionStyles = null;
         this.transforms = new Transforms(this.$target);
         this.overshootCoords = { x: 0, y: 0 };
-        this.overshootXTicker = new Timer({ autoplay: false }, null, 0).init();
-        this.overshootYTicker = new Timer({ autoplay: false }, null, 0).init();
-        this.updateTicker = new Timer({ autoplay: false }, null, 0).init();
-        this.overshootXTicker.onUpdate = () => {
-            if (this.disabled[0])
-                return;
-            this.updated = true;
-            this.manual = true;
-            this.animate[this.xProp](this.overshootCoords.x, 0);
-        };
-        this.overshootXTicker.onComplete = () => {
-            if (this.disabled[0])
-                return;
-            this.manual = false;
-            this.animate[this.xProp](this.overshootCoords.x, 0);
-        };
-        this.overshootYTicker.onUpdate = () => {
-            if (this.disabled[1])
-                return;
-            this.updated = true;
-            this.manual = true;
-            this.animate[this.yProp](this.overshootCoords.y, 0);
-        };
-        this.overshootYTicker.onComplete = () => {
-            if (this.disabled[1])
-                return;
-            this.manual = false;
-            this.animate[this.yProp](this.overshootCoords.y, 0);
-        };
-        this.updateTicker.onUpdate = () => this.update();
+        this.overshootTicker = new Timer({
+            autoplay: false,
+            onUpdate: () => {
+                this.updated = true;
+                this.manual = true;
+                // Use a duration of 1 to prevent the animatable from completing immediately to prevent issues with onSettle()
+                // https://github.com/juliangarnier/anime/issues/1045
+                if (!this.disabled[0])
+                    this.animate[this.xProp](this.overshootCoords.x, 1);
+                if (!this.disabled[1])
+                    this.animate[this.yProp](this.overshootCoords.y, 1);
+            },
+            onComplete: () => {
+                this.manual = false;
+                if (!this.disabled[0])
+                    this.animate[this.xProp](this.overshootCoords.x, 0);
+                if (!this.disabled[1])
+                    this.animate[this.yProp](this.overshootCoords.y, 0);
+            },
+        }, null, 0).init();
+        this.updateTicker = new Timer({ autoplay: false, onUpdate: () => this.update() }, null, 0).init();
         this.contained = !isUnd(container);
         this.manual = false;
         this.grabbed = false;
@@ -4913,7 +4906,7 @@ class Draggable {
         this.enabled = false;
         this.initialized = false;
         this.activeProp = this.disabled[1] ? xProp : yProp;
-        this.animate.animations[this.activeProp].onRender = () => {
+        this.animate.callbacks.onRender = () => {
             const hasUpdated = this.updated;
             const hasMoved = this.grabbed && hasUpdated;
             const hasReleased = !hasMoved && this.released;
@@ -4925,7 +4918,8 @@ class Draggable {
             this.deltaY = dy;
             this.coords[2] = x;
             this.coords[3] = y;
-            // Check if dx or dy are not 0 to check if the draggable has actually moved https://github.com/juliangarnier/anime/issues/1032
+            // Check if dx or dy are not 0 to check if the draggable has actually moved
+            // https://github.com/juliangarnier/anime/issues/1032
             if (hasUpdated && (dx || dy)) {
                 this.onUpdate(this);
             }
@@ -4937,9 +4931,9 @@ class Draggable {
                 this.angle = atan2(dy, dx);
             }
         };
-        this.animate.animations[this.activeProp].onComplete = () => {
+        this.animate.callbacks.onComplete = () => {
             if ((!this.grabbed && this.released)) {
-                // Set eleased to false before calling onSettle to avoid recursion
+                // Set released to false before calling onSettle to avoid recursion
                 this.released = false;
             }
             if (!this.manual) {
@@ -5009,7 +5003,7 @@ class Draggable {
         if (this.disabled[0])
             return;
         const v = round(x, 5);
-        this.overshootXTicker.pause();
+        this.overshootTicker.pause();
         this.manual = true;
         this.updated = !muteUpdateCallback;
         this.destX = v;
@@ -5027,7 +5021,7 @@ class Draggable {
         if (this.disabled[1])
             return;
         const v = round(y, 5);
-        this.overshootYTicker.pause();
+        this.overshootTicker.pause();
         this.manual = true;
         this.updated = !muteUpdateCallback;
         this.destY = v;
@@ -5074,6 +5068,10 @@ class Draggable {
     }
     updateBoundingValues() {
         const $container = this.$container;
+        // Return early if no $container defined to prevents error when reading scrollWidth / scrollHeight
+        // https://github.com/juliangarnier/anime/issues/1064
+        if (!$container)
+            return;
         const cx = this.x;
         const cy = this.y;
         const cx2 = this.coords[2];
@@ -5143,14 +5141,13 @@ class Draggable {
         this.setY(cy, true);
     }
     /**
-     * Returns 0 if not OB, 1 if x is OB, 2 if y is OB, 3 if both x and y are OB
-     *
      * @param  {Array} bounds
      * @param  {Number} x
      * @param  {Number} y
      * @return {Number}
      */
     isOutOfBounds(bounds, x, y) {
+        // Returns 0 if not OB, 1 if x is OB, 2 if y is OB, 3 if both x and y are OB
         if (!this.contained)
             return 0;
         const [bt, br, bb, bl] = bounds;
@@ -5281,8 +5278,7 @@ class Draggable {
     }
     stop() {
         this.updateTicker.pause();
-        this.overshootXTicker.pause();
-        this.overshootYTicker.pause();
+        this.overshootTicker.pause();
         // Pauses the in bounds onRelease animations
         for (let prop in this.animate.animations)
             this.animate.animations[prop].pause();
@@ -5369,7 +5365,7 @@ class Draggable {
      */
     handleDown(e) {
         const $eTarget = /** @type {HTMLElement} */ (e.target);
-        if (this.grabbed || /** @type {HTMLInputElement}  */ ($eTarget).type === 'range')
+        if (this.grabbed || /** @type {HTMLInputElement} */ ($eTarget).type === 'range')
             return;
         e.stopPropagation();
         this.grabbed = true;
@@ -5568,8 +5564,7 @@ class Draggable {
                 ease: releaseEase,
                 composition,
             }).init();
-            this.overshootXTicker.stretch(durationX).restart();
-            this.overshootYTicker.stretch(durationY).restart();
+            this.overshootTicker.stretch(max(durationX, durationY)).restart();
         }
         else {
             if (!disabledX)
@@ -5689,8 +5684,7 @@ class Draggable {
         this.disable();
         this.$target.classList.remove('is-disabled');
         this.updateTicker.revert();
-        this.overshootXTicker.revert();
-        this.overshootYTicker.revert();
+        this.overshootTicker.revert();
         this.resizeTicker.revert();
         this.animate.revert();
         this.resizeObserver.disconnect();
@@ -5962,9 +5956,6 @@ class Scope {
  */
 const createScope = params => new Scope(params);
 
-/**
- * @typedef {String|Number} ScrollThresholdValue
- */
 /**
  * @return {Number}
  */
@@ -6267,41 +6258,6 @@ const getAnimationDomTarget = linked => {
 };
 let scrollerIndex = 0;
 const debugColors$1 = ['#FF4B4B', '#FF971B', '#FFC730', '#F9F640', '#7AFF5A', '#18FF74', '#17E09B', '#3CFFEC', '#05DBE9', '#33B3F1', '#638CF9', '#C563FE', '#FF4FCF', '#F93F8A'];
-/**
- * @typedef {Object} ScrollThresholdParam
- * @property {ScrollThresholdValue} [target]
- * @property {ScrollThresholdValue} [container]
- */
-/**
- * @callback ScrollObserverAxisCallback
- * @param {ScrollObserver} self
- * @return {'x'|'y'}
- */
-/**
- * @callback ScrollThresholdCallback
- * @param {ScrollObserver} self
- * @return {ScrollThresholdValue|ScrollThresholdParam}
- */
-/**
- * @typedef {Object} ScrollObserverParams
- * @property {Number|String} [id]
- * @property {Boolean|Number|String|EasingParam} [sync]
- * @property {TargetsParam} [container]
- * @property {TargetsParam} [target]
- * @property {'x'|'y'|ScrollObserverAxisCallback|((observer: ScrollObserver) => 'x'|'y'|ScrollObserverAxisCallback)} [axis]
- * @property {ScrollThresholdValue|ScrollThresholdParam|ScrollThresholdCallback|((observer: ScrollObserver) => ScrollThresholdValue|ScrollThresholdParam|ScrollThresholdCallback)} [enter]
- * @property {ScrollThresholdValue|ScrollThresholdParam|ScrollThresholdCallback|((observer: ScrollObserver) => ScrollThresholdValue|ScrollThresholdParam|ScrollThresholdCallback)} [leave]
- * @property {Boolean|((observer: ScrollObserver) => Boolean)} [repeat]
- * @property {Boolean} [debug]
- * @property {Callback<ScrollObserver>} [onEnter]
- * @property {Callback<ScrollObserver>} [onLeave]
- * @property {Callback<ScrollObserver>} [onEnterForward]
- * @property {Callback<ScrollObserver>} [onLeaveForward]
- * @property {Callback<ScrollObserver>} [onEnterBackward]
- * @property {Callback<ScrollObserver>} [onLeaveBackward]
- * @property {Callback<ScrollObserver>} [onUpdate]
- * @property {Callback<ScrollObserver>} [onSyncComplete]
- */
 class ScrollObserver {
     /**
      * @param {ScrollObserverParams} parameters
@@ -7329,9 +7285,33 @@ const text = {
 
 
 /**
- * @param  {Number|String|[Number|String,Number|String]} val
- * @param  {StaggerParams} params
- * @return {StaggerFunction}
+ * @overload
+ * @param {Number} val
+ * @param {StaggerParams} [params]
+ * @return {StaggerFunction<Number>}
+ */
+/**
+ * @overload
+ * @param {String} val
+ * @param {StaggerParams} [params]
+ * @return {StaggerFunction<String>}
+ */
+/**
+ * @overload
+ * @param {[Number, Number]} val
+ * @param {StaggerParams} [params]
+ * @return {StaggerFunction<Number>}
+ */
+/**
+ * @overload
+ * @param {[String, String]} val
+ * @param {StaggerParams} [params]
+ * @return {StaggerFunction<String>}
+ */
+/**
+ * @param {Number|String|[Number, Number]|[String, String]} val The staggered value or range
+ * @param {StaggerParams} [params] The stagger parameters
+ * @return {StaggerFunction<Number|String>}
  */
 const stagger = (val, params = {}) => {
     let values = [];

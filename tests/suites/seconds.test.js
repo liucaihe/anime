@@ -53,6 +53,14 @@ suite('Seconds', () => {
 
   });
 
+  test('Timers offset time should be properly scaled when not controlled by a Timeline', () => {
+    engine.timeUnit = 's';
+    const timer1 = createTimer({ duration: .05, autoplay: false, });
+    const timer2 = createTimer({ duration: .05, delay: .01, autoplay: false, });
+    expect(timer1._offset).to.be.below(1);
+    expect(timer2._offset).to.be.below(1);
+  });
+
   test('Stretch a looped timer', () => {
     engine.timeUnit = 's';
     const timer1 = createTimer({

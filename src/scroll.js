@@ -57,10 +57,6 @@ import {
 } from './values.js';
 
 /**
- * @typedef {String|Number} ScrollThresholdValue
- */
-
-/**
  * @return {Number}
  */
 const getMaxViewHeight = () => {
@@ -369,45 +365,6 @@ const getAnimationDomTarget = linked => {
 let scrollerIndex = 0;
 
 const debugColors = ['#FF4B4B','#FF971B','#FFC730','#F9F640','#7AFF5A','#18FF74','#17E09B','#3CFFEC','#05DBE9','#33B3F1','#638CF9','#C563FE','#FF4FCF','#F93F8A'];
-
-/**
- * @typedef {Object} ScrollThresholdParam
- * @property {ScrollThresholdValue} [target]
- * @property {ScrollThresholdValue} [container]
- */
-
-/**
- * @callback ScrollObserverAxisCallback
- * @param {ScrollObserver} self
- * @return {'x'|'y'}
- */
-
-/**
- * @callback ScrollThresholdCallback
- * @param {ScrollObserver} self
- * @return {ScrollThresholdValue|ScrollThresholdParam}
- */
-
-/**
- * @typedef {Object} ScrollObserverParams
- * @property {Number|String} [id]
- * @property {Boolean|Number|String|EasingParam} [sync]
- * @property {TargetsParam} [container]
- * @property {TargetsParam} [target]
- * @property {'x'|'y'|ScrollObserverAxisCallback|((observer: ScrollObserver) => 'x'|'y'|ScrollObserverAxisCallback)} [axis]
- * @property {ScrollThresholdValue|ScrollThresholdParam|ScrollThresholdCallback|((observer: ScrollObserver) => ScrollThresholdValue|ScrollThresholdParam|ScrollThresholdCallback)} [enter]
- * @property {ScrollThresholdValue|ScrollThresholdParam|ScrollThresholdCallback|((observer: ScrollObserver) => ScrollThresholdValue|ScrollThresholdParam|ScrollThresholdCallback)} [leave]
- * @property {Boolean|((observer: ScrollObserver) => Boolean)} [repeat]
- * @property {Boolean} [debug]
- * @property {Callback<ScrollObserver>} [onEnter]
- * @property {Callback<ScrollObserver>} [onLeave]
- * @property {Callback<ScrollObserver>} [onEnterForward]
- * @property {Callback<ScrollObserver>} [onLeaveForward]
- * @property {Callback<ScrollObserver>} [onEnterBackward]
- * @property {Callback<ScrollObserver>} [onLeaveBackward]
- * @property {Callback<ScrollObserver>} [onUpdate]
- * @property {Callback<ScrollObserver>} [onSyncComplete]
- */
 
 export class ScrollObserver {
   /**

@@ -2,7 +2,7 @@
 
 import {
   compositionTypes,
-  noop,
+  noop
 } from './consts.js';
 
 import {
@@ -17,6 +17,7 @@ import {
   mergeObjects,
   forEachChildren,
   isArr,
+  stringStartsWith,
 } from './helpers.js';
 
 import {
@@ -34,20 +35,49 @@ export class Animatable {
    */
   constructor(targets, parameters) {
     if (scope.current) scope.current.register(this);
+    const beginHandler = () => {
+      if (this.callbacks.completed) this.callbacks.reset();
+      this.callbacks.play();
+    };
+    const pauseHandler = () => {
+      if (this.callbacks.completed) return;
+      let paused = true;
+      for (let name in this.animations) {
+        const anim = this.animations[name];
+        if (!anim.paused && paused) {
+          paused = false;
+          break;
+        }
+      }
+      if (paused) {
+        this.callbacks.complete();
+      }
+    };
     /** @type {AnimationParams} */
-    const globalParams = {};
+    const globalParams = {
+      onBegin: beginHandler,
+      onComplete: pauseHandler,
+      onPause: pauseHandler,
+    };
+    /** @type {AnimationParams} */
+    const callbacksAnimationParams = { v: 1, autoplay: false };
     const properties = {};
     this.targets = [];
     this.animations = {};
+    /** @type {JSAnimation|null} */
+    this.callbacks = null;
     if (isUnd(targets) || isUnd(parameters)) return;
     for (let propName in parameters) {
       const paramValue = parameters[propName];
       if (isKey(propName)) {
         properties[propName] = paramValue;
+      } else if (stringStartsWith(propName, 'on')) {
+        callbacksAnimationParams[propName] = paramValue;
       } else {
         globalParams[propName] = paramValue;
       }
     }
+    this.callbacks = new JSAnimation({ v: 0 }, callbacksAnimationParams);
     for (let propName in properties) {
       const propValue = properties[propName];
       const isObjValue = isObj(propValue);
@@ -107,6 +137,7 @@ export class Animatable {
     }
     this.animations = {};
     this.targets.length = 0;
+    if (this.callbacks) this.callbacks.revert();
     return this;
   }
 }
@@ -116,4 +147,4 @@ export class Animatable {
  * @param {AnimatableParams} parameters
  * @return {AnimatableObject}
  */
-export const createAnimatable = (targets, parameters) => /** @type {AnimatableObject} */(new Animatable(targets, parameters));
+export const createAnimatable = (targets, parameters) => /** @type {AnimatableObject} */ (new Animatable(targets, parameters));

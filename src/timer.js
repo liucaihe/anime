@@ -125,18 +125,17 @@ export class Timer extends Clock {
                                 /** @type {Number} */(timerLoop) < 0 ? Infinity :
                                 /** @type {Number} */(timerLoop) + 1;
 
+
     let offsetPosition = 0;
 
     if (parent) {
       offsetPosition = parentPosition;
     } else {
-      let startTime = now();
-      // Make sure to tick the engine once if suspended to avoid big gaps with the following offsetPosition calculation
-      if (engine.paused) {
-        engine.requestTick(startTime);
-        startTime = engine._elapsedTime;
-      }
-      offsetPosition = startTime - engine._startTime;
+      // Make sure to tick the engine once if not currently running to get up to date engine._elapsedTime
+      // to avoid big gaps with the following offsetPosition calculation
+      if (!engine.reqId) engine.requestTick(now());
+      // Make sure to scale the offset position with globals.timeScale to properly handle seconds unit
+      offsetPosition = (engine._elapsedTime - engine._startTime) * globals.timeScale;
     }
 
     // Timer's parameters
@@ -337,6 +336,9 @@ export class Timer extends Clock {
   /** @return {this} */
   resetTime() {
     const timeScale = 1 / (this._speed * engine._speed);
+    // TODO: See if we can safely use engine._elapsedTime here
+    // if (!engine.reqId) engine.requestTick(now())
+    // this._startTime = engine._elapsedTime - (this._currentTime + this._delay) * timeScale;
     this._startTime = now() - (this._currentTime + this._delay) * timeScale;
     return this;
   }
@@ -497,7 +499,6 @@ export class Timer extends Clock {
   }
 
 }
-
 
 /**
  * @param {TimerParams} [parameters]

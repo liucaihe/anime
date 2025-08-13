@@ -27,7 +27,6 @@ export const toLowerCase = str => str.replace(lowerCaseRgx, '$1-$2').toLowerCase
  */
 export const stringStartsWith = (str, sub) => str.indexOf(sub) === 0;
 
-// Time
 // Note: Date.now is used instead of performance.now since it is precise enough for timings calculations, performs slightly faster and works in Node.js environement.
 export const now = Date.now;
 

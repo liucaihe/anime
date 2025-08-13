@@ -1,7 +1,7 @@
-import { createTimeline, stagger, utils, engine, animate } from '../../../lib/anime.esm.js';
+import { createTimeline, stagger, utils, engine, animate } from '../../../../lib/anime.esm.js';
 
 // import { createTimeline, stagger, utils, engine, animate } from '../../assets/js/anime.esm.js';
-import { inspect } from '../../../lib/gui/index.js';
+// import { inspect } from '../../../lib/gui/index.js';
 
 const [ $square ] = utils.$('.square');
 

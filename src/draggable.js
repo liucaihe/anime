@@ -351,32 +351,23 @@ export class Draggable {
     this.touchActionStyles = null;
     this.transforms = new Transforms(this.$target);
     this.overshootCoords = { x: 0, y: 0 };
-    this.overshootXTicker = new Timer({ autoplay: false }, null, 0).init();
-    this.overshootYTicker = new Timer({ autoplay: false }, null, 0).init();
-    this.updateTicker = new Timer({ autoplay: false }, null, 0).init();
-    this.overshootXTicker.onUpdate = () => {
-      if (this.disabled[0]) return;
-      this.updated = true;
-      this.manual = true;
-      this.animate[this.xProp](this.overshootCoords.x, 0);
-    }
-    this.overshootXTicker.onComplete = () => {
-      if (this.disabled[0]) return;
-      this.manual = false;
-      this.animate[this.xProp](this.overshootCoords.x, 0);
-    }
-    this.overshootYTicker.onUpdate = () => {
-      if (this.disabled[1]) return;
-      this.updated = true;
-      this.manual = true;
-      this.animate[this.yProp](this.overshootCoords.y, 0);
-    }
-    this.overshootYTicker.onComplete = () => {
-      if (this.disabled[1]) return;
-      this.manual = false;
-      this.animate[this.yProp](this.overshootCoords.y, 0);
-    }
-    this.updateTicker.onUpdate = () => this.update();
+    this.overshootTicker = new Timer({
+      autoplay: false,
+      onUpdate: () => {
+        this.updated = true;
+        this.manual = true;
+        // Use a duration of 1 to prevent the animatable from completing immediately to prevent issues with onSettle()
+        // https://github.com/juliangarnier/anime/issues/1045
+        if (!this.disabled[0]) this.animate[this.xProp](this.overshootCoords.x, 1);
+        if (!this.disabled[1]) this.animate[this.yProp](this.overshootCoords.y, 1);
+      },
+      onComplete: () => {
+        this.manual = false;
+        if (!this.disabled[0]) this.animate[this.xProp](this.overshootCoords.x, 0);
+        if (!this.disabled[1]) this.animate[this.yProp](this.overshootCoords.y, 0);
+      },
+    }, null, 0).init();
+    this.updateTicker = new Timer({ autoplay: false, onUpdate: () => this.update() }, null,0,).init();
     this.contained = !isUnd(container);
     this.manual = false;
     this.grabbed = false;
@@ -387,7 +378,7 @@ export class Draggable {
     this.enabled = false;
     this.initialized = false;
     this.activeProp = this.disabled[1] ? xProp : yProp;
-    this.animate.animations[this.activeProp].onRender = () => {
+    this.animate.callbacks.onRender = () => {
       const hasUpdated = this.updated;
       const hasMoved = this.grabbed && hasUpdated;
       const hasReleased = !hasMoved && this.released;
@@ -399,7 +390,8 @@ export class Draggable {
       this.deltaY = dy;
       this.coords[2] = x;
       this.coords[3] = y;
-      // Check if dx or dy are not 0 to check if the draggable has actually moved https://github.com/juliangarnier/anime/issues/1032
+      // Check if dx or dy are not 0 to check if the draggable has actually moved
+      // https://github.com/juliangarnier/anime/issues/1032
       if (hasUpdated && (dx || dy)) {
         this.onUpdate(this);
       }
@@ -410,9 +402,9 @@ export class Draggable {
         this.angle = atan2(dy, dx);
       }
     }
-    this.animate.animations[this.activeProp].onComplete = () => {
+    this.animate.callbacks.onComplete = () => {
       if ((!this.grabbed && this.released)) {
-        // Set eleased to false before calling onSettle to avoid recursion
+        // Set released to false before calling onSettle to avoid recursion
         this.released = false;
       }
       if (!this.manual) {
@@ -480,7 +472,7 @@ export class Draggable {
   setX(x, muteUpdateCallback = false) {
     if (this.disabled[0]) return;
     const v = round(x, 5);
-    this.overshootXTicker.pause();
+    this.overshootTicker.pause();
     this.manual = true;
     this.updated = !muteUpdateCallback;
     this.destX = v;
@@ -498,7 +490,7 @@ export class Draggable {
   setY(y, muteUpdateCallback = false) {
     if (this.disabled[1]) return;
     const v = round(y, 5);
-    this.overshootYTicker.pause();
+    this.overshootTicker.pause();
     this.manual = true;
     this.updated = !muteUpdateCallback;
     this.destY = v;
@@ -555,6 +547,9 @@ export class Draggable {
 
   updateBoundingValues() {
     const $container = this.$container;
+    // Return early if no $container defined to prevents error when reading scrollWidth / scrollHeight
+    // https://github.com/juliangarnier/anime/issues/1064
+    if (!$container) return;
     const cx = this.x;
     const cy = this.y;
     const cx2 = this.coords[2];
@@ -624,14 +619,13 @@ export class Draggable {
   }
 
   /**
-   * Returns 0 if not OB, 1 if x is OB, 2 if y is OB, 3 if both x and y are OB
-   *
    * @param  {Array} bounds
    * @param  {Number} x
    * @param  {Number} y
    * @return {Number}
    */
   isOutOfBounds(bounds, x, y) {
+    // Returns 0 if not OB, 1 if x is OB, 2 if y is OB, 3 if both x and y are OB
     if (!this.contained) return 0;
     const [ bt, br, bb, bl ] = bounds;
     const [ dx, dy ] = this.disabled;
@@ -764,8 +758,7 @@ export class Draggable {
 
   stop() {
     this.updateTicker.pause();
-    this.overshootXTicker.pause();
-    this.overshootYTicker.pause();
+    this.overshootTicker.pause();
     // Pauses the in bounds onRelease animations
     for (let prop in this.animate.animations) this.animate.animations[prop].pause();
     remove(this, null, 'x');
@@ -853,7 +846,7 @@ export class Draggable {
    */
   handleDown(e) {
     const $eTarget = /** @type {HTMLElement} */(e.target);
-    if (this.grabbed || /** @type {HTMLInputElement}  */($eTarget).type === 'range') return;
+    if (this.grabbed || /** @type {HTMLInputElement} */($eTarget).type === 'range') return;
 
     e.stopPropagation();
 
@@ -1072,8 +1065,7 @@ export class Draggable {
           composition,
         }).init();
 
-        this.overshootXTicker.stretch(durationX).restart();
-        this.overshootYTicker.stretch(durationY).restart();
+        this.overshootTicker.stretch(max(durationX, durationY)).restart();
 
     } else {
 
@@ -1203,8 +1195,7 @@ export class Draggable {
     this.disable();
     this.$target.classList.remove('is-disabled');
     this.updateTicker.revert();
-    this.overshootXTicker.revert();
-    this.overshootYTicker.revert();
+    this.overshootTicker.revert();
     this.resizeTicker.revert();
     this.animate.revert();
     this.resizeObserver.disconnect();
