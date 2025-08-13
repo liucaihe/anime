@@ -939,7 +939,7 @@ export class Draggable {
           break;
         }
       }
-      $parent = /** @type {HTMLElement} */($parent.parentNode);
+      $parent = $parent.parentElement;
     }
 
     if (canTouchScroll && ((!isAtTop && !isAtBottom) || (isAtTop && movedY < 0) || (isAtBottom && movedY > 0))) {
