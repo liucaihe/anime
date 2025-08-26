@@ -6,7 +6,7 @@ import {
 import {
   animate,
   utils,
-} from '../../src/anime.js';
+} from '../../../dist/modules/index.js';
 
 const validUnits = ['cm','mm','in','pc','pt','px','em','ex','ch','rem','vw','vh','vmin','vmax','q','lh','rlh','vb','vi','svw','svh','lvw','lvh','dvw','dvh'];
 

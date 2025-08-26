@@ -1,4 +1,4 @@
-import { animate, createTimeline, createTimer, stagger, utils } from '../../lib/anime.esm.js';
+import { animate, createTimeline, createTimer, stagger, utils } from '../../dist/modules/index.js';
 
 const creatureEl = document.querySelector('#creature');
 const viewport = { w: window.innerWidth * .5, h: window.innerHeight * .5 };

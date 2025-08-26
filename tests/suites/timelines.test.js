@@ -9,12 +9,12 @@ import {
   utils,
   createTimer,
   animate,
-} from '../../src/anime.js';
+} from '../../../dist/modules/index.js';
 
 import {
   compositionTypes,
   minValue,
-} from '../../src/consts.js';
+} from '../../dist/modules/core/consts.js';
 
 suite('Timelines', () => {
   function createTL() {

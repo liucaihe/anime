@@ -8,8 +8,8 @@ import {
   testObject,
 } from '../setup.js';
 
-import { animate, createTimeline, createTimer, utils } from '../../src/anime.js';
-import { minValue } from '../../src/consts.js';
+import { animate, createTimeline, createTimer, utils } from '../../../dist/modules/index.js';
+import { minValue } from '../../dist/modules/core/consts.js';
 
 suite('Parameters', () => {
   const duration = 10;

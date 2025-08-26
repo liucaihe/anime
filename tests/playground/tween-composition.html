@@ -61,9 +61,7 @@
     <div class="hover loop square red"></div>
   </div>
   <script type="module">
-    import { animate, stagger, utils } from '../../../lib/anime.esm.js';
-
-    // import { inspect } from '../lib/gui/index.js';
+    import { animate, stagger, utils } from '../../../dist/modules/index.js';
 
     const black = '#252423';
     const white = '#F6F4F2';
@@ -87,22 +85,13 @@
     const staggered = animate($loopeds, {
       autoplay: false,
       x: [
-        {
-          to: ['-50%', 50],
-          delay: stagger(120, {grid: [5, 5], from: 14}),
-          endDelay: stagger(120, {grid: [5, 5], from: 14, direction: 'reverse'}),
-        }, {
-          to: '-50%',
-          delay: stagger(120, {grid: [5, 5], from: 10}),
-          endDelay: stagger(120, {grid: [5, 5], from: 10, direction: 'reverse'}),
-        },
+        { to: ['-50%', 50], delay: stagger(120, {grid: [5, 5], from: 14}) },
+        { to: '-50%', delay: stagger(120, {grid: [5, 5], from: 10}) },
       ],
       ease: 'inOutQuart',
       duration: 2000,
       loop: true,
     });
-
-    // // inspect(staggered);
 
     // animate($loopeds, {
     //   scale: [0, 1],
@@ -110,8 +99,6 @@
     //   duration: 500,
     //   delay: stagger(120, {grid: [5, 5], from: 'center', start: 240}),
     // });
-
-    // createGUI(staggered);
 
     for (let i = 0, l = $hovereds.length; i < l; i++) {
       const el = $hovereds[i];

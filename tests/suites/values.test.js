@@ -7,12 +7,12 @@ import {
 import {
   animate,
   utils,
-} from '../../src/anime.js';
+} from '../../../dist/modules/index.js';
 
 import {
   unitsExecRgx,
   valueTypes,
-} from '../../src/consts.js';
+} from '../../dist/modules/core/consts.js';
 
 suite('Values', () => {
 

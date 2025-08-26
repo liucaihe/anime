@@ -1,4 +1,4 @@
-import { createTimeline, utils, stagger } from '../../lib/anime.esm.js';
+import { createTimeline, utils, stagger } from '../../dist/modules/index.js';
 
 const wrapperEl = document.querySelector('#test-wrapper');
 const numberOfEls = 500;

@@ -1,4 +1,4 @@
-import { waapi, animate, createTimer, utils, engine } from '../../../lib/anime.esm.js';
+import { waapi, animate, createTimer, utils, engine } from '../../../dist/modules/index.js';
 
 import {
   Object3D,

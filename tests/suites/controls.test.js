@@ -10,11 +10,11 @@ import {
   createTimer,
   utils,
   engine,
-} from '../../src/anime.js';
+} from '../../../dist/modules/index.js';
 
 import {
   minValue,
-} from '../../src/consts.js';
+} from '../../dist/modules/core/consts.js';
 
 suite('Controls', () => {
   test('Alternate the direction of an animation', resolve => {

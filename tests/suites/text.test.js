@@ -5,9 +5,9 @@ import {
 
 import {
   utils,
-  text,
+  splitText,
   animate,
-} from '../../src/anime.js';
+} from '../../../dist/modules/index.js';
 
 // Firefox detect Japanse words differently
 const wordsLength = browserIs.firefox ? 44 : 45;
@@ -15,7 +15,7 @@ const charsLength = 229;
 
 suite('Text', () => {
   test('Defaults text split (words only)', () => {
-    const split = text.split('#split-text p');
+    const split = splitText('#split-text p');
     expect(split.lines.length).to.equal(0);
     expect(split.words.length).to.equal(wordsLength);
     expect(split.chars.length).to.equal(0);
@@ -23,7 +23,7 @@ suite('Text', () => {
   });
 
   test('Split chars only', () => {
-    const split = text.split('#split-text p', { words: false, chars: true });
+    const split = splitText('#split-text p', { words: false, chars: true });
     expect(split.lines.length).to.equal(0);
     expect(split.words.length).to.equal(0);
     expect(split.chars.length).to.equal(charsLength);
@@ -31,7 +31,7 @@ suite('Text', () => {
   });
 
   test('Split lines only', resolve => {
-    const split = text.split('#split-text p', {
+    const split = splitText('#split-text p', {
       lines: true,
       words: false,
     })
@@ -50,7 +50,7 @@ suite('Text', () => {
   });
 
   test('Split words and chars', () => {
-    const split = text.split('#split-text p', { chars: true });
+    const split = splitText('#split-text p', { chars: true });
     expect(split.lines.length).to.equal(0);
     expect(split.words.length).to.equal(wordsLength);
     expect(split.chars.length).to.equal(charsLength);
@@ -58,7 +58,7 @@ suite('Text', () => {
   });
 
   test('Split words and lines', resolve => {
-    const split = text.split('#split-text p', {
+    const split = splitText('#split-text p', {
       lines: true,
     });
     split.addEffect((split) => {
@@ -76,7 +76,7 @@ suite('Text', () => {
   });
 
   test('Split lines and chars', resolve => {
-    const split = text.split('#split-text p', {
+    const split = splitText('#split-text p', {
       lines: true,
       words: false,
       chars: true,
@@ -95,7 +95,7 @@ suite('Text', () => {
   });
 
   test('Split lines words and chars', resolve => {
-    const split = text.split('#split-text p', {
+    const split = splitText('#split-text p', {
       lines: true,
       chars: true,
     })
@@ -114,7 +114,7 @@ suite('Text', () => {
   });
 
   test('Custom css classes', resolve => {
-    const split = text.split('#split-text p', {
+    const split = splitText('#split-text p', {
       lines: { class: 'split-line' },
       words: { class: 'split-word' },
       chars: { class: 'split-char' },
@@ -133,7 +133,7 @@ suite('Text', () => {
   });
 
   test('Wrap text', resolve => {
-    const split = text.split('#split-text p', {
+    const split = splitText('#split-text p', {
       lines: { wrap: 'clip' },
       words: { wrap: 'clip' },
       chars: { wrap: 'clip' },
@@ -151,7 +151,7 @@ suite('Text', () => {
   });
 
   test('Clone text', resolve => {
-    const split = text.split('#split-text p', {
+    const split = splitText('#split-text p', {
       lines: { clone: true },
       words: { clone: true },
       chars: { clone: true },
@@ -166,7 +166,7 @@ suite('Text', () => {
   });
 
   test('Custom template', resolve => {
-    const split = text.split('#split-text p', {
+    const split = splitText('#split-text p', {
       lines: '<span class="split-line split-line-{i}">{value}</span>',
       words: '<span class="split-word split-word-{i}">{value}</span>',
       chars: '<span class="split-char split-char-{i}">{value}</span>',
@@ -185,7 +185,7 @@ suite('Text', () => {
 
   test('Init in a document.fonts.ready Promise', resolve => {
     document.fonts.ready.then(() => {
-      text.split('#split-text p', {
+      splitText('#split-text p', {
         lines: true,
         words: true,
         chars: true,
@@ -204,7 +204,7 @@ suite('Text', () => {
 
   test('addEffect() should only triggers once on load', resolve => {
     let calls = 0, timeout;
-    text.split('#split-text p', {
+    splitText('#split-text p', {
       lines: true,
     })
     .addEffect((split) => {
@@ -221,7 +221,7 @@ suite('Text', () => {
   test('addEffect() should properly track the time of an animation', resolve => {
     let animation;
     const [ $p ] = utils.$('#split-text p');
-    const split = text.split('#split-text p', {
+    const split = splitText('#split-text p', {
       lines: true,
     })
     .addEffect((split) => {
@@ -248,7 +248,7 @@ suite('Text', () => {
       let cleanups = 0;
       let lines = 0;
       const [ $p ] = utils.$('#split-text p');
-      const split = text.split($p, {
+      const split = splitText($p, {
         lines: true,
       })
       .addEffect(() => {
@@ -284,7 +284,7 @@ suite('Text', () => {
   test('addEffect() should only triggers once on load inside a document.fonts.ready Promise', resolve => {
     document.fonts.ready.then(() => {
       let calls = 0, timeout;
-      text.split('#split-text p', {
+      splitText('#split-text p', {
         lines: true,
       })
       .addEffect((split) => {
@@ -304,7 +304,7 @@ suite('Text', () => {
       let calls = 0;
       let cleanups = 0;
       const [ $p ] = utils.$('#split-text p');
-      const split = text.split($p, {
+      const split = splitText($p, {
         lines: true,
       })
       .addEffect(() => {
@@ -331,7 +331,7 @@ suite('Text', () => {
     let calls = 0;
     let cleanups = 0;
     const [ $p ] = utils.$('#split-text p');
-    const split = text.split($p, {
+    const split = splitText($p, {
       lines: false,
     })
     .addEffect(() => {
@@ -353,7 +353,7 @@ suite('Text', () => {
       let calls = 0;
       let cleanups = 0;
       const [ $p ] = utils.$('#split-text p');
-      const split = text.split($p, {
+      const split = splitText($p, {
         lines: true,
       })
       .addEffect(self => {
@@ -383,7 +383,7 @@ suite('Text', () => {
   test('revert() should properly revert animations effects', resolve => {
     let animation;
     const [ $p ] = utils.$('#split-text p');
-    const split = text.split('#split-text p', {
+    const split = splitText('#split-text p', {
       lines: true,
     })
     .addEffect((split) => {
@@ -405,7 +405,7 @@ suite('Text', () => {
       let calls = 0;
       let cleanups = 0;
       const [ $p ] = utils.$('#split-text p');
-      const split = text.split($p, {
+      const split = splitText($p, {
         lines: true,
       })
       .addEffect(self => {

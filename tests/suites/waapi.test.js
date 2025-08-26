@@ -7,7 +7,7 @@ import {
   utils,
   stagger,
   eases,
-} from '../../src/anime.js';
+} from '../../../dist/modules/index.js';
 
 suite('WAAPI', () => {
 

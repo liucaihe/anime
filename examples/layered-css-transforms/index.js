@@ -1,4 +1,4 @@
-import { createTimeline, utils, createSpring } from '../../lib/anime.esm.js';
+import { createTimeline, utils, createSpring } from '../../dist/modules/index.js';
 
 const shapeEls = document.querySelectorAll('.shape');
 const triangleEl = document.querySelector('.layered-animations polygon');

@@ -7,7 +7,7 @@ import {
   utils,
   eases,
   createSpring,
-} from '../../src/anime.js';
+} from '../../../dist/modules/index.js';
 
 function createEasingParam(ease) {
   return {

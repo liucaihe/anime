@@ -7,7 +7,7 @@ import {
   scrollContainers,
   animate,
   utils
-} from '../../src/anime.js';
+} from '../../../dist/modules/index.js';
 
 suite('Scroll', () => {
   test('Reverting an animation with onScroll should also revert the ScrollObserver', () => {

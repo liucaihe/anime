@@ -2,7 +2,7 @@ import {
   createTimeline,
   stagger,
   utils,
-} from '../../lib/anime.esm.js';
+} from '../../dist/modules/index.js';
 
 const { random, cos, sin, sqrt, PI } = Math;
 const count = 2500;

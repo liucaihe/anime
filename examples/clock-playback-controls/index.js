@@ -1,4 +1,4 @@
-import { animate, createTimeline, utils } from '../../lib/anime.esm.js';
+import { animate, createTimeline, utils } from '../../dist/modules/index.js';
 
 const [ $digitalClock ] = utils.$('#digital');
 

@@ -1,4 +1,4 @@
-import { animate, createTimer, utils } from '../../lib/anime.esm.js';
+import { animate, createTimer, utils } from '../../dist/modules/index.js';
 
 const canvasEl = document.querySelector('canvas');
 const ctx = canvasEl.getContext('2d', { alpha: false });

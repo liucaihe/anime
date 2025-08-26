@@ -9,7 +9,7 @@ import {
   createSpring,
   createTimeline,
   engine,
-} from '../../lib/anime.esm.js';
+} from '../../dist/modules/index.js';
 
 engine.timeUnit = 'ms';
 // engine.timeUnit = 's';

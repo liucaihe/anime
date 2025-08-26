@@ -5,7 +5,7 @@ import {
   createTimer,
   createScope,
   onScroll
-} from '../../../../lib/anime.esm.js';
+} from '../../../../dist/modules/index.js';
 
 const [$animResume] = utils.$('#animation-resume');
 const [$animPlay] = utils.$('#animation-play');

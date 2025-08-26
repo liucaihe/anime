@@ -2,7 +2,7 @@ import {
   animate,
   utils,
   createScope,
-} from '../../../lib/anime.esm.js';
+} from '../../../dist/modules/index.js';
 
 const scope = createScope({
   mediaQueries: { isSmall: '(max-width: 800px)' },

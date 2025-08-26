@@ -4,7 +4,7 @@ import {
   getTweenDelay,
 } from '../utils.js';
 
-import { animate, stagger, createTimeline } from '../../src/anime.js';
+import { animate, stagger, createTimeline } from '../../../dist/modules/index.js';
 
 suite('Stagger', () => {
   test('Increase each values by a specific value for each elements', () => {

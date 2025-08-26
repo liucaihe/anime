@@ -4,7 +4,7 @@ import {
   createTimeline,
   stagger,
   utils,
-} from '../../lib/anime.esm.js';
+} from '../../dist/modules/index.js';
 
 const line = svg.createDrawable('line');
 

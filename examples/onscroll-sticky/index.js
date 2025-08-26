@@ -4,7 +4,7 @@ import {
   onScroll,
   createTimeline,
   animate,
-} from '../../src/anime.js';
+} from '../../dist/modules/index.js';
 
 utils.set('.card', {
   rotate: () => utils.random(-1, 1, 2),

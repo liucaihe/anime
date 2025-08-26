@@ -3,10 +3,10 @@ import {
   createTimeline,
   createScope,
   stagger,
-  text,
+  splitText,
   utils,
   Scope,
-} from '../../../lib/anime.esm.js';
+} from '../../../dist/modules/index.js';
 
 let split;
 
@@ -71,7 +71,7 @@ function updateSplitConfig() {
 
   if (split) split.revert();
 
-  split = text.split('article', { ...config.split })
+  split = splitText('article', { ...config.split })
   .addEffect(self => config.animation.lines && self.lines.length && animateSplit(self.lines, 'lines'))
   .addEffect(self => config.animation.words && self.words.length && animateSplit(self.words, 'words'))
   .addEffect(self => config.animation.chars && self.chars.length && animateSplit(self.chars, 'chars'))

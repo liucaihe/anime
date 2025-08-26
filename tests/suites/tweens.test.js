@@ -11,12 +11,12 @@ import {
   createTimer,
   createTimeline,
   engine,
-} from '../../src/anime.js';
+} from '../../../dist/modules/index.js';
 
 import {
   compositionTypes,
   valueTypes,
-} from '../../src/consts.js';
+} from '../../dist/modules/core/consts.js';
 
 suite('Tweens', () => {
   test('Single tween timings', () => {

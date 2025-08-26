@@ -3,7 +3,7 @@ import {
   onScroll,
   stagger,
   createScope,
-} from '../../src/anime.js';
+} from '../../dist/modules/index.js';
 
 createScope({
   mediaQueries: { landscape: '(orientation: landscape)' },

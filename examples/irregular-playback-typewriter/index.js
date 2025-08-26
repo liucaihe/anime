@@ -4,7 +4,7 @@ import {
   utils,
   stagger,
   eases,
-} from '../../lib/anime.esm.js';
+} from '../../dist/modules/index.js';
 
 const $spans = utils.$('span');
 const $cursor = utils.$('.cursor');

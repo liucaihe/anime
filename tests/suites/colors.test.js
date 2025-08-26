@@ -6,11 +6,11 @@ import {
 import {
   animate,
   utils,
-} from '../../src/anime.js';
+} from '../../../dist/modules/index.js';
 
 import {
   valueTypes,
-} from '../../src/consts.js';
+} from '../../dist/modules/core/consts.js';
 
 const colors = {
   from: {

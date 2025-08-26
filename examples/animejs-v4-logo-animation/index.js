@@ -1,4 +1,4 @@
-import { createTimeline, stagger, svg, utils, eases } from '../../lib/anime.esm.js';
+import { createTimeline, stagger, svg, utils, eases } from '../../dist/modules/index.js';
 
 const [ $dot1 ] = utils.$('#dot-1');
 const onions = [];

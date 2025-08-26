@@ -4,7 +4,7 @@ import {
   addChild,
   removeChild,
   forEachChildren,
-} from '../src/helpers.js';
+} from '../dist/modules/core/helpers.js';
 
 export const { expect } = chai;
 

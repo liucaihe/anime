@@ -1,14 +1,12 @@
 import {
   expect,
-  getChildAtIndex,
-  forEachChildren,
 } from '../utils.js';
 
 import {
   createTimer,
   createDraggable,
   utils,
-} from '../../src/anime.js';
+} from '../../../dist/modules/index.js';
 
 const createMouseEvent = ($target, name, x, y) => $target.dispatchEvent(new MouseEvent('mouse' + name, {
   clientX: x,
@@ -194,3 +192,4 @@ suite('Draggables', () => {
   });
 
 });
+

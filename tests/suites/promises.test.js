@@ -2,7 +2,7 @@ import {
   expect,
 } from '../utils.js';
 
-import { animate, createTimeline, createTimer, utils } from '../../src/anime.js';
+import { animate, createTimeline, createTimer, utils } from '../../../dist/modules/index.js';
 
 suite('Promises', () => {
 

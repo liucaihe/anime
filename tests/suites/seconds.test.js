@@ -5,14 +5,14 @@ import {
 
 import {
   minValue,
-} from '../../src/consts.js';
+} from '../../dist/modules/core/consts.js';
 
 import {
   animate,
   createTimeline,
   createTimer,
   engine,
-} from '../../src/anime.js';
+} from '../../../dist/modules/index.js';
 
 
 suite('Seconds', () => {

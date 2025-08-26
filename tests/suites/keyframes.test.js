@@ -4,11 +4,11 @@ import {
   getTweenDelay,
 } from '../utils.js';
 
-import { animate, utils } from '../../src/anime.js';
+import { animate, utils } from '../../../dist/modules/index.js';
 
 import {
   valueTypes,
-} from '../../src/consts.js';
+} from '../../dist/modules/core/consts.js';
 
 suite('Keyframes', () => {
   test('An array of one raw value should be considered as a simple value', () => {

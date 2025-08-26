@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "target": "esnext",
+    "allowJs": true,
+    "checkJs": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "skipLibCheck": true,
+    "outDir": "./dist/modules/"
+  },
+  "include": [
+    "./src/index.js",
+    "./src/timer/index.js",
+    "./src/animation/index.js",
+    "./src/timeline/index.js",
+    "./src/animatable/index.js",
+    "./src/draggable/index.js",
+    "./src/scope/index.js",
+    "./src/events/index.js",
+    "./src/spring/index.js",
+    "./src/engine/index.js",
+    "./src/easings/index.js",
+    "./src/utils/index.js",
+    "./src/svg/index.js",
+    "./src/text/index.js",
+    "./src/waapi/index.js",
+    "./src/types/index.js",
+  ],
+  "exclude": [] // Needed to allow include and outDir to be the same
+}

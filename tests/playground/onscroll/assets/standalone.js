@@ -2,7 +2,7 @@ import {
   utils,
   onScroll,
   animate,
-} from '../../../../src/anime.js';
+} from '../../../../dist/modules/index.js';
 
 const $logs = utils.$('.log');
 

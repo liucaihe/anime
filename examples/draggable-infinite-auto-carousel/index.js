@@ -4,7 +4,7 @@ import {
   createDraggable,
   createAnimatable,
   utils,
-} from '../../lib/anime.esm.js';
+} from '../../dist/modules/index.js';
 
 const [ $carousel ] = /** @type {Array<HTMLElement>} */(utils.$('.carousel'));
 $carousel.innerHTML += $carousel.innerHTML; // Clone the children for creating the illusion of infinity

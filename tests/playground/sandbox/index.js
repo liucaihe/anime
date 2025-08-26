@@ -1,17 +1,16 @@
-import {
-  animate,
-  createTimeline,
-  utils,
-} from '../../../lib/anime.esm.js';
+import { animate, clamp, createTimer, onScroll, random } from '../../../dist/modules/index.js';
 
-utils.set('.square', {
-  y: 0,
-  rotate: 45,
-})
+animate('square', {
+  x: 100,
+  duration: 200,
+  autoplay: onScroll({
+    target: '.container',
+    sync: 1,
+  })
+});
 
 animate('.square', {
-  y: '+=50',
-  rotate: () => '+=10',
-  loop: true,
-  onLoop: self => self.refresh()
+  duration: () => random(1, 200)
 });
+
+const value = clamp()

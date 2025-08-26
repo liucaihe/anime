@@ -4,9 +4,9 @@ import {
   createSpring,
   createTimeline,
   stagger,
-  text,
+  splitText,
   utils,
-} from '../../../lib/anime.esm.js';
+} from '../../../dist/modules/index.js';
 
 createScope({
   root: '#horizontal-split',
@@ -18,7 +18,7 @@ createScope({
 
   const { root, methods } = scope;
 
-  text.split('h2', {
+  splitText('h2', {
     chars: {
       class: 'char',
       clone: 'left',
@@ -48,7 +48,7 @@ createScope({
   const { root } = scope;
 
   const params = {
-    split: text.split('h2', { chars: true }),
+    split: splitText('h2', { chars: true }),
     strength: 0,
   };
 
@@ -80,7 +80,7 @@ createScope({
 
   const { root, methods } = scope;
 
-  text.split('h2', {
+  splitText('h2', {
     chars: {
       class: 'char',
       clone: 'top',
@@ -117,7 +117,7 @@ createScope({
 }).add((scope) => {
 
   const { root, methods } = scope;
-  const { chars } = text.split('h2', { chars: true });
+  const { chars } = splitText('h2', { chars: true });
 
   utils.set(chars, { opacity: .25 });
 
@@ -138,7 +138,7 @@ createScope({
 
   const { root, methods } = scope;
 
-  text.split('h2', {
+  splitText('h2', {
     words: `<span class="word-3d word-{i}">
       <em class="face face-top">{value}</em>
       <em class="face-front">{value}</em>
@@ -172,7 +172,7 @@ createScope({
 }).add((scope) => {
 
   const { root, methods } = scope;
-  const { chars } = text.split('h2', { chars: true });
+  const { chars } = splitText('h2', { chars: true });
 
   scope.add('onEnter', () => {
     createTimeline().add(chars, {
