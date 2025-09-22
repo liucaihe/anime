@@ -8,11 +8,11 @@
   <style>
     body {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       flex-wrap: wrap;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      height: 200vh;
     }
 
     .container {
@@ -20,14 +20,15 @@
       flex-wrap: wrap;
       justify-content: center;
       align-items: center;
-      gap: .5rem;
+      flex-direction: column;
+      gap: 10rem;
       padding: 1rem;
     }
 
     .square {
       width: 100px;
       height: 100px;
-      background: var(--red);
+      background: currentColor;
       border-radius: 1rem;
       padding: 1rem;
     }
@@ -46,11 +47,11 @@
     <button class="button">1000</button>
   </div>
   <div class="container">
-    <div class="square"></div>
-    <div class="square"></div>
-    <div class="square"></div>
-    <div class="square"></div>
-    <div class="square"></div>
+    <div class="square red"></div>
+    <div class="square green"></div>
+    <div class="square green"></div>
+    <div class="square green"></div>
+    <div class="square green"></div>
   </div>
   <script type="module" src="./index.js"></script>
 </body>

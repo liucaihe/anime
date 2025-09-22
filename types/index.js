@@ -1,6 +1,6 @@
 /**
  * anime.js - ESM
- * @version v4.1.3
+ * @version v4.1.4
  * @author Julian Garnier
  * @license MIT
  * @copyright (c) 2025 Julian Garnier
@@ -142,7 +142,7 @@ const globals = {
     /** @type {Number} */
     tickThreshold: 200,
 };
-const globalVersions = { version: '4.1.3', engine: null };
+const globalVersions = { version: '4.1.4', engine: null };
 if (isBrowser) {
     if (!win.AnimeJS)
         win.AnimeJS = [];
@@ -274,7 +274,7 @@ const shuffle = items => {
  * @param  {Number} v
  * @return {Number}
  */
-const clampInfinity = v => v === Infinity ? maxValue : v === -Infinity ? -1e12 : v;
+const clampInfinity = v => v === Infinity ? maxValue : v === -Infinity ? -maxValue : v;
 /**
  * @param  {Number} v
  * @return {Number}
@@ -1215,7 +1215,7 @@ const createDrawableProxy = ($el, start, end) => {
                         // const v1 = round(+value.slice(0, spaceIndex), precision);
                         // const v2 = round(+value.slice(spaceIndex + 1), precision);
                         const scaleFactor = getScaleFactor($scalled);
-                        const os = v1 * -1e3 * scaleFactor;
+                        const os = v1 * -pathLength * scaleFactor;
                         const d1 = (v2 * pathLength * scaleFactor) + os;
                         const d2 = (pathLength * scaleFactor +
                             ((v1 === 0 && v2 === 1) || (v1 === 1 && v2 === 0) ? 0 : 10 * scaleFactor) - d1);
@@ -4504,7 +4504,7 @@ class Spring {
         this.m = clamp(setValue(parameters.mass, 1), 0, maxSpringParamValue);
         this.s = clamp(setValue(parameters.stiffness, 100), 1, maxSpringParamValue);
         this.d = clamp(setValue(parameters.damping, 10), .1, maxSpringParamValue);
-        this.v = clamp(setValue(parameters.velocity, 0), -1e4, maxSpringParamValue);
+        this.v = clamp(setValue(parameters.velocity, 0), -maxSpringParamValue, maxSpringParamValue);
         this.w0 = 0;
         this.zeta = 0;
         this.wd = 0;
@@ -4574,7 +4574,7 @@ class Spring {
         return this.v;
     }
     set velocity(v) {
-        this.v = clamp(setValue(v, 0), -1e4, maxSpringParamValue);
+        this.v = clamp(setValue(v, 0), -maxSpringParamValue, maxSpringParamValue);
         this.compute();
     }
 }
@@ -4846,7 +4846,7 @@ class Draggable {
         /** @type {[Number, Number, Number, Number]} */
         this.dragArea = [0, 0, 0, 0]; // x, y, w, h
         /** @type {[Number, Number, Number, Number]} */
-        this.containerBounds = [-1e12, maxValue, maxValue, -1e12]; // t, r, b, l
+        this.containerBounds = [-maxValue, maxValue, maxValue, -maxValue]; // t, r, b, l
         /** @type {[Number, Number, Number, Number]} */
         this.scrollBounds = [0, 0, 0, 0]; // t, r, b, l
         /** @type {[Number, Number, Number, Number]} */
@@ -5305,10 +5305,10 @@ class Draggable {
         const canScroll = this.canScroll;
         if (!this.containerArray && this.isOutOfBounds(scrollBounds, x, y)) {
             const [st, sr, sb, sl] = scrollBounds;
-            const t = round(clamp(y - st, -1e12, 0), 0);
+            const t = round(clamp(y - st, -maxValue, 0), 0);
             const r = round(clamp(x - sr, 0, maxValue), 0);
             const b = round(clamp(y - sb, 0, maxValue), 0);
-            const l = round(clamp(x - sl, -1e12, 0), 0);
+            const l = round(clamp(x - sl, -maxValue, 0), 0);
             new JSAnimation(scroll, {
                 x: round(scroll.x + (l ? l - gap : r ? r + gap : 0), 0),
                 y: round(scroll.y + (t ? t - gap : b ? b + gap : 0), 0),
@@ -6340,6 +6340,8 @@ class ScrollObserver {
         this.forceEnter = false;
         /** @type {Boolean} */
         this.hasEntered = false;
+        /** @type {Boolean} */
+        this.isReady = false;
         // /** @type {Array.<Number>} */
         // this.offsets = [];
         /** @type {Number} */
@@ -6425,6 +6427,8 @@ class ScrollObserver {
         return p === Infinity || isNaN(p) ? 0 : round(clamp(p, 0, 1), 6);
     }
     refresh() {
+        // This flag is used to prevent running handleScroll() outside of this.refresh() with values not calculated
+        this.isReady = true;
         this.reverted = false;
         const params = this._params;
         this.repeat = setValue(parseScrollObserverFunctionParameter(params.repeat, this), true);
@@ -6688,6 +6692,8 @@ class ScrollObserver {
         }
     }
     handleScroll() {
+        if (!this.isReady)
+            return;
         const linked = this.linked;
         const sync = this.sync;
         const syncEase = this.syncEase;
@@ -6716,7 +6722,7 @@ class ScrollObserver {
             if (syncSmooth && isNum(syncSmooth)) {
                 if ( /** @type {Number} */(syncSmooth) < 1) {
                     const step = 0.0001;
-                    const snap = lp < p && p === 1 ? step : lp > p && !p ? -1e-4 : 0;
+                    const snap = lp < p && p === 1 ? step : lp > p && !p ? -step : 0;
                     p = round(lerp(lp, p, interpolate(.01, .2, /** @type {Number} */ (syncSmooth)), false) + snap, 6);
                 }
             }
@@ -6808,6 +6814,7 @@ class ScrollObserver {
             this.removeDebug();
         }
         this.reverted = true;
+        this.isReady = false;
         return this;
     }
 }

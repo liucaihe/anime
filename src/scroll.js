@@ -449,6 +449,8 @@ export class ScrollObserver {
     this.forceEnter = false;
     /** @type {Boolean} */
     this.hasEntered = false;
+    /** @type {Boolean} */
+    this.isReady = false;
     // /** @type {Array.<Number>} */
     // this.offsets = [];
     /** @type {Number} */
@@ -537,6 +539,8 @@ export class ScrollObserver {
   }
 
   refresh() {
+    // This flag is used to prevent running handleScroll() outside of this.refresh() with values not calculated
+    this.isReady = true;
     this.reverted = false;
     const params = this._params;
     this.repeat = setValue(parseScrollObserverFunctionParameter(params.repeat, this), true);
@@ -802,6 +806,7 @@ export class ScrollObserver {
   }
 
   handleScroll() {
+    if (!this.isReady) return;
     const linked = this.linked;
     const sync = this.sync;
     const syncEase = this.syncEase;
@@ -925,6 +930,7 @@ export class ScrollObserver {
       this.removeDebug();
     }
     this.reverted = true;
+    this.isReady = false;
     return this;
   }
 

@@ -1,17 +1,20 @@
-import {
-  animate,
-  createTimeline,
-  utils,
-} from '../../../lib/anime.esm.js';
+import { animate, onScroll, utils } from '../../../lib/anime.esm.js';
 
-utils.set('.square', {
-  y: 0,
-  rotate: 45,
-})
-
-animate('.square', {
-  y: '+=50',
-  rotate: () => '+=10',
-  loop: true,
-  onLoop: self => self.refresh()
+animate('.red', {
+  id: 'test',
+  rotate: 360,
+  autoplay: onScroll()
 });
+
+utils.$('.green').forEach($el => {
+  setTimeout(() => {
+    onScroll({
+      target: $el,
+      repeat: false,
+      debug: true,
+      onEnter: () => {
+        console.log("enter scroll")
+      }
+    })
+  }, 60)
+})

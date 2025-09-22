@@ -947,6 +947,7 @@ declare class ScrollObserver {
     isInView: boolean;
     forceEnter: boolean;
     hasEntered: boolean;
+    isReady: boolean;
     offset: number;
     offsetStart: number;
     offsetEnd: number;
