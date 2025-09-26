@@ -259,6 +259,8 @@ export class Draggable {
     /** @type {Number} */
     this.dragSpeed = 0;
     /** @type {Number} */
+    this.dragThreshold = 3;
+    /** @type {Number} */
     this.maxVelocity = 0;
     /** @type {Number} */
     this.minVelocity = 0;
@@ -690,6 +692,7 @@ export class Draggable {
     this.scrollSpeed = setValue(parseDraggableFunctionParameter(params.scrollSpeed, this), 1.5);
     this.scrollThreshold = setValue(parseDraggableFunctionParameter(params.scrollThreshold, this), 20);
     this.dragSpeed = setValue(parseDraggableFunctionParameter(params.dragSpeed, this), 1);
+    this.dragThreshold = setValue(parseDraggableFunctionParameter(params.dragThreshold, this), 3);
     this.minVelocity = setValue(parseDraggableFunctionParameter(params.minVelocity, this), 0);
     this.maxVelocity = setValue(parseDraggableFunctionParameter(params.maxVelocity, this), 50);
     this.velocityMultiplier = setValue(parseDraggableFunctionParameter(params.velocityMultiplier, this), 1);
@@ -991,8 +994,7 @@ export class Draggable {
       this.$trigger.addEventListener('touchend', preventDefault);
 
       // Don't check for a miminim distance move if already dragging
-      if (this.dragged || (!this.disabled[0] && abs(movedX) > 3) || (!this.disabled[1] && abs(movedY) > 3)) {
-
+      if (this.dragged || (!this.disabled[0] && abs(movedX) > this.dragThreshold) || (!this.disabled[1] && abs(movedY) > this.dragThreshold)) {
         this.updateTicker.resume();
         this.pointer[2] = this.pointer[0];
         this.pointer[3] = this.pointer[1];

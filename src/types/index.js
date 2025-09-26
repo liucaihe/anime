@@ -585,6 +585,7 @@ export {}
  * @property {Number|((draggable: Draggable) => Number)} [containerFriction]
  * @property {Number|((draggable: Draggable) => Number)} [releaseContainerFriction]
  * @property {Number|((draggable: Draggable) => Number)} [dragSpeed]
+ * @property {Number|((draggable: Draggable) => Number)} [dragThreshold]
  * @property {Number|((draggable: Draggable) => Number)} [scrollSpeed]
  * @property {Number|((draggable: Draggable) => Number)} [scrollThreshold]
  * @property {Number|((draggable: Draggable) => Number)} [minVelocity]
