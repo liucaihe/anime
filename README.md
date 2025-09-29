@@ -37,8 +37,8 @@ Help the project become sustainable by sponsoring us on <a target="_blank" href=
 </a>
 <a target="_blank" href="https://go.warp.dev/anime">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./assets/sponsors/wrap-logomark.png">
-    <img align="center" src="./assets/sponsors/wrap-logomark-dark.png" width="250">
+    <source media="(prefers-color-scheme: dark)" srcset="./assets/sponsors/warp-logomark.png">
+    <img align="center" src="./assets/sponsors/warp-logomark-dark.png" width="250">
   </picture>
 </a>
 </p>
