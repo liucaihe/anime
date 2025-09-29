@@ -21,12 +21,6 @@
   <img alt="GitHub Sponsors" src="https://img.shields.io/github/sponsors/juliangarnier?style=flat-square&logo=github">
 </p>
 
-## Private Anime.js Discord
-
-Join us on Discord by following this link https://discord.gg/N2vjsQsq9w
-
-Please don't forget to **share your GitHub username** and **your Discord username** to julian@animejs.com so I can give you the sponsor role!!
-
 ## Sponsors
 
 Anime.js is 100% free and is only made possible with the help of our sponsors.
