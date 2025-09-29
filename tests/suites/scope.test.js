@@ -4,7 +4,7 @@ import {
 
 import {
   createScope,
-} from '../../src/anime.js';
+} from '../../dist/modules/index.js';
 
 suite('Scope', () => {
 

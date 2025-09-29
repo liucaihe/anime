@@ -1,4 +1,4 @@
-import { waapi, animate, stagger, utils, createTimer } from '../../../../lib/anime.esm.js';
+import { waapi, animate, stagger, utils, createTimer } from '../../../../dist/modules/index.js';
 
 let alternate = false;
 let x = utils.random(0, window.innerWidth - 800);

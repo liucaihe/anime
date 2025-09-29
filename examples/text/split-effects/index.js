@@ -2,9 +2,9 @@ import {
   animate,
   createTimeline,
   stagger,
-  text,
+  splitText,
   utils,
-} from '../../../lib/anime.esm.js';
+} from '../../../dist/modules/index.js';
 
 const coords = [];
 const [ $revert ] = utils.$('#revert');
@@ -22,7 +22,7 @@ const splitAndAnimate = () => {
   $revert.disabled = false;
   $split.disabled = true;
 
-  split = text.split('p', {
+  split = splitText('p', {
     lines: true,
   });
 

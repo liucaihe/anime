@@ -1,4 +1,4 @@
-import { waapi, animate, stagger, createSpring, utils, eases, engine } from '../../../../lib/anime.esm.js';
+import { waapi, animate, stagger, createSpring, utils, eases, engine } from '../../../../dist/modules/index.js';
 
 let currentY = 0;
 let alternate = false;

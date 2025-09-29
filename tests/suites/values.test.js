@@ -7,12 +7,12 @@ import {
 import {
   animate,
   utils,
-} from '../../src/anime.js';
+} from '../../dist/modules/index.js';
 
 import {
   unitsExecRgx,
   valueTypes,
-} from '../../src/consts.js';
+} from '../../dist/modules/core/consts.js';
 
 suite('Values', () => {
 
@@ -491,32 +491,40 @@ suite('Values', () => {
   test('CSS Variables in Transforms', () => {
     /** @type {HTMLElement} */
     const $target = document.querySelector('#target-id');
-    utils.set($target, {
-      '--x': '12rem',
-      '--rx': '45deg',
-      '--s': 2,
+    const x = '12rem';
+    const rx = '45deg';
+    const s = '2';
+    // defined and set the variables in two different set() callS otherwise the values won't be properly computed
+    utils.set($target, { '--x': x, '--rx': rx, '--s': s });
+    const setter = utils.set($target, {
       translateX: 'var(--x)',
       rotateX: 'var(--rx)',
       scale: 'var(--s)'
     });
-    expect(getComputedStyle($target).getPropertyValue('--x')).to.equal('12rem');
-    expect(getComputedStyle($target).getPropertyValue('--rx')).to.equal('45deg');
-    expect(getComputedStyle($target).getPropertyValue('--s')).to.equal('2');
+    expect(getComputedStyle($target).getPropertyValue('--x')).to.equal(x);
+    expect(getComputedStyle($target).getPropertyValue('--rx')).to.equal(rx);
+    expect(getComputedStyle($target).getPropertyValue('--s')).to.equal(s);
     let transforms = $target.style.transform;
-    expect(transforms).to.equal('translateX(var(--x)) rotateX(var(--rx)) scale(var(--s))');
+    expect(transforms).to.equal(`translateX(${x}) rotateX(${rx}) scale(${s})`);
+    const x2 = '19rem';
+    const rx2 = '64deg';
+    const s2 = '1.25';
     const animation = animate($target, {
-      '--x': '19rem',
-      '--rx': '64deg',
-      '--s': 1.25,
+      '--x': x2,
+      '--rx': rx2,
+      '--s': s2,
       duration: 10
     });
 
     animation.pause().seek(animation.duration);
-    expect(getComputedStyle($target).getPropertyValue('--x')).to.equal('19rem');
-    expect(getComputedStyle($target).getPropertyValue('--rx')).to.equal('64deg');
-    expect(getComputedStyle($target).getPropertyValue('--s')).to.equal('1.25');
+    expect(getComputedStyle($target).getPropertyValue('--x')).to.equal(x2);
+    expect(getComputedStyle($target).getPropertyValue('--rx')).to.equal(rx2);
+    expect(getComputedStyle($target).getPropertyValue('--s')).to.equal(s2);
+    // Setting css variables with utils.set() will convert the variable to a static computed value
+    // So we need to refresh the setter in order to get the updated values from the animation
+    setter.refresh();
     transforms = $target.style.transform;
-    expect(transforms).to.equal('translateX(var(--x)) rotateX(var(--rx)) scale(var(--s))');
+    expect(transforms).to.equal(`translateX(${x2}) rotateX(${rx2}) scale(${s2})`);
   });
 
   test('From values', () => {

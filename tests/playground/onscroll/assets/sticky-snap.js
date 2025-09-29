@@ -2,7 +2,7 @@ import {
   utils,
   onScroll,
   createTimeline,
-} from '../../../../src/anime.js';
+} from '../../../../dist/modules/index.js';
 
 const tl = createTimeline({
   defaults: {

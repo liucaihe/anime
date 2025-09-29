@@ -1,4 +1,4 @@
-import { animate, createTimer, createTimeline, utils } from '../../src/anime.js';
+import { animate, createTimer, createTimeline, utils } from '../../dist/modules/index.js';
 
 animate('.anime-css', {
   keyframes: {

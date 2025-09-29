@@ -3,7 +3,7 @@ import {
   animate,
   onScroll,
   stagger,
-} from '../../../../src/anime.js';
+} from '../../../../dist/modules/index.js';
 
 const isLandscapeMedia = matchMedia('(orientation: landscape)');
 

@@ -3,7 +3,7 @@ import {
   onScroll,
   createTimeline,
   animate,
-} from '../../../../src/anime.js';
+} from '../../../../dist/modules/index.js';
 
 animate('#edges .target', {
   rotate: 360,

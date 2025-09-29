@@ -1,4 +1,4 @@
-import { animate, svg } from '../../../lib/anime.esm.js';
+import { animate, svg } from '../../../dist/modules/index.js';
 
 animate(['.no-specified-width .dom-el', '.no-specified-width .rect-el'], {
   duration: 3000,

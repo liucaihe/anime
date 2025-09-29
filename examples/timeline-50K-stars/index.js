@@ -1,4 +1,4 @@
-import { animate, createTimeline, utils } from '../../lib/anime.esm.js';
+import { animate, createTimeline, utils, steps, cubicBezier } from '../../dist/modules/index.js';
 
 const [$animation] = utils.$('#animation');
 const [$button] = utils.$('.star-button');
@@ -39,14 +39,14 @@ const increaseCount = (cursor) => {
     .add($cursorClone, {
       x: { to: [utils.random(-250, 250), utils.random(-70, 70)], ease: 'out(3)' },
       y: { to: [utils.random(0, 1) ? -300 : 300, utils.random(0, 10)], ease: 'out(6)' },
-      backgroundPosition: { to: '-40px 0px', ease: 'steps(1)', duration: 150 },
+      backgroundPosition: { to: '-40px 0px', ease: steps(1), duration: 150 },
       opacity: [0, 1],
       duration: 400,
     })
     .add($cursorClone, {
       x: { to: utils.random(-250, 250), ease: 'inOut(3)' },
       y: { to: utils.random(0, 1) ? -300 : 300, ease: 'inOut(6)' },
-      backgroundPosition: { to: '0px 0px', ease: 'steps(1)', duration: 50 },
+      backgroundPosition: { to: '0px 0px', ease: steps(1), duration: 50 },
       opacity: 0,
       duration: 750,
     })
@@ -75,7 +75,7 @@ createTimeline()
 .add($cursor, {
   x: { to: 0, ease: 'out(3)' },
   y: { to: 10, ease: 'out(6)' },
-  backgroundPosition: { to: '-40px 0px', ease: 'steps(1)', duration: 250 },
+  backgroundPosition: { to: '-40px 0px', ease: steps(1), duration: 250 },
   duration: 750,
 })
 .add('.star-button', {
@@ -94,35 +94,35 @@ createTimeline()
 .add($cursor, {
   x: { to: -150, ease: 'inOut(3)' },
   y: { to: 250, ease: 'inOut(6)' },
-  backgroundPosition: { to: '0px 0px', ease: 'steps(1)', duration: 50 },
+  backgroundPosition: { to: '0px 0px', ease: steps(1), duration: 50 },
   duration: 750,
 }, 'CLICK START-=500')
 .add(data, {
   mult: [0, 0, 1.5, .25, 0, 0],
   duration: 10000,
-  ease: 'cubicBezier(1,0,0,1)',
+  ease: cubicBezier(1,0,0,1),
 }, 'CLICK START')
 .add(clickAnimation, {
   progress: 1,
   duration: 10000,
-  ease: 'cubicBezier(.65,0,0,1)',
+  ease: cubicBezier(.65,0,0,1),
 }, 'CLICK START')
 .add($count, {
   innerHTML: ['5', '40000'],
   modifier: utils.round(0),
-  ease: 'cubicBezier(1,0,1,1)',
+  ease: cubicBezier(1,0,1,1),
   duration: 5000
 }, 'CLICK START+=800')
 .add($count, {
   innerHTML: '49999',
   modifier: utils.round(0),
-  ease: 'cubicBezier(0,1,0,1)',
+  ease: cubicBezier(0,1,0,1),
   duration: 4250
 }, '<')
 .add($cursor, {
   x: { to: 0, ease: 'out(3)' },
   y: { to: 10, ease: 'out(6)' },
-  backgroundPosition: { to: '-40px 0px', ease: 'steps(1)', duration: 250 },
+  backgroundPosition: { to: '-40px 0px', ease: steps(1), duration: 250 },
   duration: 750,
 }, '<+=250')
 .add('.star-button', {
@@ -135,7 +135,7 @@ createTimeline()
 .add($cursor, {
   x: { to: -150, ease: 'inOut(3)' },
   y: { to: 250, ease: 'inOut(6)' },
-  backgroundPosition: { to: '0px 0px', ease: 'steps(1)', duration: 250 },
+  backgroundPosition: { to: '0px 0px', ease: steps(1), duration: 250 },
   duration: 750,
 }, '<<+=1000')
 .add($animation, {

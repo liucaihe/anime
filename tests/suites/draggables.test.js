@@ -1,14 +1,12 @@
 import {
   expect,
-  getChildAtIndex,
-  forEachChildren,
 } from '../utils.js';
 
 import {
   createTimer,
   createDraggable,
   utils,
-} from '../../src/anime.js';
+} from '../../dist/modules/index.js';
 
 const createMouseEvent = ($target, name, x, y) => $target.dispatchEvent(new MouseEvent('mouse' + name, {
   clientX: x,
@@ -16,6 +14,24 @@ const createMouseEvent = ($target, name, x, y) => $target.dispatchEvent(new Mous
   bubbles: true,
   cancelable: true
 }));
+
+const createTouchEvent = ($el, type, x, y) => {
+  const touch = new Touch({
+    identifier: 1,
+    target: $el,
+    clientX: x,
+    clientY: y,
+    pageX: x,
+    pageY: y,
+  });
+  $el.dispatchEvent(new TouchEvent('touch' + type, {
+    touches: type === 'end' ? [] : [touch],
+    changedTouches: [touch],
+    bubbles: true,
+    composed: true,
+    cancelable: true
+  }));
+};
 
 suite('Draggables', () => {
   test('Triggering a reset in the onSettle callback should correctly set the values', resolve => {
@@ -96,7 +112,7 @@ suite('Draggables', () => {
         resolve();
         draggable.revert();
       },
-      duration: 33,
+      duration: 50,
     });
   });
 
@@ -109,8 +125,8 @@ suite('Draggables', () => {
 
     const draggable = createDraggable($target, {
       container: $container,
-      releaseDamping: 2000,
-      releaseStiffness: 2000,
+      releaseStiffness: 10000,
+      releaseDamping: 300,
       onUpdate: () => {
         updates++;
       },
@@ -132,8 +148,50 @@ suite('Draggables', () => {
         createMouseEvent(document, 'move', ++x, 0);
         createMouseEvent(document, 'up', ++x, 0);
       },
-      duration: 33,
+      duration: 50,
+    });
+  });
+
+  test('Touch dragging should work in Shadow DOM', resolve => {
+    const $container = document.querySelector('#css-tests');
+    const $host = document.createElement('div');
+    $container.appendChild($host);
+
+    const shadowRoot = $host.attachShadow({ mode: 'open' });
+    const $target = document.createElement('div');
+    $target.style.cssText = 'width: 100px; height: 100px;';
+    shadowRoot.appendChild($target);
+
+    let updates = 0;
+    let x = 0;
+    let y = 0;
+
+    const draggable = createDraggable($target, {
+      releaseStiffness: 10000,
+      releaseDamping: 300,
+      onUpdate: () => {
+        updates++;
+      },
+      onSettle: () => {
+        expect(updates).to.be.above(0);
+        draggable.revert();
+        $host.remove();
+        resolve();
+      }
+    });
+
+    expect(updates).to.equal(0);
+
+    createTouchEvent($target, 'start', x, y);
+
+    createTimer({
+      onUpdate: () => createTouchEvent($target, 'move', ++x, 0),
+      onComplete: () => {
+        createTouchEvent($target, 'end', ++x, 0);
+      },
+      duration: 100,
     });
   });
 
 });
+

@@ -2,7 +2,7 @@ import {
   animate,
   onScroll,
   utils,
-} from '../../../../src/anime.js';
+} from '../../../../dist/modules/index.js';
 
 utils.set('.section', {
   rotate: () => utils.random(-45, 45),

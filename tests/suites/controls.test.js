@@ -9,12 +9,11 @@ import {
   createTimeline,
   createTimer,
   utils,
-  engine,
-} from '../../src/anime.js';
+} from '../../dist/modules/index.js';
 
 import {
   minValue,
-} from '../../src/consts.js';
+} from '../../dist/modules/core/consts.js';
 
 suite('Controls', () => {
   test('Alternate the direction of an animation', resolve => {
@@ -290,9 +289,15 @@ suite('Controls', () => {
   });
 
   test('Revert an animation with CSS properties with existing inline styles and clean newly added inline styles', () => {
-    const $target = /** @type {HTMLElement} */(document.querySelector('#target-id'));
-    $target.style.height = '100px';
-    const animation1 = animate($target, {
+    const targets = document.querySelectorAll('.target-class');
+    const cssText = [];
+    targets.forEach(($target, i) => {
+      const targetStyle = /** @type {HTMLElement} */($target).style;
+      targetStyle.borderRadius = `${i * 10}%`;
+      cssText[i] = targetStyle.cssText;
+    });
+    const animation1 = animate(targets, {
+      borderRadius: '50%',
       width: 200,
       height: 200,
     });
@@ -300,13 +305,21 @@ suite('Controls', () => {
     animation1.revert();
     expect(animation1._cancelled).to.equal(1);
     expect(animation1.paused).to.equal(true);
-    expect($target.getAttribute('style')).to.equal('height: 100px;');
+    targets.forEach(($target, i) => {
+      const targetStyle = /** @type {HTMLElement} */($target).style;
+      expect(targetStyle.cssText).to.equal(cssText[i]);
+    });
   });
 
-  test('Revert an animation with Transforms properties with existing inline styles and clean newly added inline styles', () => {
-    const $target = /** @type {HTMLElement} */(document.querySelector('#target-id'));
-    $target.style.transform = 'translateY(100px)';
-    const animation1 = animate($target, {
+  test('Revert an animation with transform properties with existing inline styles and clean newly added inline styles', () => {
+    const targets = document.querySelectorAll('.target-class');
+    const cssText = [];
+    targets.forEach(($target, i) => {
+      const targetStyle = /** @type {HTMLElement} */($target).style;
+      targetStyle.borderRadius = `${i * 10}%`;
+      cssText[i] = targetStyle.cssText;
+    });
+    const animation1 = animate(targets, {
       translateX: 200,
       translateY: 200,
     });
@@ -314,7 +327,10 @@ suite('Controls', () => {
     animation1.revert();
     expect(animation1._cancelled).to.equal(1);
     expect(animation1.paused).to.equal(true);
-    expect($target.getAttribute('style')).to.equal('transform: translateY(100px);');
+    targets.forEach(($target, i) => {
+      const targetStyle = /** @type {HTMLElement} */($target).style;
+      expect(targetStyle.cssText).to.equal(cssText[i]);
+    });
   });
 
   test('Revert a timeline and and clean inline styles', () => {

@@ -3,7 +3,7 @@ import {
   createTimeline,
   stagger,
   utils,
-} from '../../lib/anime.esm.js';
+} from '../../dist/modules/index.js';
 
 function generateLines(numberOfLines) {
   const svgWidth = 1100;

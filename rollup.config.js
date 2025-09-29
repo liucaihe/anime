@@ -1,185 +1,94 @@
 import terser from '@rollup/plugin-terser';
-import filesize from 'rollup-plugin-filesize';
-import ts from 'rollup-plugin-ts';
-import pkg from './package.json' assert { type: 'json' };
 import fs from 'fs';
 
-const inputPath = 'src/anime.js';
-const outputName = 'anime';
-const jsDocTypes = fs.readFileSync('./src/types.js', 'utf-8').split('/* Exports */')[1];
+const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
 
-/**
- * @param {String} format
- * @param {Boolean} [addTypes]
- * @return {String}
- */
-const banner = (format, addTypes) => {
+const banner = (format, content = '') => chunk => {
   const date = new Date();
+  const moduleName = chunk.fileName.split('/')[0] || '';
   return `/**
- * anime.js - ${ format }
+ * Anime.js${ moduleName.includes('.') ? '' : ' - ' + moduleName } - ${ format }
  * @version v${ pkg.version }
- * @author Julian Garnier
  * @license MIT
- * @copyright (c) ${ date.getFullYear() } Julian Garnier
- * @see https://animejs.com
- */${addTypes ? jsDocTypes : ''}
+ * @copyright ${ date.getFullYear() } - Julian Garnier
+ */${content}
 `
 }
 
-const terserModuleOptions = {
-  compress: {
-    passes: 10,
-    module: true,
-  },
-  mangle: true,
-}
-
-const terserScriptOptions = {
-  compress: {
-    passes: 10,
-    module: false,
-  },
-  mangle: true,
-}
-
-const terserStripComments = {
-  compress: false,
-  mangle: false,
-}
-
-const tasks = [];
-
-const cleanupOptions = {
-  // Replace "import('./file.js')."
-  "import\\('\\.\\/[^']+\\.js'\\)\\.": '',
-  "/// <reference path='./types.js' />": '',
-  __packageVersion__: pkg.version.toString()
-};
-
-const cleanup = {
-  name: 'cleanup',
-  generateBundle(_, bundle) {
-    Object.keys(bundle).forEach((fileName) => {
-      const file = bundle[fileName];
-      let code = file.code;
-      for (const [find, replacement] of Object.entries(cleanupOptions)) {
-        const regExp = new RegExp(find, 'g');
-        code = code.replace(regExp, replacement);
-      }
-      file.code = code;
-    });
-  },
-};
-
-const prependTypes = {
-  name: 'prepend-file',
-  transform(code, id) {
-    if (id.includes('anime.js')) {
-      return {
-        code: `${jsDocTypes}\n${code}`,
-        map: null // If you're not handling source maps
-      };
+const replace = (rgx, string = '') => {
+  return {
+    name: 'replace',
+    generateBundle(_, bundle) {
+      Object.keys(bundle).forEach((fileName) => {
+        const file = bundle[fileName];
+        let code = file.code;
+        code = code.replace(rgx, string);
+        file.code = code;
+      });
     }
-    return null;
   }
-};
-
-tasks.push( // ESM
-  {
-    input: inputPath,
-    output: { file: pkg.module, format: 'esm', banner: banner('ESM', true) },
-    plugins: [prependTypes, cleanup]
-  },
-);
-
-if (process.env.types) {
-  tasks.push( // TYPES
-    {
-      input: inputPath,
-      output: { file: './types/index.js', format: 'esm', banner: banner('ESM') },
-      plugins: [prependTypes, cleanup, ts()]
-    }
-  );
 }
 
-if (process.env.build || process.env.npm_config_minify) {
-  tasks.push( // ESM minified
+const updatePackageVersion = replace(/__packageVersion__/g, pkg.version);
+
+// Extracts module input paths from the package.json 'exports' field
+const inputs = Object.keys(pkg.exports).filter(k => k !== './package.json').map(k => `src${k.replace('.', '')}/index.js`);
+
+console.log(inputs);
+
+const tasks = [{
+  input: inputs,
+  output: [
     {
-      input: inputPath,
-      output: { file: pkg.files[0] + '/anime.esm.min.js', format: 'esm', banner: banner('ESM') },
-      plugins: [cleanup, terser(terserModuleOptions), filesize({ showMinifiedSize: false })]
+      dir: 'dist/modules/',
+      format: 'esm',
+      preserveModules: true,
+      preserveModulesRoot: 'src',
+      banner: banner('ESM'),
+    },
+    {
+      dir: 'dist/modules/',
+      format: 'cjs',
+      entryFileNames: '[name].cjs',
+      preserveModules: true,
+      preserveModulesRoot: 'src',
+      banner: banner('CJS'),
     }
-  );
-}
+  ],
+  plugins: [updatePackageVersion],
+}];
 
 if (process.env.build) {
-  tasks.push( // UMD
-    {
-      input: inputPath,
-      output: { file: pkg.main, format: 'umd', name: outputName, banner: banner('UMD') },
-      plugins: [cleanup, terser(terserStripComments)]
-    }
-  );
 
-  tasks.push( // IIFE
-    {
-      input: inputPath,
-      output: { file: pkg.files[0] + '/anime.iife.js', format: 'iife', name: outputName, banner: banner('IIFE') },
-      plugins: [cleanup, terser(terserStripComments)]
-    }
-  );
+  // Gets global JSDoc type definitions from src/types to be inserted in the banner of the bundles after tree shaking
+  const JSDocTypes = fs.readFileSync('./src/types/index.js', 'utf-8').split('// Exported types')[1];
 
-  tasks.push( // CJS
-    {
-      input: inputPath,
-      output: { file: pkg.exports['.'].require, format: 'cjs', name: outputName, banner: banner('CJS') },
-      plugins: [cleanup, terser(terserStripComments)]
-    }
-  );
+  // Removes comments containing JSDoc @import tags to avoid duplicated type definitions in bundles
+  const cleanupJSDocImports = replace(/\/\*\*(?:(?!\*\/|\/\*\*)[\s\S])*?@import(?:(?!\*\/|\/\*\*)[\s\S])*?\*\//g);
 
-  tasks.push( // UMD, CJS & IIFE minified
-    {
-      input: inputPath,
-      output: [
-        { file: pkg.files[0] + '/anime.umd.min.js', format: 'umd', name: outputName, banner: banner('UMD') },
-        { file: pkg.files[0] + '/anime.min.cjs', format: 'cjs', name: outputName, banner: banner('CJS') },
-        { file: pkg.files[0] + '/anime.iife.min.js', format: 'iife', name: outputName, banner: banner('IIFE') },
-      ],
-      plugins: [cleanup, terser(terserScriptOptions)]
-    }
-  );
+  const minify = terser({
+    compress: { passes: 10, module: false },
+    mangle: true,
+  });
 
-  // tasks.push( // ES5
-  //   {
-  //     input: inputPath,
-  //     output: { file: pkg.files[0] + '/anime.es5.iife.js', format: 'iife', name: outputName, banner: banner('ES5 IIFE') },
-  //     plugins: [prependTypes, cleanup, babel({
-  //       presets: ['@babel/preset-env'],
-  //       babelHelpers: 'bundled',
-  //       comments: false,
-  //       parserOpts: {
-  //         // @ts-ignore
-  //         plugins: ['v8intrinsic', '@babel/plugin-transform-arrow-functions']
-  //       }
-  //     })]
-  //   }
-  // );
+  tasks.push({
+    input: 'src/index.js',
+    output: [
+      { file: 'dist/bundles/anime.esm.js', format: 'esm', name: 'anime', banner: banner('ESM bundle', JSDocTypes) },
+      { file: 'dist/bundles/anime.umd.js', format: 'umd', name: 'anime', banner: banner('UMD bundle', JSDocTypes) }
+    ],
+    plugins: [updatePackageVersion, cleanupJSDocImports]
+  });
 
-  // tasks.push( // ES5 Minified
-  //   {
-  //     input: inputPath,
-  //     output: { file: pkg.files[0] + '/anime.es5.iife.min.js', format: 'iife', name: outputName, banner: banner('ES5 IIFE') },
-  //     plugins: [cleanup, babel({
-  //       presets: ['@babel/preset-env'],
-  //       babelHelpers: 'bundled',
-  //       comments: false,
-  //       parserOpts: {
-  //         // @ts-ignore
-  //         plugins: ['v8intrinsic', '@babel/plugin-transform-arrow-functions']
-  //       }
-  //     })]
-  //   }
-  // );
+  tasks.push({
+    input: 'src/index.js',
+    output: [
+      { file: 'dist/bundles/anime.esm.min.js', format: 'esm', name: 'anime', banner: banner('ESM minified bundle') },
+      { file: 'dist/bundles/anime.umd.min.js', format: 'umd', name: 'anime', banner: banner('UMD minified bundle') }
+    ],
+    plugins: [updatePackageVersion, minify]
+  });
+
 }
 
 export default tasks;

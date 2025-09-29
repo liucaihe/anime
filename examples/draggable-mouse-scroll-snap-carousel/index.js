@@ -2,7 +2,7 @@ import {
   createTimer,
   createDraggable,
   utils,
-} from '../../lib/anime.esm.js';
+} from '../../dist/modules/index.js';
 
 const carousel = {
   totalWidth: 0,

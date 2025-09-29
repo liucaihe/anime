@@ -5,7 +5,7 @@ import {
   createTimer,
   createScope,
   onScroll
-} from '../../../../lib/anime.esm.js';
+} from '../../../../dist/modules/index.js';
 
 const [$animResume] = utils.$('#animation-resume');
 const [$animPlay] = utils.$('#animation-play');
@@ -33,17 +33,17 @@ const scope = createScope({
     scale: 2,
     backgroundColor: 'var(--bg)',
     delay: stagger(70),
-    loop: 4,
+    loop: 1,
     alternate: true,
     ease: 'inOut(4)',
     duration: 750,
-    onComplete: () => utils.set('.square', { backgroundColor: 'var(--yellow)' })
   })
 
   const scrollAnim = waapi.animate('.square', {
     translate: ($el, i, t) => `0px ${stagger([-20, 20])($el, i, t)}rem`,
     rotate: `90deg`,
     delay: stagger(100),
+    reversed: true,
     autoplay: onScroll({
       target: document.body,
       sync: 1,

@@ -2,7 +2,7 @@ import {
   utils,
   animate,
   createTimeline,
-} from '../../src/anime.js';
+} from '../../dist/modules/index.js';
 
 import {
   expect,
@@ -140,7 +140,7 @@ suite('Utils', () => {
   });
 
   test('Set Object properties to specific unit', () => {
-    const anim = utils.set(testObject, {
+    utils.set(testObject, {
       plainValue: '42px',
       valueWithUnit: '42rem',
       multiplePLainValues: '40% 41px 42rem 43vh',
@@ -459,7 +459,7 @@ suite('Utils', () => {
     animation.pause();
   });
 
-  test('Remove specific tween property and cancel the animation if not tweens are left', () => {
+  test('Remove specific tween property and cancel the animation if no tweens are left', () => {
     const animation = animate('#target-id', { x: 100, y: 100 });
     expect(getChildLength(animation)).to.equal(2);
 
@@ -503,4 +503,10 @@ suite('Utils', () => {
     animation.pause();
   });
 
+  test('Chained utility functions', () => {
+    const chain = utils.mapRange(0, 100, 0, 1000).clamp(0, 100);
+    expect(chain(1)).to.equal(10);
+    expect(chain(5)).to.equal(50);
+    expect(chain(50)).to.equal(100);
+  });
 });

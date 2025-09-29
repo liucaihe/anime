@@ -14,6 +14,7 @@
   </strong>
 </p>
 
+
 <p align="center">
   <img alt="NPM Downloads" src="https://img.shields.io/npm/dm/animejs?style=flat-square&logo=npm">
   <img alt="jsDelivr hits (npm)" src="https://img.shields.io/jsdelivr/npm/hm/animejs?style=flat-square&logo=jsdeliver">
@@ -32,6 +33,12 @@ Help the project become sustainable by sponsoring us on <a target="_blank" href=
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="./assets/sponsors/ice-open-network-logomark.png">
     <img align="center" src="./assets/sponsors/ice-open-network-logomark-dark.png" width="250">
+  </picture>
+</a>
+<a target="_blank" href="https://go.warp.dev/anime">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./assets/sponsors/warp-logomark.png">
+    <img align="center" src="./assets/sponsors/warp-logomark-dark.png" width="250">
   </picture>
 </a>
 </p>
@@ -53,9 +60,11 @@ Help the project become sustainable by sponsoring us on <a target="_blank" href=
 </a>
 </p>
 
+
 ## Usage
 
 Anime.js V4 works by importing ES modules like so:
+
 
 <table>
 <tr>
@@ -100,11 +109,11 @@ Then, execute the following scripts with `npm run <script>`.
 
 | script | action |
 | ------ | ------ |
-| `dev` | Watch any changes in `src/` and compiles the esm version to `lib/anime.esm.js` |
-| `dev-types` | Same as `dev`, but also run TypeScript and generate the `types/index.d.ts` file |
-| `build` | Generate types definition and compiles ESM / UMD / IIFE versions to `lib/` |
-| `test-browser` | Start a local server and start all browser related tests |
-| `test-node` | Start all Node related tests |
-| `open-examples` | Start a local server to browse the examples locally |
+| `dev` | Watches for changes in `src/**/*.js`, bundles the ESM version to `lib/` and creates type declarations in `types/` |
+| `dev:test` | Runs `dev` and `test:browser` concurrently |
+| `build` | Bundles ESM / UMD / CJS / IIFE versions to `lib/` and creates type declarations in `types/` |
+| `test:browser` | Starts a local server and runs all browser-related tests |
+| `test:node` | Starts Node-related tests |
+| `open:examples` | Starts a local server to browse the examples locally |
 
 © [Julian Garnier](http://juliangarnier.com) | [MIT License](LICENSE.md)

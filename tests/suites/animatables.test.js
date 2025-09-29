@@ -6,7 +6,7 @@ import {
   createAnimatable,
   createTimer,
   utils,
-} from '../../src/anime.js';
+} from '../../dist/modules/index.js';
 
 suite('Animatables', () => {
 

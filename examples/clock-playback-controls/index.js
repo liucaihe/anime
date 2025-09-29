@@ -1,4 +1,4 @@
-import { animate, createTimeline, utils } from '../../lib/anime.esm.js';
+import { animate, createTimeline, utils, cubicBezier } from '../../dist/modules/index.js';
 
 const [ $digitalClock ] = utils.$('#digital');
 
@@ -25,7 +25,7 @@ const masterTL = createTimeline({ defaults: { ease: 'linear' }, autoplay: false 
       $el.appendChild($num);
     }
     const canStop = d > 100;
-    const ease = canStop ? 'cubicBezier(1,0,.6,1.2)' : 'linear';
+    const ease = canStop ? cubicBezier(1,0,.6,1.2) : 'linear';
     const duration = canStop ? 650 : d;
     const position = `+=${canStop ? d - 650 : 0}`;
     const numTL = createTimeline({ defaults: { ease }, loop: true });

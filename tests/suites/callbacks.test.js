@@ -6,7 +6,7 @@ import {
   animate,
   createTimeline,
   utils,
-} from '../../src/anime.js';
+} from '../../dist/modules/index.js';
 
 function setupAnimationCallBack(callbackName, callbackFunc) {
   const parameters = {

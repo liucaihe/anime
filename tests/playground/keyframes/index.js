@@ -1,6 +1,6 @@
 import {
   animate,
-} from '../../../lib/anime.esm.js';
+} from '../../../dist/modules/index.js';
 
 const easeOut = 'cubicBezier(0, 0, 0.58, 1)';
 const easeIn = 'cubicBezier(0.42, 0, 1, 1)';

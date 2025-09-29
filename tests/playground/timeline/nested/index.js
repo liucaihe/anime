@@ -1,4 +1,4 @@
-import { animate, createTimer, createTimeline, eases, stagger, utils } from '../../../../lib/anime.esm.js';
+import { animate, createTimer, createTimeline, eases, stagger, utils } from '../../../../dist/modules/index.js';
 
 // import { inspect } from '../../../lib/gui/index.js';
 

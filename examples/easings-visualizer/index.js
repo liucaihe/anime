@@ -1,4 +1,4 @@
-import { animate, createTimeline, eases, createSpring, utils, stagger } from '../../lib/anime.esm.js';
+import { animate, createTimeline, eases, createSpring, utils, stagger } from '../../dist/modules/index.js';
 
 function bindInputsToObject(name, obj, onChange = () => {}) {
   const $bindedInputs = document.querySelectorAll(`[data-${ name }]`);

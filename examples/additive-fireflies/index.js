@@ -1,4 +1,4 @@
-import { animate, createTimer, utils } from '../../lib/anime.esm.js';
+import { animate, createTimer, utils } from '../../dist/modules/index.js';
 
 const $animationWrapper = document.querySelector('#animation-wrapper');
 const $circle = document.querySelector('#circle');

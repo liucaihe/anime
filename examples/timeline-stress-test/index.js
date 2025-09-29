@@ -2,7 +2,7 @@ import {
   createTimeline,
   stagger,
   utils,
-} from '../../lib/anime.esm.js';
+} from '../../dist/modules/index.js';
 
 const count = 2024;
 const duration = 10000;

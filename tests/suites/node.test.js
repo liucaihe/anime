@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import { animate, createTimer, createTimeline, engine } from '../../src/anime.js';
-import { render } from '../../src/render.js';
+import { animate, createTimer, createTimeline, engine } from '../../dist/modules/index.js';
+import { render } from '../../dist/modules/core/render.js';
 // import { animate } from '../visual/assets/anime.4.0.0.beta-29.js';
 
 const totalInstances = 10000;
@@ -172,69 +172,6 @@ suite('Node tests', () => {
     expect(animationHasFastProperties).to.equal(true);
   });
 
-  test('test if the render() function can be optimized', () => {
-
-    // First test a normal run
-
-    for (let i = 0; i < totalInstances; i++) {
-      animate(targets[i], {
-        prop: Math.random(),
-        delay: Math.random() * 1.5,
-        duration: Math.random() * 2,
-        loopDelay: Math.random() * 3
-      })
-    }
-
-    expect(getOptimizationStatus(render)).to.equal(49);
-
-    // Then mix animation types an manually render them
-
-    const animations = [];
-
-    // animations.push(globalClock._additiveAnimation);
-
-    for (let i = 0; i < totalInstances / 3; i++) {
-      animations.push(animate(targets[i], {prop: Math.random(), duration: Math.random() * 2, autoplay: false}));
-      animations.push(createTimer({duration: Math.random() * 10, autoplay: false}));
-    }
-
-    // animations.push(globalClock._additiveAnimation);
-
-    const start = Date.now();
-
-    for (let i = 0; i < animations.length; i++) {
-      const time = Date.now() - start;
-      const tickMode = Math.random() < .5 ? 0 : -1;
-      render(animations[i], time, 0, 0, tickMode);
-    }
-
-    expect(getOptimizationStatus(render)).to.equal(49);
-  });
-
-  test('test if the engine.update() function can be optimized', resolve => {
-
-    // First test a normal run
-
-    for (let i = 0; i < totalInstances; i++) {
-      animate(targets[i], {
-        prop: Math.random(),
-        delay: Math.random() * 1.5,
-        duration: Math.random() * 100,
-        loopDelay: Math.random() * 3,
-        frameRate: Math.random() * 10,
-      });
-      createTimer({
-        duration: Math.random() * 100,
-        frameRate: Math.random() * 10,
-      });
-    }
-
-    setTimeout(() => {
-      expect(getOptimizationStatus(engine.update)).to.equal(49);
-      resolve();
-    }, 200)
-  });
-
   const generateInstances = () => {
     let anim, tl, timer;
     for (let i = 0; i < totalInstances; i++) {
@@ -265,6 +202,76 @@ suite('Node tests', () => {
     }
     return { anim, tl, timer }
   }
+
+  test('test if the render() function can be optimized', resolve => {
+
+    // First test a normal run
+
+    for (let i = 0; i < totalInstances; i++) {
+      animate(targets[i], {
+        prop: Math.random(),
+        delay: Math.random() * 1.5,
+        duration: Math.random() * 100,
+        loopDelay: Math.random() * 3
+      })
+    }
+
+    setTimeout(() => {
+      expect(getOptimizationStatus(render)).to.equal(49);
+
+      // Then mix animation types an manually render them
+
+      const animations = [];
+
+      // animations.push(globalClock._additiveAnimation);
+
+      for (let i = 0; i < totalInstances / 3; i++) {
+        animations.push(animate(targets[i], {prop: Math.random(), duration: Math.random() * 100, autoplay: false}));
+        animations.push(createTimer({duration: Math.random() * 100, autoplay: false}));
+      }
+
+      // animations.push(globalClock._additiveAnimation);
+
+      const start = Date.now();
+
+      for (let i = 0; i < animations.length; i++) {
+        const time = Date.now() - start;
+        const tickMode = Math.random() < .5 ? 0 : -1;
+        render(animations[i], time, 0, 0, tickMode);
+      }
+
+      setTimeout(() => {
+        expect(getOptimizationStatus(render)).to.equal(49);
+        resolve();
+      }, 200)
+
+    }, 200)
+
+  });
+
+  test('test if the engine.update() function can be optimized', resolve => {
+
+    // First test a normal run
+
+    for (let i = 0; i < totalInstances; i++) {
+      animate(targets[i], {
+        prop: Math.random(),
+        delay: Math.random() * 1.5,
+        duration: Math.random() * 100,
+        loopDelay: Math.random() * 3,
+        frameRate: Math.random() * 10,
+      });
+      createTimer({
+        duration: Math.random() * 100,
+        frameRate: Math.random() * 10,
+      });
+    }
+
+    setTimeout(() => {
+      expect(getOptimizationStatus(engine.update)).to.equal(49);
+      resolve();
+    }, 200)
+  });
 
   test('test if engine has fast properties', () => {
     const { anim, tl, timer } = generateInstances();
