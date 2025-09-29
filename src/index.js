@@ -5,7 +5,6 @@ export * from './animatable/index.js';
 export * from './draggable/index.js';
 export * from './scope/index.js';
 export * from './events/index.js';
-export * from './spring/index.js';
 export * from './engine/index.js';
 export * from './easings/index.js';
 export * as easings from './easings/index.js';

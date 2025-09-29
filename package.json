@@ -1,16 +1,16 @@
 {
-  "name": "animejs",
-  "version": "4.2.0-beta.0",
+  "name": "@juliangarnierorg/anime-beta",
+  "version": "4.2.0",
   "description": "JavaScript animation engine",
   "homepage": "https://animejs.com",
   "author": "Julian Garnier <julian@animejs.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/juliangarnier/anime.git"
+    "url": "git+https://github.com/juliangarnierorg/anime-beta.git"
   },
   "bugs": {
-    "url": "https://github.com/juliangarnier/anime/issues"
+    "url": "https://github.com/juliangarnierorg/anime-beta/issues"
   },
   "funding": {
     "type": "github",
@@ -20,12 +20,17 @@
     "anime",
     "animejs",
     "anime.js",
+    "timer",
     "animation",
     "timeline",
-    "easings",
-    "spring",
+    "animatable",
+    "draggable",
+    "scope",
+    "engine",
     "scroll",
-    "drag",
+    "easings",
+    "cubic-bezier",
+    "spring",
     "text",
     "JavaScript",
     "CSS",
@@ -100,17 +105,47 @@
       "import": "./dist/modules/events/index.js",
       "default": "./dist/modules/events/index.cjs"
     },
-    "./spring": {
-      "types": "./dist/modules/spring/index.d.ts",
-      "require": "./dist/modules/spring/index.cjs",
-      "import": "./dist/modules/spring/index.js",
-      "default": "./dist/modules/spring/index.cjs"
-    },
     "./easings": {
       "types": "./dist/modules/easings/index.d.ts",
       "require": "./dist/modules/easings/index.cjs",
       "import": "./dist/modules/easings/index.js",
       "default": "./dist/modules/easings/index.cjs"
+    },
+    "./easings/eases": {
+      "types": "./dist/modules/easings/eases/index.d.ts",
+      "require": "./dist/modules/easings/eases/index.cjs",
+      "import": "./dist/modules/easings/eases/index.js",
+      "default": "./dist/modules/easings/eases/index.cjs"
+    },
+    "./easings/linear": {
+      "types": "./dist/modules/easings/linear/index.d.ts",
+      "require": "./dist/modules/easings/linear/index.cjs",
+      "import": "./dist/modules/easings/linear/index.js",
+      "default": "./dist/modules/easings/linear/index.cjs"
+    },
+    "./easings/steps": {
+      "types": "./dist/modules/easings/steps/index.d.ts",
+      "require": "./dist/modules/easings/steps/index.cjs",
+      "import": "./dist/modules/easings/steps/index.js",
+      "default": "./dist/modules/easings/steps/index.cjs"
+    },
+    "./easings/irregular": {
+      "types": "./dist/modules/easings/irregular/index.d.ts",
+      "require": "./dist/modules/easings/irregular/index.cjs",
+      "import": "./dist/modules/easings/irregular/index.js",
+      "default": "./dist/modules/easings/irregular/index.cjs"
+    },
+    "./easings/cubic-bezier": {
+      "types": "./dist/modules/easings/cubic-bezier/index.d.ts",
+      "require": "./dist/modules/easings/cubic-bezier/index.cjs",
+      "import": "./dist/modules/easings/cubic-bezier/index.js",
+      "default": "./dist/modules/easings/cubic-bezier/index.cjs"
+    },
+    "./easings/spring": {
+      "types": "./dist/modules/easings/spring/index.d.ts",
+      "require": "./dist/modules/easings/spring/index.cjs",
+      "import": "./dist/modules/easings/spring/index.js",
+      "default": "./dist/modules/easings/spring/index.cjs"
     },
     "./utils": {
       "types": "./dist/modules/utils/index.d.ts",
@@ -139,6 +174,7 @@
   },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.4",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^24.3.0",
     "browser-sync": "^2.29.3",
     "chai": "^4.3.10",

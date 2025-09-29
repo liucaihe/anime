@@ -17,7 +17,7 @@ var styles = require('../core/styles.cjs');
 var composition = require('../animation/composition.cjs');
 var animation = require('../animation/animation.cjs');
 var timer = require('../timer/timer.cjs');
-var eases = require('../easings/eases.cjs');
+var parser = require('../easings/eases/parser.cjs');
 var position = require('./position.cjs');
 
 /**
@@ -111,7 +111,7 @@ class Timeline extends timer.Timer {
     /** @type {Callback<this>} */
     this.onRender = parameters.onRender || globalDefaults.onRender;
     const tlPlaybackEase = values.setValue(parameters.playbackEase, globalDefaults.playbackEase);
-    this._ease = tlPlaybackEase ? eases.parseEase(tlPlaybackEase) : null;
+    this._ease = tlPlaybackEase ? parser.parseEase(tlPlaybackEase) : null;
     /** @type {Number} */
     this.iterationDuration = 0;
   }

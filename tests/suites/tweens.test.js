@@ -11,7 +11,7 @@ import {
   createTimer,
   createTimeline,
   engine,
-} from '../../../dist/modules/index.js';
+} from '../../dist/modules/index.js';
 
 import {
   compositionTypes,

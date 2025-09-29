@@ -7,7 +7,7 @@ import {
   animate,
   utils,
   svg,
-} from '../../../dist/modules/index.js';
+} from '../../dist/modules/index.js';
 
 suite('SVG', () => {
   test('svg.createDrawable', resolve => {

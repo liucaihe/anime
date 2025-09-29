@@ -51,7 +51,7 @@ import {
 
 import {
   parseEase,
-} from '../easings/eases.js';
+} from '../easings/eases/parser.js';
 
 import {
   parseTimelinePosition,

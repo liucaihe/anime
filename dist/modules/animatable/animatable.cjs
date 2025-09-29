@@ -11,7 +11,7 @@ var consts = require('../core/consts.cjs');
 var globals = require('../core/globals.cjs');
 var helpers = require('../core/helpers.cjs');
 var animation = require('../animation/animation.cjs');
-var eases = require('../easings/eases.cjs');
+var parser = require('../easings/eases/parser.cjs');
 
 /**
  * @import {
@@ -116,7 +116,7 @@ class Animatable {
               tween._fromNumber = /** @type {Number} */(tween._modifier(tween._number));
               tween._toNumber = /** @type {Number} */(to);
             }
-            if (!helpers.isUnd(ease)) tween._ease = eases.parseEase(ease);
+            if (!helpers.isUnd(ease)) tween._ease = parser.parseEase(ease);
             tween._currentTime = 0;
           });
           if (!helpers.isUnd(duration)) animation$1.stretch(duration);

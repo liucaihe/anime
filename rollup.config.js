@@ -34,6 +34,8 @@ const updatePackageVersion = replace(/__packageVersion__/g, pkg.version);
 // Extracts module input paths from the package.json 'exports' field
 const inputs = Object.keys(pkg.exports).filter(k => k !== './package.json').map(k => `src${k.replace('.', '')}/index.js`);
 
+console.log(inputs);
+
 const tasks = [{
   input: inputs,
   output: [

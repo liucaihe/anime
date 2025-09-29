@@ -7,18 +7,20 @@
 
 'use strict';
 
-var none = require('./none.cjs');
-var cubicBezier = require('./cubic-bezier.cjs');
-var steps = require('./steps.cjs');
-var linear = require('./linear.cjs');
-var irregular = require('./irregular.cjs');
-var eases = require('./eases.cjs');
+var index = require('./cubic-bezier/index.cjs');
+var index$1 = require('./steps/index.cjs');
+var index$2 = require('./linear/index.cjs');
+var index$3 = require('./irregular/index.cjs');
+var index$4 = require('./spring/index.cjs');
+var parser = require('./eases/parser.cjs');
 
 
 
-exports.none = none.none;
-exports.cubicBezier = cubicBezier.cubicBezier;
-exports.steps = steps.steps;
-exports.linear = linear.linear;
-exports.irregular = irregular.irregular;
-exports.eases = eases.eases;
+exports.cubicBezier = index.cubicBezier;
+exports.steps = index$1.steps;
+exports.linear = index$2.linear;
+exports.irregular = index$3.irregular;
+exports.Spring = index$4.Spring;
+exports.createSpring = index$4.createSpring;
+exports.spring = index$4.spring;
+exports.eases = parser.eases;

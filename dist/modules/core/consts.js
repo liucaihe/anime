@@ -68,6 +68,8 @@ const maxFps = 120;
 // Strings
 
 const emptyString = '';
+const cssVarPrefix = 'var(';
+
 const shortTransforms = /*#__PURE__*/ (() => {
   const map = new Map();
   map.set('x', 'translateX');
@@ -91,9 +93,9 @@ const validTransforms = [
   'skew',
   'skewX',
   'skewY',
-  'perspective',
   'matrix',
   'matrix3d',
+  'perspective',
 ];
 
 const transformsFragmentStrings = /*#__PURE__*/ validTransforms.reduce((a, v) => ({...a, [v]: v + '('}), {});
@@ -117,5 +119,6 @@ const unitsExecRgx = /^([-+]?\d*\.?\d+(?:e[-+]?\d+)?)([a-z]+|%)$/i;
 const lowerCaseRgx = /([a-z])([A-Z])/g;
 const transformsExecRgx = /(\w+)(\([^)]+\)+)/g; // Match inline transforms with cacl() values, returns the value wrapped in ()
 const relativeValuesExecRgx = /(\*=|\+=|-=)/;
+const cssVariableMatchRgx = /var\(\s*(--[\w-]+)(?:\s*,\s*([^)]+))?\s*\)/;
 
-export { K, compositionTypes, digitWithExponentRgx, doc, emptyString, hexTestRgx, hslExecRgx, hslaExecRgx, isBrowser, isDomSymbol, isRegisteredTargetSymbol, isSvgSymbol, lowerCaseRgx, maxFps, maxValue, minValue, morphPointsSymbol, noop, proxyTargetSymbol, relativeValuesExecRgx, rgbExecRgx, rgbaExecRgx, shortTransforms, tickModes, transformsExecRgx, transformsFragmentStrings, transformsSymbol, tweenTypes, unitsExecRgx, validTransforms, valueTypes, win };
+export { K, compositionTypes, cssVarPrefix, cssVariableMatchRgx, digitWithExponentRgx, doc, emptyString, hexTestRgx, hslExecRgx, hslaExecRgx, isBrowser, isDomSymbol, isRegisteredTargetSymbol, isSvgSymbol, lowerCaseRgx, maxFps, maxValue, minValue, morphPointsSymbol, noop, proxyTargetSymbol, relativeValuesExecRgx, rgbExecRgx, rgbaExecRgx, shortTransforms, tickModes, transformsExecRgx, transformsFragmentStrings, transformsSymbol, tweenTypes, unitsExecRgx, validTransforms, valueTypes, win };

@@ -8,11 +8,14 @@
   <style>
     body {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       flex-wrap: wrap;
       justify-content: center;
       align-items: center;
       height: 100vh;
+      --test-color: #00FF00;
+      --x: 5rem;
+      --y: 20rem;
     }
 
     .container {
@@ -20,14 +23,15 @@
       flex-wrap: wrap;
       justify-content: center;
       align-items: center;
-      gap: .5rem;
+      flex-direction: column;
+      gap: 1rem;
       padding: 1rem;
     }
 
     .square {
       width: 100px;
       height: 100px;
-      background: var(--red);
+      background: currentColor;
       border-radius: 1rem;
       padding: 1rem;
     }
@@ -36,21 +40,32 @@
       border-radius: 1rem;
       padding: 1rem;
     }
-
+    .demo .css-variables.square:after {
+      position: absolute;
+      opacity: .5;
+      top: 0;
+      left: 0;
+      content: "";
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: currentColor;
+      border-radius: inherit;
+      transform: scale(var(--pseudo-el-after-scale));
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <button class="button">2000</button>
-    <button class="button">4000</button>
-    <button class="button">1000</button>
-  </div>
-  <div class="container">
-    <div class="square"></div>
-    <div class="square"></div>
-    <div class="square"></div>
-    <div class="square"></div>
-    <div class="square"></div>
+  <div class="demo">
+    <div class="medium row">
+      <div class="css-variables square"></div>
+    </div>
+    <div class="medium row">
+      <div class="css-variables square"></div>
+    </div>
+    <div class="medium row">
+      <div class="css-variables square"></div>
+    </div>
   </div>
   <script type="module" src="./index.js"></script>
 </body>

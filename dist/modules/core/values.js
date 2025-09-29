@@ -5,8 +5,8 @@
  * @copyright 2025 - Julian Garnier
  */
 
-import { tweenTypes, isDomSymbol, isSvgSymbol, validTransforms, shortTransforms, valueTypes, unitsExecRgx, digitWithExponentRgx, proxyTargetSymbol } from './consts.js';
-import { isValidSVGAttribute, stringStartsWith, isUnd, isCol, isFnc, cloneArray } from './helpers.js';
+import { tweenTypes, isDomSymbol, isSvgSymbol, validTransforms, shortTransforms, valueTypes, unitsExecRgx, digitWithExponentRgx, proxyTargetSymbol, cssVarPrefix, cssVariableMatchRgx, emptyString } from './consts.js';
+import { isUnd, isValidSVGAttribute, stringStartsWith, isCol, isFnc, isStr, cloneArray } from './helpers.js';
 import { parseInlineTransforms } from './transforms.js';
 import { convertColorStringValuesToRgbaArray } from './colors.js';
 
@@ -39,19 +39,30 @@ const setValue = (targetValue, defaultValue) => {
  * @return {any}
  */
 const getFunctionValue = (value, target, index, total, store) => {
+  let func;
   if (isFnc(value)) {
-    const func = () => {
+    func = () => {
       const computed = /** @type {Function} */(value)(target, index, total);
       // Fallback to 0 if the function returns undefined / NaN / null / false / 0
       return !isNaN(+computed) ? +computed : computed || 0;
     };
-    if (store) {
-      store.func = func;
-    }
-    return func();
+  } else if (isStr(value) && stringStartsWith(value, cssVarPrefix)) {
+    func = () => {
+      const match = value.match(cssVariableMatchRgx);
+      const cssVarName = match[1];
+      const fallbackValue = match[2];
+      let computed = getComputedStyle(/** @type {HTMLElement} */(target))?.getPropertyValue(cssVarName);
+      // Use fallback if CSS variable is not set or empty
+      if ((!computed || computed.trim() === emptyString) && fallbackValue) {
+        computed = fallbackValue.trim();
+      }
+      return computed || 0;
+    };
   } else {
     return value;
   }
+  if (store) store.func = func;
+  return func();
 };
 
 /**

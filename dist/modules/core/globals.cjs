@@ -31,6 +31,7 @@ const defaults = {
   reversed: false,
   alternate: false,
   autoplay: true,
+  persist: false,
   duration: consts.K,
   delay: 0,
   loopDelay: 0,

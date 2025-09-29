@@ -9,7 +9,7 @@
 
 var consts = require('../core/consts.cjs');
 var helpers = require('../core/helpers.cjs');
-var eases = require('../easings/eases.cjs');
+var parser = require('../easings/eases/parser.cjs');
 var position = require('../timeline/position.cjs');
 var values = require('../core/values.cjs');
 var targets = require('../core/targets.cjs');
@@ -25,7 +25,7 @@ var random = require('./random.cjs');
 /**
  * @import {
  *   Spring,
- * } from '../spring/spring.js'
+ * } from '../easings/spring/index.js'
 */
 
 /**
@@ -65,7 +65,7 @@ const stagger = (val, params = {}) => {
   const ease = params.ease;
   const hasEasing = !helpers.isUnd(ease);
   const hasSpring = hasEasing && !helpers.isUnd(/** @type {Spring} */(ease).ease);
-  const staggerEase = hasSpring ? /** @type {Spring} */(ease).ease : hasEasing ? eases.parseEase(ease) : null;
+  const staggerEase = hasSpring ? /** @type {Spring} */(ease).ease : hasEasing ? parser.parseEase(ease) : null;
   const grid = params.grid;
   const axis = params.axis;
   const customTotal = params.total;

@@ -15,7 +15,7 @@ import { cleanInlineStyles } from '../core/styles.js';
 import { removeTargetsFromRenderable } from '../animation/composition.js';
 import { JSAnimation } from '../animation/animation.js';
 import { Timer } from '../timer/timer.js';
-import { parseEase } from '../easings/eases.js';
+import { parseEase } from '../easings/eases/parser.js';
 import { parseTimelinePosition } from './position.js';
 
 /**

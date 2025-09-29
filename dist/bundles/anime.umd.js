@@ -17,6 +17,7 @@
  * @property {Number|Boolean} [loop]
  * @property {Boolean} [reversed]
  * @property {Boolean} [alternate]
+ * @property {Boolean} [persist]
  * @property {Boolean|ScrollObserver} [autoplay]
  * @property {Number|FunctionValue} [duration]
  * @property {Number|FunctionValue} [delay]
@@ -24,13 +25,13 @@
  * @property {EasingParam} [ease]
  * @property {'none'|'replace'|'blend'|compositionTypes} [composition]
  * @property {(v: any) => any} [modifier]
- * @property {(tickable: Tickable) => void} [onBegin]
- * @property {(tickable: Tickable) => void} [onBeforeUpdate]
- * @property {(tickable: Tickable) => void} [onUpdate]
- * @property {(tickable: Tickable) => void} [onLoop]
- * @property {(tickable: Tickable) => void} [onPause]
- * @property {(tickable: Tickable) => void} [onComplete]
- * @property {(renderable: Renderable) => void} [onRender]
+ * @property {Callback<Tickable>} [onBegin]
+ * @property {Callback<Tickable>} [onBeforeUpdate]
+ * @property {Callback<Tickable>} [onUpdate]
+ * @property {Callback<Tickable>} [onLoop]
+ * @property {Callback<Tickable>} [onPause]
+ * @property {Callback<Tickable>} [onComplete]
+ * @property {Callback<Renderable>} [onRender]
  */
 
 /** @typedef {JSAnimation|Timeline} Renderable */
@@ -86,7 +87,11 @@
  */
 
 /**
- * @typedef {('linear'|'linear(x1, x2 25%, x3)'|'in'|'out'|'inOut'|'inQuad'|'outQuad'|'inOutQuad'|'inCubic'|'outCubic'|'inOutCubic'|'inQuart'|'outQuart'|'inOutQuart'|'inQuint'|'outQuint'|'inOutQuint'|'inSine'|'outSine'|'inOutSine'|'inCirc'|'outCirc'|'inOutCirc'|'inExpo'|'outExpo'|'inOutExpo'|'inBounce'|'outBounce'|'inOutBounce'|'inBack'|'outBack'|'inOutBack'|'inElastic'|'outElastic'|'inOutElastic'|'irregular'|'cubicBezier'|'steps'|'in(p = 1.675)'|'out(p = 1.675)'|'inOut(p = 1.675)'|'inBack(overshoot = 1.70158)'|'outBack(overshoot = 1.70158)'|'inOutBack(overshoot = 1.70158)'|'inElastic(amplitude = 1, period = .3)'|'outElastic(amplitude = 1, period = .3)'|'inOutElastic(amplitude = 1, period = .3)'|'irregular(length = 10, randomness = 1)'|'cubicBezier(x1, y1, x2, y2)'|'steps(steps = 10)')} EaseStringParamNames
+ * @typedef {('linear'|'none'|'in'|'out'|'inOut'|'inQuad'|'outQuad'|'inOutQuad'|'inCubic'|'outCubic'|'inOutCubic'|'inQuart'|'outQuart'|'inOutQuart'|'inQuint'|'outQuint'|'inOutQuint'|'inSine'|'outSine'|'inOutSine'|'inCirc'|'outCirc'|'inOutCirc'|'inExpo'|'outExpo'|'inOutExpo'|'inBounce'|'outBounce'|'inOutBounce'|'inBack'|'outBack'|'inOutBack'|'inElastic'|'outElastic'|'inOutElastic'|'out(p = 1.675)'|'inOut(p = 1.675)'|'inBack(overshoot = 1.7)'|'outBack(overshoot = 1.7)'|'inOutBack(overshoot = 1.7)'|'inElastic(amplitude = 1, period = .3)'|'outElastic(amplitude = 1, period = .3)'|'inOutElastic(amplitude = 1, period = .3)')} EaseStringParamNames
+ */
+
+/**
+ * @typedef {('ease'|'ease-in'|'ease-out'|'ease-in-out'|'linear(0, 0.25, 1)'|'steps'|'steps(6, start)'|'step-start'|'step-end'|'cubic-bezier(0.42, 0, 1, 1)') } WAAPIEaseStringParamNames
  */
 
 /**
@@ -97,7 +102,7 @@
 
 /**
  * @callback BackEasing
- * @param {Number|String} [overshoot=1.70158]
+ * @param {Number|String} [overshoot=1.7]
  * @return {EasingFunction}
  */
 
@@ -113,6 +118,7 @@
 // A hack to get both ease names suggestions AND allow any strings
 // https://github.com/microsoft/TypeScript/issues/29729#issuecomment-460346421
 /** @typedef {(String & {})|EaseStringParamNames|EasingFunction|Spring} EasingParam */
+/** @typedef {(String & {})|EaseStringParamNames|WAAPIEaseStringParamNames|EasingFunction|Spring} WAAPIEasingParam */
 
 // Spring types
 
@@ -122,6 +128,9 @@
  * @property {Number} [stiffness=100] - Stiffness, default 100
  * @property {Number} [damping=10] - Damping, default 10
  * @property {Number} [velocity=0] - Initial velocity, default 0
+ * @property {Number} [bounce=0] - Initial bounce, default 0
+ * @property {Number} [duration=0] - The perceived duration, default 0
+ * @property {Callback<JSAnimation>} [onComplete] - Callback function called when the spring currentTime hits the perceived duration
  */
 
  // Callback types
@@ -219,6 +228,7 @@
  * @property {Number} _isOverlapped
  * @property {Number} _isOverridden
  * @property {Number} _renderTransforms
+ * @property {String} _inlineValue
  * @property {Tween} _prevRep
  * @property {Tween} _nextRep
  * @property {Tween} _prevAdd
@@ -376,7 +386,7 @@
  */
 
 /**
- * @typedef {(animation: WAAPIAnimation) => void} WAAPICallback
+ * @typedef {Callback<WAAPIAnimation>} WAAPICallback
  */
 
 /**
@@ -385,7 +395,7 @@
  * @property {WAAPIKeyframeValue} [from]
  * @property {Number|WAAPIFunctionValue} [duration]
  * @property {Number|WAAPIFunctionValue} [delay]
- * @property {EasingParam} [ease]
+ * @property {WAAPIEasingParam} [ease]
  * @property {CompositeOperation} [composition]
  */
 
@@ -398,13 +408,14 @@
  * @property {Number} [playbackRate]
  * @property {Number|WAAPIFunctionValue} [duration]
  * @property {Number|WAAPIFunctionValue} [delay]
- * @property {EasingParam} [ease]
+ * @property {WAAPIEasingParam} [ease]
  * @property {CompositeOperation} [composition]
+ * @property {Boolean} [persist]
  * @property {WAAPICallback} [onComplete]
  */
 
 /**
- * @typedef {Record<String, WAAPIKeyframeValue | WAAPIAnimationOptions | Boolean | ScrollObserver | WAAPICallback | EasingParam | WAAPITweenOptions> & WAAPIAnimationOptions} WAAPIAnimationParams
+ * @typedef {Record<String, WAAPIKeyframeValue | WAAPIAnimationOptions | Boolean | ScrollObserver | WAAPICallback | WAAPIEasingParam | WAAPITweenOptions> & WAAPIAnimationOptions} WAAPIAnimationParams
  */
 
 // Animatable types
@@ -688,6 +699,8 @@
   // Strings
 
   const emptyString = '';
+  const cssVarPrefix = 'var(';
+
   const shortTransforms = /*#__PURE__*/ (() => {
     const map = new Map();
     map.set('x', 'translateX');
@@ -711,9 +724,9 @@
     'skew',
     'skewX',
     'skewY',
-    'perspective',
     'matrix',
     'matrix3d',
+    'perspective',
   ];
 
   const transformsFragmentStrings = /*#__PURE__*/ validTransforms.reduce((a, v) => ({...a, [v]: v + '('}), {});
@@ -737,6 +750,7 @@
   const lowerCaseRgx = /([a-z])([A-Z])/g;
   const transformsExecRgx = /(\w+)(\([^)]+\)+)/g; // Match inline transforms with cacl() values, returns the value wrapped in ()
   const relativeValuesExecRgx = /(\*=|\+=|-=)/;
+  const cssVariableMatchRgx = /var\(\s*(--[\w-]+)(?:\s*,\s*([^)]+))?\s*\)/;
 
   
 
@@ -751,6 +765,7 @@
     reversed: false,
     alternate: false,
     autoplay: true,
+    persist: false,
     duration: K,
     delay: 0,
     loopDelay: 0,
@@ -1174,19 +1189,30 @@
    * @return {any}
    */
   const getFunctionValue = (value, target, index, total, store) => {
+    let func;
     if (isFnc(value)) {
-      const func = () => {
+      func = () => {
         const computed = /** @type {Function} */(value)(target, index, total);
         // Fallback to 0 if the function returns undefined / NaN / null / false / 0
         return !isNaN(+computed) ? +computed : computed || 0;
       };
-      if (store) {
-        store.func = func;
-      }
-      return func();
+    } else if (isStr(value) && stringStartsWith(value, cssVarPrefix)) {
+      func = () => {
+        const match = value.match(cssVariableMatchRgx);
+        const cssVarName = match[1];
+        const fallbackValue = match[2];
+        let computed = getComputedStyle(/** @type {HTMLElement} */(target))?.getPropertyValue(cssVarName);
+        // Use fallback if CSS variable is not set or empty
+        if ((!computed || computed.trim() === emptyString) && fallbackValue) {
+          computed = fallbackValue.trim();
+        }
+        return computed || 0;
+      };
     } else {
       return value;
     }
+    if (store) store.func = func;
+    return func();
   };
 
   /**
@@ -1593,7 +1619,9 @@
     // Handle setters on timeline differently and allow re-trigering the onComplete callback when seeking backwards
     if (parent && isSetter) {
       if (!muteCallbacks && (
-        (parent.began && !isRunningBackwards && tickableAbsoluteTime >= duration && !completed) ||
+        // (tickableAbsoluteTime > 0 instead) of (tickableAbsoluteTime >= duration) to prevent floating point precision issues
+        // see: https://github.com/juliangarnier/anime/issues/1088
+        (parent.began && !isRunningBackwards && tickableAbsoluteTime > 0 && !completed) ||
         (isRunningBackwards && tickableAbsoluteTime <= minValue && completed)
       )) {
         tickable.onComplete(/** @type {CallbackArgument} */(tickable));
@@ -1695,12 +1723,11 @@
     }
   };
 
+  
+
+  
+
   const propertyNamesCache = {};
-
-
-  
-
-  
 
   /**
    * @param  {String} propertyName
@@ -1748,10 +1775,11 @@
         const tweenTarget = tween.target;
         if (tweenTarget[isDomSymbol]) {
           const targetStyle = /** @type {DOMTarget} */(tweenTarget).style;
-          const originalInlinedValue = animation._inlineStyles[tweenProperty];
+          const originalInlinedValue = tween._inlineValue;
+          const tweenHadNoInlineValue = isNil(originalInlinedValue) || originalInlinedValue === emptyString;
           if (tween._tweenType === tweenTypes.TRANSFORM) {
             const cachedTransforms = tweenTarget[transformsSymbol];
-            if (isUnd(originalInlinedValue) || originalInlinedValue === emptyString) {
+            if (tweenHadNoInlineValue) {
               delete cachedTransforms[tweenProperty];
             } else {
               cachedTransforms[tweenProperty] = originalInlinedValue;
@@ -1768,8 +1796,8 @@
               }
             }
           } else {
-            if (isUnd(originalInlinedValue) || originalInlinedValue === emptyString) {
-              targetStyle.removeProperty(tweenProperty);
+            if (tweenHadNoInlineValue) {
+              targetStyle.removeProperty(toLowerCase(tweenProperty));
             } else {
               targetStyle[tweenProperty] = originalInlinedValue;
             }
@@ -3054,6 +3082,7 @@
 
   
 
+
   /** @type {PowerEasing} */
   const easeInPower = (p = 1.68) => t => pow(t, +p);
 
@@ -3070,154 +3099,6 @@
     inOut: easeIn => t => t < .5 ? easeIn(t * 2) / 2 : 1 - easeIn(t * -2 + 2) / 2,
     outIn: easeIn => t => t < .5 ? (1 - easeIn(1 - t * 2)) / 2 : (easeIn(t * 2 - 1) + 1) / 2,
   };
-
-  /**
-   * @param  {String} string
-   * @param  {Record<String, EasingFunctionWithParams|EasingFunction>} easesFunctions
-   * @param  {Object} easesLookups
-   * @return {EasingFunction}
-   */
-  const parseEaseString = (string, easesFunctions, easesLookups) => {
-    if (easesLookups[string]) return easesLookups[string];
-    if (string.indexOf('(') <= -1) {
-      const hasParams = easeTypes[string] || string.includes('Back') || string.includes('Elastic');
-      const parsedFn = /** @type {EasingFunction} */(hasParams ? /** @type {EasingFunctionWithParams} */(easesFunctions[string])() : easesFunctions[string]);
-      return parsedFn ? easesLookups[string] = parsedFn : none;
-    } else {
-      const split = string.slice(0, -1).split('(');
-      const parsedFn = /** @type {EasingFunctionWithParams} */(easesFunctions[split[0]]);
-      return parsedFn ? easesLookups[string] = parsedFn(...split[1].split(',')) : none;
-    }
-  };
-
-  
-
-  /**
-   * Cubic Bezier solver adapted from https://github.com/gre/bezier-easing
-   * (c) 2014 Gaëtan Renaudeau
-   */
-
-  /**
-   * @param  {Number} aT
-   * @param  {Number} aA1
-   * @param  {Number} aA2
-   * @return {Number}
-   */
-  const calcBezier = (aT, aA1, aA2) => (((1 - 3 * aA2 + 3 * aA1) * aT + (3 * aA2 - 6 * aA1)) * aT + (3 * aA1)) * aT;
-
-  /**
-   * @param  {Number} aX
-   * @param  {Number} mX1
-   * @param  {Number} mX2
-   * @return {Number}
-   */
-  const binarySubdivide = (aX, mX1, mX2) => {
-    let aA = 0, aB = 1, currentX, currentT, i = 0;
-    do {
-      currentT = aA + (aB - aA) / 2;
-      currentX = calcBezier(currentT, mX1, mX2) - aX;
-      if (currentX > 0) {
-        aB = currentT;
-      } else {
-        aA = currentT;
-      }
-    } while (abs(currentX) > .0000001 && ++i < 100);
-    return currentT;
-  };
-
-  /**
-   * @param  {Number} [mX1] The x coordinate of the first point
-   * @param  {Number} [mY1] The y coordinate of the first point
-   * @param  {Number} [mX2] The x coordinate of the second point
-   * @param  {Number} [mY2] The y coordinate of the second point
-   * @return {EasingFunction}
-   */
-
-  const cubicBezier = (mX1 = 0.5, mY1 = 0.0, mX2 = 0.5, mY2 = 1.0) => (mX1 === mY1 && mX2 === mY2) ? none :
-    t => t === 0 || t === 1 ? t :
-    calcBezier(binarySubdivide(t, mX1, mX2), mY1, mY2);
-
-  
-
-  /**
-   * Steps ease implementation https://developer.mozilla.org/fr/docs/Web/CSS/transition-timing-function
-   * Only covers 'end' and 'start' jumpterms
-   * @param  {Number} steps
-   * @param  {Boolean} [fromStart]
-   * @return {EasingFunction}
-   */
-  const steps = (steps = 10, fromStart) => {
-    const roundMethod = fromStart ? ceil : floor;
-    return t => roundMethod(clamp$1(t, 0, 1) * steps) * (1 / steps);
-  };
-
-  
-
-  /**
-   * Without parameters, the linear function creates a non-eased transition.
-   * Parameters, if used, creates a piecewise linear easing by interpolating linearly between the specified points.
-   *
-   * @param  {...(String|Number)} args - Points
-   * @return {EasingFunction}
-   */
-  const linear = (...args) => {
-    const argsLength = args.length;
-    if (!argsLength) return none;
-    const totalPoints = argsLength - 1;
-    const firstArg = args[0];
-    const lastArg = args[totalPoints];
-    const xPoints = [0];
-    const yPoints = [parseNumber(firstArg)];
-    for (let i = 1; i < totalPoints; i++) {
-      const arg = args[i];
-      const splitValue = isStr(arg) ?
-      /** @type {String} */(arg).trim().split(' ') :
-      [arg];
-      const value = splitValue[0];
-      const percent = splitValue[1];
-      xPoints.push(!isUnd(percent) ? parseNumber(percent) / 100 : i / totalPoints);
-      yPoints.push(parseNumber(value));
-    }
-    yPoints.push(parseNumber(lastArg));
-    xPoints.push(1);
-    return function easeLinear(t) {
-      for (let i = 1, l = xPoints.length; i < l; i++) {
-        const currentX = xPoints[i];
-        if (t <= currentX) {
-          const prevX = xPoints[i - 1];
-          const prevY = yPoints[i - 1];
-          return prevY + (yPoints[i] - prevY) * (t - prevX) / (currentX - prevX);
-        }
-      }
-      return yPoints[yPoints.length - 1];
-    }
-  };
-
-  
-
-  /**
-   * Generate random steps
-   * @param  {Number} [length] - The number of steps
-   * @param  {Number} [randomness] - How strong the randomness is
-   * @return {EasingFunction}
-   */
-  const irregular = (length = 10, randomness = 1) => {
-    const values = [0];
-    const total = length - 1;
-    for (let i = 1; i < total; i++) {
-      const previousValue = values[i - 1];
-      const spacing = i / total;
-      const segmentEnd = (i + 1) / total;
-      const randomVariation = spacing + (segmentEnd - spacing) * Math.random();
-      // Mix the even spacing and random variation based on the randomness parameter
-      const randomValue = spacing * (1 - randomness) + randomVariation * randomness;
-      values.push(clamp$1(randomValue, previousValue, 1));
-    }
-    values.push(1);
-    return linear(...values);
-  };
-
-  
 
   /**
    * Easing functions adapted and simplified from https://robertpenner.com/easing/
@@ -3247,7 +3128,7 @@
       return 1 / pow(4, 3 - b) - 7.5625 * pow((pow2 * 3 - 2) / 22 - t, 2);
     },
     /** @type {BackEasing} */
-    Back: (overshoot = 1.70158) => t => (+overshoot + 1) * t * t * t - +overshoot * t * t,
+    Back: (overshoot = 1.7) => t => (+overshoot + 1) * t * t * t - +overshoot * t * t,
     /** @type {ElasticEasing} */
     Elastic: (amplitude = 1, period = .3) => {
       const a = clamp$1(+amplitude, 1, 10);
@@ -3260,10 +3141,8 @@
 
   /**
    * @typedef  {Object} EasesFunctions
-   * @property {typeof linear} linear
-   * @property {typeof irregular} irregular
-   * @property {typeof steps} steps
-   * @property {typeof cubicBezier} cubicBezier
+   * @property {typeof none} linear
+   * @property {typeof none} none
    * @property {PowerEasing} in
    * @property {PowerEasing} out
    * @property {PowerEasing} inOut
@@ -3311,7 +3190,7 @@
    */
 
   const eases = (/*#__PURE__ */ (() => {
-    const list = { linear, irregular, steps, cubicBezier };
+    const list = { linear: none, none: none };
     for (let type in easeTypes) {
       for (let name in easeInFunctions) {
         const easeIn = easeInFunctions[name];
@@ -3327,15 +3206,43 @@
   })());
 
   /** @type {Record<String, EasingFunction>} */
-  const JSEasesLookups = { linear: none };
+  const easesLookups = { linear: none, none: none };
+
+  /**
+   * @param  {String} string
+   * @return {EasingFunction}
+   */
+  const parseEaseString = (string) => {
+    if (easesLookups[string]) return easesLookups[string];
+    if (string.indexOf('(') <= -1) {
+      const hasParams = easeTypes[string] || string.includes('Back') || string.includes('Elastic');
+      const parsedFn = /** @type {EasingFunction} */(hasParams ? /** @type {EasingFunctionWithParams} */(eases[string])() : eases[string]);
+      return parsedFn ? easesLookups[string] = parsedFn : none;
+    } else {
+      const split = string.slice(0, -1).split('(');
+      const parsedFn = /** @type {EasingFunctionWithParams} */(eases[split[0]]);
+      return parsedFn ? easesLookups[string] = parsedFn(...split[1].split(',')) : none;
+    }
+  };
+
+  const deprecated = ['steps(', 'irregular(', 'linear(', 'cubicBezier('];
 
   /**
    * @param  {EasingParam} ease
    * @return {EasingFunction}
    */
-  const parseEase = ease => isFnc(ease) ? ease :
-    isStr(ease) ? parseEaseString(/** @type {String} */(ease), eases, JSEasesLookups) :
-    none;
+  const parseEase = ease => {
+    if (isStr(ease)) {
+      for (let i = 0, l = deprecated.length; i < l; i++) {
+        if (stringStartsWith(ease, deprecated[i])) {
+          console.warn(`String syntax for \`ease: "${ease}"\` has been removed from the core and replaced by importing and passing the easing function directly: \`ease: ${ease}\``);
+          return none;
+        }
+      }
+    }
+    const easeFunc = isFnc(ease) ? ease : isStr(ease) ? parseEaseString(/** @type {String} */(ease)) : none;
+    return easeFunc;
+  };
 
   
 
@@ -3343,6 +3250,7 @@
   // TODO: Maybe move the objects creation to values.js and use the decompose function to create the base object
   const fromTargetObject = createDecomposedValueTargetObject();
   const toTargetObject = createDecomposedValueTargetObject();
+  const inlineStylesStore = {};
   const toFunctionStore = { func: null };
   const keyframesTargetArray = [null];
   const fastSetValuesArray = [null, null];
@@ -3487,15 +3395,15 @@
       const animEase = animaPlaybackEase ? parseEase(animaPlaybackEase) : null;
       const hasSpring = !isUnd(ease) && !isUnd(/** @type {Spring} */(ease).ease);
       const tEasing = hasSpring ? /** @type {Spring} */(ease).ease : setValue(ease, animEase ? 'linear' : animDefaults.ease);
-      const tDuration = hasSpring ? /** @type {Spring} */(ease).duration : setValue(duration, animDefaults.duration);
+      const tDuration = hasSpring ? /** @type {Spring} */(ease).settlingDuration : setValue(duration, animDefaults.duration);
       const tDelay = setValue(delay, animDefaults.delay);
       const tModifier = modifier || animDefaults.modifier;
       // If no composition is defined and the targets length is high (>= 1000) set the composition to 'none' (0) for faster tween creation
       const tComposition = isUnd(composition) && targetsLength >= K ? compositionTypes.none : !isUnd(composition) ? composition : animDefaults.composition;
-      // TODO: Do not create an empty object until we know the animation will generate inline styles
-      const animInlineStyles = {};
       // const absoluteOffsetTime = this._offset;
       const absoluteOffsetTime = this._offset + (parent ? parent._offset : 0);
+      // This allows targeting the current animation in the spring onComplete callback
+      if (hasSpring) /** @type {Spring} */(ease).parent = this;
 
       let iterationDuration = NaN;
       let iterationDelay = NaN;
@@ -3597,7 +3505,7 @@
               // Easing are treated differently and don't accept function based value to prevent having to pass a function wrapper that returns an other function all the time
               const tweenEasing = hasSpring ? /** @type {Spring} */(keyEasing).ease : keyEasing || tEasing;
               // Calculate default individual keyframe duration by dividing the tl of keyframes
-              const tweenDuration = hasSpring ? /** @type {Spring} */(keyEasing).duration : getFunctionValue(setValue(key.duration, (l > 1 ? getFunctionValue(tDuration, target, ti, tl) / l : tDuration)), target, ti, tl);
+              const tweenDuration = hasSpring ? /** @type {Spring} */(keyEasing).settlingDuration : getFunctionValue(setValue(key.duration, (l > 1 ? getFunctionValue(tDuration, target, ti, tl) / l : tDuration)), target, ti, tl);
               // Default delay value should only be applied to the first tween
               const tweenDelay = getFunctionValue(setValue(key.delay, (!tweenIndex ? tDelay : 0)), target, ti, tl);
               const computedComposition = getFunctionValue(setValue(key.composition, tComposition), target, ti, tl);
@@ -3647,7 +3555,7 @@
                     }
                   } else {
                     decomposeRawValue(
-                      getOriginalAnimatableValue(target, propName, tweenType, animInlineStyles),
+                      getOriginalAnimatableValue(target, propName, tweenType, inlineStylesStore),
                       decomposedOriginalValue
                     );
                     if (decomposedOriginalValue.t === valueTypes.UNIT) {
@@ -3665,7 +3573,7 @@
                   } else {
                     // No need to get and parse the original value if the tween is part of a timeline and has a previous sibling part of the same timeline
                     decomposeRawValue(parent && prevSibling && prevSibling.parent.parent === parent ? prevSibling._value :
-                    getOriginalAnimatableValue(target, propName, tweenType, animInlineStyles), toTargetObject);
+                    getOriginalAnimatableValue(target, propName, tweenType, inlineStylesStore), toTargetObject);
                   }
                 }
                 if (hasFromvalue) {
@@ -3676,7 +3584,7 @@
                   } else {
                     decomposeRawValue(parent && prevSibling && prevSibling.parent.parent === parent ? prevSibling._value :
                     // No need to get and parse the original value if the tween is part of a timeline and has a previous sibling part of the same timeline
-                    getOriginalAnimatableValue(target, propName, tweenType, animInlineStyles), fromTargetObject);
+                    getOriginalAnimatableValue(target, propName, tweenType, inlineStylesStore), fromTargetObject);
                   }
                 }
               }
@@ -3685,7 +3593,7 @@
               if (fromTargetObject.o) {
                 fromTargetObject.n = getRelativeValue(
                   !prevSibling ? decomposeRawValue(
-                    getOriginalAnimatableValue(target, propName, tweenType, animInlineStyles),
+                    getOriginalAnimatableValue(target, propName, tweenType, inlineStylesStore),
                     decomposedOriginalValue
                   ).n : prevSibling._toNumber,
                   fromTargetObject.n,
@@ -3741,6 +3649,10 @@
               // Rounding is necessary here to minimize floating point errors when working in seconds
               const tweenUpdateDuration = round$1(+tweenDuration || minValue, 12);
 
+              // Copy the value of the iniline style if it exist and imediatly nullify it to prevents false positive on other targets
+              let inlineValue = inlineStylesStore[propName];
+              if (!isNil(inlineValue)) inlineStylesStore[propName] = null;
+
               /** @type {Tween} */
               const tween = {
                 parent: this,
@@ -3772,6 +3684,7 @@
                 _isOverlapped: 0,
                 _isOverridden: 0,
                 _renderTransforms: 0,
+                _inlineValue: inlineValue,
                 _prevRep: null, // For replaced tween
                 _nextRep: null, // For replaced tween
                 _prevAdd: null, // For additive tween
@@ -3874,8 +3787,6 @@
       // this._offset += parent ? iterationDelay : 0;
       /** @type {Number} */
       this.iterationDuration = iterationDuration;
-      /** @type {{}} */
-      this._inlineStyles = animInlineStyles;
 
       if (!this._autoplay && shouldTriggerRender) this.onRender(this);
     }
@@ -3909,6 +3820,7 @@
         if (tweenFunc) {
           const ogValue = getOriginalAnimatableValue(tween.target, tween.property, tween._tweenType);
           decomposeRawValue(ogValue, decomposedOriginalValue);
+          // TODO: Check for from / to Array based values here,
           decomposeRawValue(tweenFunc(), toTargetObject);
           tween._fromNumbers = cloneArray(decomposedOriginalValue.d);
           tween._fromNumber = decomposedOriginalValue.n;
@@ -3918,6 +3830,8 @@
           tween._toNumber = toTargetObject.o ? getRelativeValue(decomposedOriginalValue.n, toTargetObject.n, toTargetObject.o) : toTargetObject.n;
         }
       });
+      // This forces setter animations to render once
+      if (this.duration === minValue) this.restart();
       return this;
     }
 
@@ -3960,16 +3874,18 @@
    * @param {DOMTarget} $el
    * @param {String} [property]
    * @param {WAAPIAnimation} [parent]
+   * @return {globalThis.Animation}
    */
   const removeWAAPIAnimation = ($el, property, parent) => {
     let nextLookup = WAAPIAnimationsLookups._head;
+    let anim;
     while (nextLookup) {
       const next = nextLookup._next;
       const matchTarget = nextLookup.$el === $el;
       const matchProperty = !property || nextLookup.property === property;
       const matchParent = !parent || nextLookup.parent === parent;
       if (matchTarget && matchProperty && matchParent) {
-        const anim = nextLookup.animation;
+        anim = nextLookup.animation;
         try { anim.commitStyles(); } catch {}      anim.cancel();
         removeChild(WAAPIAnimationsLookups, nextLookup);
         const lookupParent = nextLookup.parent;
@@ -3977,8 +3893,8 @@
           lookupParent._completed++;
           if (lookupParent.animations.length === lookupParent._completed) {
             lookupParent.completed = true;
+            lookupParent.paused = true;
             if (!lookupParent.muteCallbacks) {
-              lookupParent.paused = true;
               lookupParent.onComplete(lookupParent);
               lookupParent._resolve(lookupParent);
             }
@@ -3987,6 +3903,7 @@
       }
       nextLookup = next;
     }
+    return anim;
   };
 
   /**
@@ -3995,7 +3912,7 @@
    * @param {String} property
    * @param {PropertyIndexedKeyframes} keyframes
    * @param {KeyframeAnimationOptions} params
-   * @retun {Animation}
+   * @retun {globalThis.Animation}
    */
   const addWAAPIAnimation = (parent, $el, property, keyframes, params) => {
     const animation = $el.animate(keyframes, params);
@@ -4010,8 +3927,11 @@
     removeWAAPIAnimation($el, property);
     addChild(WAAPIAnimationsLookups, { parent, animation, $el, property, _next: null, _prev: null });
     const handleRemove = () => { removeWAAPIAnimation($el, property, parent); };
+    animation.oncancel = handleRemove;
     animation.onremove = handleRemove;
-    animation.onfinish = handleRemove;
+    if (!parent.persist) {
+      animation.onfinish = handleRemove;
+    }
     return animation;
   };
 
@@ -4639,8 +4559,10 @@
 
   
 
+  
+
   /*
-   * Spring ease solver adapted from https://webkit.org/demos/spring/spring.js
+   * Spring easing solver adapted from https://webkit.org/demos/spring/spring.js
    * (c) 2016 Webkit - Apple Inc
    */
 
@@ -4651,25 +4573,46 @@
      * @param {SpringParams} [parameters]
      */
     constructor(parameters = {}) {
+      const hasBounceOrDuration = !isUnd(parameters.bounce) || !isUnd(parameters.duration);
       this.timeStep = .02; // Interval fed to the solver to calculate duration
       this.restThreshold = .0005; // Values below this threshold are considered resting position
       this.restDuration = 200; // Duration in ms used to check if the spring is resting after reaching restThreshold
       this.maxDuration = 60000; // The maximum allowed spring duration in ms (default 1 min)
       this.maxRestSteps = this.restDuration / this.timeStep / K; // How many steps allowed after reaching restThreshold before stopping the duration calculation
       this.maxIterations = this.maxDuration / this.timeStep / K; // Calculate the maximum iterations allowed based on maxDuration
-      this.m = clamp$1(setValue(parameters.mass, 1), 0, maxSpringParamValue);
-      this.s = clamp$1(setValue(parameters.stiffness, 100), 1, maxSpringParamValue);
-      this.d = clamp$1(setValue(parameters.damping, 10), .1, maxSpringParamValue);
+      this.bn = clamp$1(setValue(parameters.bounce, .5), -1, 1); // The bounce percentage between -1 and 1.
+      this.pd = clamp$1(setValue(parameters.duration, 628), 10 * globals.timeScale, maxSpringParamValue * globals.timeScale); // The perceived duration
+      this.m = clamp$1(setValue(parameters.mass, 1), 1, maxSpringParamValue);
+      this.s = clamp$1(setValue(parameters.stiffness, 100), minValue, maxSpringParamValue);
+      this.d = clamp$1(setValue(parameters.damping, 10), minValue, maxSpringParamValue);
       this.v = clamp$1(setValue(parameters.velocity, 0), -maxSpringParamValue, maxSpringParamValue);
       this.w0 = 0;
       this.zeta = 0;
       this.wd = 0;
       this.b = 0;
+      this.completed = false;
       this.solverDuration = 0;
-      this.duration = 0;
+      this.settlingDuration = 0;
+      /** @type {JSAnimation} */
+      this.parent = null;
+      /** @type {Callback<JSAnimation>} */
+      this.onComplete = parameters.onComplete || noop;
+      if (hasBounceOrDuration) this.calculateSDFromBD();
       this.compute();
       /** @type {EasingFunction} */
-      this.ease = t => t === 0 || t === 1 ? t : this.solve(t * this.solverDuration);
+      this.ease = t => {
+        const currentTime = t * this.settlingDuration;
+        const completed = this.completed;
+        const perceivedTime = this.pd;
+        if (currentTime >= perceivedTime && !completed) {
+          this.completed = true;
+          this.onComplete(this.parent);
+        }
+        if (currentTime < perceivedTime && completed) {
+          this.completed = false;
+        }
+        return t === 0 || t === 1 ? t : this.solve(t * this.solverDuration);
+      };
     }
 
     /** @type {EasingFunction} */
@@ -4677,23 +4620,83 @@
       const { zeta, w0, wd, b } = this;
       let t = time;
       if (zeta < 1) {
+        // Underdamped
         t = exp(-t * zeta * w0) * (1 * cos(wd * t) + b * sin(wd * t));
-      } else {
+      } else if (zeta === 1) {
+        // Critically damped
         t = (1 + b * t) * exp(-t * w0);
+      } else {
+        // Overdamped
+        // Using exponential instead of cosh and sinh functions to prevent Infinity
+        // Original exp(-zeta * w0 * t) * (cosh(wd * t) + b * sinh(wd * t))
+        t = ((1 + b) * exp((-zeta * w0 + wd) * t) + (1 - b) * exp((-zeta * w0 - wd) * t)) / 2;
       }
       return 1 - t;
+    }
+
+    calculateSDFromBD() {
+      // Apple's SwiftUI perceived spring duration implementation https://developer.apple.com/videos/play/wwdc2023/10158/?time=1010
+      // Equations taken from Kevin Grajeda's article https://www.kvin.me/posts/effortless-ui-spring-animations
+      const pds = globals.timeScale === 1 ? this.pd / K : this.pd;
+      // Mass and velocity should be set to their default values
+      this.m = 1;
+      this.v = 0;
+      // Stiffness = (2π ÷ perceptualDuration)²
+      this.s = pow((2 * PI) / pds, 2);
+      if (this.bn >= 0) {
+        // For bounce ≥ 0 (critically damped to underdamped)
+        // damping = ((1 - bounce) × 4π) ÷ perceptualDuration
+        this.d = ((1 - this.bn) * 4 * PI) / pds;
+      } else {
+        // For bounce < 0 (overdamped)
+        // damping = 4π ÷ (perceptualDuration × (1 + bounce))
+        // Note: (1 + bounce) is positive since bounce is negative
+        this.d = (4 * PI) / (pds * (1 + this.bn));
+      }
+      this.s = round$1(clamp$1(this.s, minValue, maxSpringParamValue), 3);
+      this.d = round$1(clamp$1(this.d, minValue, 300), 3); // Clamping to 300 is needed to prevent insane values in the solver
+    }
+
+    calculateBDFromSD() {
+      // Calculate perceived duration and bounce from stiffness and damping
+      // Note: We assumes m = 1 and v = 0 for these calculations
+      const pds = (2 * PI) / sqrt(this.s);
+      this.pd = pds * (globals.timeScale === 1 ? K : 1);
+      const zeta = this.d / (2 * sqrt(this.s));
+      if (zeta <= 1) {
+        // Critically damped to underdamped
+        this.bn = 1 - (this.d * pds) / (4 * PI);
+      } else {
+        // Overdamped
+        this.bn = (4 * PI) / (this.d * pds) - 1;
+      }
+      this.bn = round$1(clamp$1(this.bn, -1, 1), 3);
+      this.pd = round$1(clamp$1(this.pd, 10 * globals.timeScale, maxSpringParamValue * globals.timeScale), 3);
     }
 
     compute() {
       const { maxRestSteps, maxIterations, restThreshold, timeStep, m, d, s, v } = this;
       const w0 = this.w0 = clamp$1(sqrt(s / m), minValue, K);
-      const zeta = this.zeta = d / (2 * sqrt(s * m));
-      const wd = this.wd = zeta < 1 ? w0 * sqrt(1 - zeta * zeta) : 0;
-      this.b = zeta < 1 ? (zeta * w0 + -v) / wd : -v + w0;
+      const bouncedZeta = this.zeta = d / (2 * sqrt(s * m));
+      // Calculate wd based on damping type
+      if (bouncedZeta < 1) {
+        // Underdamped
+        this.wd = w0 * sqrt(1 - bouncedZeta * bouncedZeta);
+        this.b = (bouncedZeta * w0 + -v) / this.wd;
+      } else if (bouncedZeta === 1) {
+        // Critically damped
+        this.wd = 0;
+        this.b = -v + w0;
+      } else {
+        // Overdamped
+        this.wd = w0 * sqrt(bouncedZeta * bouncedZeta - 1);
+        this.b = (bouncedZeta * w0 + -v) / this.wd;
+      }
+
       let solverTime = 0;
       let restSteps = 0;
       let iterations = 0;
-      while (restSteps < maxRestSteps && iterations < maxIterations) {
+      while (restSteps <= maxRestSteps && iterations <= maxIterations) {
         if (abs(1 - this.solve(solverTime)) < restThreshold) {
           restSteps++;
         } else {
@@ -4703,15 +4706,26 @@
         solverTime += timeStep;
         iterations++;
       }
-      this.duration = round$1(this.solverDuration * K, 0) * globals.timeScale;
+      this.settlingDuration = round$1(this.solverDuration * K, 0) * globals.timeScale;
     }
 
-    get mass() {
-      return this.m;
+    get bounce() {
+      return this.bn;
     }
 
-    set mass(v) {
-      this.m = clamp$1(setValue(v, 1), 0, maxSpringParamValue);
+    set bounce(v) {
+      this.bn = clamp$1(setValue(v, 1), -1, 1);
+      this.calculateSDFromBD();
+      this.compute();
+    }
+
+    get duration() {
+      return this.pd;
+    }
+
+    set duration(v) {
+      this.pd = clamp$1(setValue(v, 1), 10 * globals.timeScale, maxSpringParamValue * globals.timeScale);
+      this.calculateSDFromBD();
       this.compute();
     }
 
@@ -4720,7 +4734,8 @@
     }
 
     set stiffness(v) {
-      this.s = clamp$1(setValue(v, 100), 1, maxSpringParamValue);
+      this.s = clamp$1(setValue(v, 100), minValue, maxSpringParamValue);
+      this.calculateBDFromSD();
       this.compute();
     }
 
@@ -4729,7 +4744,17 @@
     }
 
     set damping(v) {
-      this.d = clamp$1(setValue(v, 10), .1, maxSpringParamValue);
+      this.d = clamp$1(setValue(v, 10), minValue, maxSpringParamValue);
+      this.calculateBDFromSD();
+      this.compute();
+    }
+
+    get mass() {
+      return this.m;
+    }
+
+    set mass(v) {
+      this.m = clamp$1(setValue(v, 1), 1, maxSpringParamValue);
       this.compute();
     }
 
@@ -4747,7 +4772,18 @@
    * @param {SpringParams} [parameters]
    * @returns {Spring}
    */
-  const createSpring = (parameters) => new Spring(parameters);
+  const spring = (parameters) => new Spring(parameters);
+
+  /**
+   * @deprecated createSpring() is deprecated use spring() instead
+   *
+   * @param {SpringParams} [parameters]
+   * @returns {Spring}
+   */
+  const createSpring = (parameters) => {
+    console.warn('createSpring() is deprecated use spring() instead');
+    return new Spring(parameters);
+  };
 
   
 
@@ -4928,13 +4964,13 @@
       /** @type {Boolean|DraggableCursorParams} */
       this.cursor = false;
       /** @type {Spring} */
-      this.releaseXSpring = hasSpring ? /** @type {Spring} */(ease) : createSpring({
+      this.releaseXSpring = hasSpring ? /** @type {Spring} */(ease) : spring({
         mass: setValue(parameters.releaseMass, 1),
         stiffness: setValue(parameters.releaseStiffness, 80),
         damping: setValue(parameters.releaseDamping, 20),
       });
       /** @type {Spring} */
-      this.releaseYSpring = hasSpring ? /** @type {Spring} */(ease) : createSpring({
+      this.releaseYSpring = hasSpring ? /** @type {Spring} */(ease) : spring({
         mass: setValue(parameters.releaseMass, 1),
         stiffness: setValue(parameters.releaseStiffness, 80),
         damping: setValue(parameters.releaseDamping, 20),
@@ -5651,8 +5687,8 @@
         this.$trigger.addEventListener('touchmove', preventDefault, { passive: false });
         this.$trigger.addEventListener('touchend', preventDefault);
 
-
-        if ((!this.disabled[0] && abs(movedX) > 3) || (!this.disabled[1] && abs(movedY) > 3)) {
+        // Don't check for a miminim distance move if already dragging
+        if (this.dragged || (!this.disabled[0] && abs(movedX) > 3) || (!this.disabled[1] && abs(movedY) > 3)) {
 
           this.updateTicker.resume();
           this.pointer[2] = this.pointer[0];
@@ -5718,8 +5754,8 @@
         const directionX = dx === cr ? cx > cr ? -1 : 1 : cx < cl ? -1 : 1;
         const distanceX = round$1(cx - dx, 0);
         springX.velocity = disabledY && hasReleaseSpring ? distanceX ? (ds * directionX) / abs(distanceX) : 0 : pv;
-        const { ease, duration, restDuration } = springX;
-        durationX = cx === dx ? 0 : hasReleaseSpring ? duration : duration - (restDuration * globals.timeScale);
+        const { ease, settlingDuration, restDuration } = springX;
+        durationX = cx === dx ? 0 : hasReleaseSpring ? settlingDuration : settlingDuration - (restDuration * globals.timeScale);
         if (hasReleaseSpring) easeX = ease;
         if (durationX > longestReleaseDuration) longestReleaseDuration = durationX;
       }
@@ -5728,8 +5764,8 @@
         const directionY = dy === cb ? cy > cb ? -1 : 1 : cy < ct ? -1 : 1;
         const distanceY = round$1(cy - dy, 0);
         springY.velocity = disabledX && hasReleaseSpring ? distanceY ? (ds * directionY) / abs(distanceY) : 0 : pv;
-        const { ease, duration, restDuration } = springY;
-        durationY = cy === dy ? 0 : hasReleaseSpring ? duration : duration - (restDuration * globals.timeScale);
+        const { ease, settlingDuration, restDuration } = springY;
+        durationY = cy === dy ? 0 : hasReleaseSpring ? settlingDuration : settlingDuration - (restDuration * globals.timeScale);
         if (hasReleaseSpring) easeY = ease;
         if (durationY > longestReleaseDuration) longestReleaseDuration = durationY;
       }
@@ -6582,6 +6618,8 @@
       /** @type {Boolean} */
       this.reverted = false;
       /** @type {Boolean} */
+      this.ready = false;
+      /** @type {Boolean} */
       this.completed = false;
       /** @type {Boolean} */
       this.began = false;
@@ -6591,8 +6629,6 @@
       this.forceEnter = false;
       /** @type {Boolean} */
       this.hasEntered = false;
-      // /** @type {Array.<Number>} */
-      // this.offsets = [];
       /** @type {Number} */
       this.offset = 0;
       /** @type {Number} */
@@ -6640,6 +6676,8 @@
         // Make sure to pause the linked object in case it's added later
         linked.pause();
         this.linked = linked;
+        // Forces WAAPI Animation to persist; otherwise, they will stop syncing on finish.
+        if (!isUnd(/** @type {WAAPIAnimation} */(linked))) /** @type {WAAPIAnimation} */(linked).persist = true;
         // Try to use a target of the linked object if no target parameters specified
         if (!this._params.target) {
           /** @type {HTMLElement} */
@@ -6679,6 +6717,8 @@
     }
 
     refresh() {
+      // This flag is used to prevent running handleScroll() outside of this.refresh() with values not yet calculated
+      this.ready = true;
       this.reverted = false;
       const params = this._params;
       this.repeat = setValue(parseScrollObserverFunctionParameter(params.repeat, this), true);
@@ -6924,8 +6964,6 @@
       const offsetStart = parsedEnterTarget + offset - parsedEnterContainer;
       const offsetEnd = parsedLeaveTarget + offset - parsedLeaveContainer;
       const scrollDelta = offsetEnd - offsetStart;
-      // this.offsets[0] = offsetX;
-      // this.offsets[1] = offsetY;
       this.offset = offset;
       this.offsetStart = offsetStart;
       this.offsetEnd = offsetEnd;
@@ -6944,6 +6982,7 @@
     }
 
     handleScroll() {
+      if (!this.ready) return;
       const linked = this.linked;
       const sync = this.sync;
       const syncEase = this.syncEase;
@@ -7067,6 +7106,7 @@
         this.removeDebug();
       }
       this.reverted = true;
+      this.ready = false;
       return this;
     }
 
@@ -7078,13 +7118,142 @@
    */
   const onScroll = (parameters = {}) => new ScrollObserver(parameters);
 
+  
+
+  /**
+   * Cubic Bezier solver adapted from https://github.com/gre/bezier-easing
+   * (c) 2014 Gaëtan Renaudeau
+   */
+
+  /**
+   * @param  {Number} aT
+   * @param  {Number} aA1
+   * @param  {Number} aA2
+   * @return {Number}
+   */
+  const calcBezier = (aT, aA1, aA2) => (((1 - 3 * aA2 + 3 * aA1) * aT + (3 * aA2 - 6 * aA1)) * aT + (3 * aA1)) * aT;
+
+  /**
+   * @param  {Number} aX
+   * @param  {Number} mX1
+   * @param  {Number} mX2
+   * @return {Number}
+   */
+  const binarySubdivide = (aX, mX1, mX2) => {
+    let aA = 0, aB = 1, currentX, currentT, i = 0;
+    do {
+      currentT = aA + (aB - aA) / 2;
+      currentX = calcBezier(currentT, mX1, mX2) - aX;
+      if (currentX > 0) {
+        aB = currentT;
+      } else {
+        aA = currentT;
+      }
+    } while (abs(currentX) > .0000001 && ++i < 100);
+    return currentT;
+  };
+
+  /**
+   * @param  {Number} [mX1] The x coordinate of the first point
+   * @param  {Number} [mY1] The y coordinate of the first point
+   * @param  {Number} [mX2] The x coordinate of the second point
+   * @param  {Number} [mY2] The y coordinate of the second point
+   * @return {EasingFunction}
+   */
+
+  const cubicBezier = (mX1 = 0.5, mY1 = 0.0, mX2 = 0.5, mY2 = 1.0) => (mX1 === mY1 && mX2 === mY2) ? none :
+    t => t === 0 || t === 1 ? t :
+    calcBezier(binarySubdivide(t, mX1, mX2), mY1, mY2);
+
+  
+
+  /**
+   * Steps ease implementation https://developer.mozilla.org/fr/docs/Web/CSS/transition-timing-function
+   * Only covers 'end' and 'start' jumpterms
+   * @param  {Number} steps
+   * @param  {Boolean} [fromStart]
+   * @return {EasingFunction}
+   */
+  const steps = (steps = 10, fromStart) => {
+    const roundMethod = fromStart ? ceil : floor;
+    return t => roundMethod(clamp$1(t, 0, 1) * steps) * (1 / steps);
+  };
+
+  
+
+  /**
+   * Without parameters, the linear function creates a non-eased transition.
+   * Parameters, if used, creates a piecewise linear easing by interpolating linearly between the specified points.
+   *
+   * @param  {...(String|Number)} args - Points
+   * @return {EasingFunction}
+   */
+  const linear = (...args) => {
+    const argsLength = args.length;
+    if (!argsLength) return none;
+    const totalPoints = argsLength - 1;
+    const firstArg = args[0];
+    const lastArg = args[totalPoints];
+    const xPoints = [0];
+    const yPoints = [parseNumber(firstArg)];
+    for (let i = 1; i < totalPoints; i++) {
+      const arg = args[i];
+      const splitValue = isStr(arg) ?
+      /** @type {String} */(arg).trim().split(' ') :
+      [arg];
+      const value = splitValue[0];
+      const percent = splitValue[1];
+      xPoints.push(!isUnd(percent) ? parseNumber(percent) / 100 : i / totalPoints);
+      yPoints.push(parseNumber(value));
+    }
+    yPoints.push(parseNumber(lastArg));
+    xPoints.push(1);
+    return function easeLinear(t) {
+      for (let i = 1, l = xPoints.length; i < l; i++) {
+        const currentX = xPoints[i];
+        if (t <= currentX) {
+          const prevX = xPoints[i - 1];
+          const prevY = yPoints[i - 1];
+          return prevY + (yPoints[i] - prevY) * (t - prevX) / (currentX - prevX);
+        }
+      }
+      return yPoints[yPoints.length - 1];
+    }
+  };
+
+  
+
+  /**
+   * Generate random steps
+   * @param  {Number} [length] - The number of steps
+   * @param  {Number} [randomness] - How strong the randomness is
+   * @return {EasingFunction}
+   */
+  const irregular = (length = 10, randomness = 1) => {
+    const values = [0];
+    const total = length - 1;
+    for (let i = 1; i < total; i++) {
+      const previousValue = values[i - 1];
+      const spacing = i / total;
+      const segmentEnd = (i + 1) / total;
+      const randomVariation = spacing + (segmentEnd - spacing) * Math.random();
+      // Mix the even spacing and random variation based on the randomness parameter
+      const randomValue = spacing * (1 - randomness) + randomVariation * randomness;
+      values.push(clamp$1(randomValue, previousValue, 1));
+    }
+    values.push(1);
+    return linear(...values);
+  };
+
   var index$3 = /*#__PURE__*/Object.freeze({
     __proto__: null,
+    Spring: Spring,
+    createSpring: createSpring,
     cubicBezier: cubicBezier,
     eases: eases,
     irregular: irregular,
     linear: linear,
-    none: none,
+    spring: spring,
     steps: steps
   });
 
@@ -8140,21 +8309,11 @@
    */
   const easingToLinear = (fn, samples = 100) => {
     const points = [];
-    for (let i = 0; i <= samples; i++) points.push(fn(i / samples));
+    for (let i = 0; i <= samples; i++) points.push(round$1(fn(i / samples), 4));
     return `linear(${points.join(', ')})`;
   };
 
-  const WAAPIEasesLookups = {
-    in: 'ease-in',
-    out: 'ease-out',
-    inOut: 'ease-in-out',
-  };
-
-  const WAAPIeases = /*#__PURE__*/(() => {
-    const list = {};
-    for (let type in easeTypes) list[type] = (/** @type {String|Number} */p) => easeTypes[type](easeInPower(p));
-    return /** @type {Record<String, EasingFunction>} */(list);
-  })();
+  const WAAPIEasesLookups = {};
 
   /**
    * @param  {EasingParam} ease
@@ -8175,9 +8334,10 @@
       } else if (stringStartsWith(ease, 'cubicB')) {
         parsedEase = toLowerCase(ease);
       } else {
-        const parsed = parseEaseString(ease, WAAPIeases, WAAPIEasesLookups);
+        const parsed = parseEaseString(ease);
         if (isFnc(parsed)) parsedEase = parsed === none ? 'linear' : easingToLinear(parsed);
       }
+      // Only cache string based easing name, otherwise function arguments get lost
       WAAPIEasesLookups[ease] = parsedEase;
     } else if (isFnc(ease)) {
       const easing = easingToLinear(ease);
@@ -8218,7 +8378,8 @@
    * @return {String}
    */
   const normalizeTweenValue = (propName, value, $el, i, targetsLength) => {
-    let v = getFunctionValue(/** @type {any} */(value), $el, i, targetsLength);
+    // Do not try to compute strings with getFunctionValue otherwise it will convert CSS variables
+    let v = isStr(value) ? value : getFunctionValue(/** @type {any} */(value), $el, i, targetsLength);
     if (!isNum(v)) return v;
     if (commonDefaultPXProperties.includes(propName) || stringStartsWith(propName, 'translate')) return `${v}px`;
     if (stringStartsWith(propName, 'rotate') || stringStartsWith(propName, 'skew')) return `${v}deg`;
@@ -8298,7 +8459,7 @@
       /** @type {PlaybackDirection} */
       const direction = alternate ? reversed ? 'alternate-reverse' : 'alternate' : reversed ? 'reverse' : 'normal';
       /** @type {FillMode} */
-      const fill = 'forwards';
+      const fill = 'both'; // We use 'both' here because the animation can be reversed during playback
       /** @type {String} */
       const easing = parseWAAPIEasing(ease);
       const timeScale = (globals.timeScale === 1 ? 1 : K);
@@ -8310,7 +8471,7 @@
       /** @type {globalThis.Animation}] */
       this.controlAnimation = null;
       /** @type {Callback<this>} */
-      this.onComplete = params.onComplete || noop;
+      this.onComplete = params.onComplete || /** @type {Callback<WAAPIAnimation>} */(/** @type {unknown} */(globals.defaults.onComplete));
       /** @type {Number} */
       this.duration = 0;
       /** @type {Boolean} */
@@ -8321,6 +8482,8 @@
       this.paused = !autoplay || scroll !== false;
       /** @type {Boolean} */
       this.reversed = reversed;
+      /** @type {Boolean} */
+      this.persist = setValue(params.persist, globals.defaults.persist);
       /** @type {Boolean|ScrollObserver} */
       this.autoplay = autoplay;
       /** @type {Number} */
@@ -8329,17 +8492,18 @@
       this._resolve = noop; // Used by .then()
       /** @type {Number} */
       this._completed = 0;
-      /** @type {Array<Object>}] */
-      this._inlineStyles = parsedTargets.map($el => $el.getAttribute('style'));
+      /** @type {Array.<Object>} */
+      this._inlineStyles = [];
 
       parsedTargets.forEach(($el, i) => {
 
         const cachedTransforms = $el[transformsSymbol];
-
         const hasIndividualTransforms = validIndividualTransforms.some(t => params.hasOwnProperty(t));
+        const elStyle = $el.style;
+        const inlineStyles = this._inlineStyles[i] = {};
 
         /** @type {Number} */
-        const duration = (spring ? /** @type {Spring} */(spring).duration : getFunctionValue(setValue(params.duration, globals.defaults.duration), $el, i, targetsLength)) * timeScale;
+        const duration = (spring ? /** @type {Spring} */(spring).settlingDuration : getFunctionValue(setValue(params.duration, globals.defaults.duration), $el, i, targetsLength)) * timeScale;
         /** @type {Number} */
         const delay = getFunctionValue(setValue(params.delay, globals.defaults.delay), $el, i, targetsLength) * timeScale;
         /** @type {CompositeOperation} */
@@ -8353,6 +8517,12 @@
           const tweenParams = { iterations, direction, fill, easing, duration, delay, composite };
           const propertyValue = params[name];
           const individualTransformProperty = hasIndividualTransforms ? validTransforms.includes(name) ? name : shortTransforms.get(name) : false;
+
+          const styleName = individualTransformProperty ? 'transform' : name;
+          if (!inlineStyles[styleName]) {
+            inlineStyles[styleName] = elStyle[styleName];
+          }
+
           let parsedPropertyValue;
           if (isObj(propertyValue)) {
             const tweenOptions = /** @type {WAAPITweenOptions} */(propertyValue);
@@ -8361,7 +8531,7 @@
             const to = /** @type {WAAPITweenOptions} */(tweenOptions).to;
             const from = /** @type {WAAPITweenOptions} */(tweenOptions).from;
             /** @type {Number} */
-            tweenParams.duration = (tweenOptionsSpring ? /** @type {Spring} */(tweenOptionsSpring).duration : getFunctionValue(setValue(tweenOptions.duration, duration), $el, i, targetsLength)) * timeScale;
+            tweenParams.duration = (tweenOptionsSpring ? /** @type {Spring} */(tweenOptionsSpring).settlingDuration : getFunctionValue(setValue(tweenOptions.duration, duration), $el, i, targetsLength)) * timeScale;
             /** @type {Number} */
             tweenParams.delay = getFunctionValue(setValue(tweenOptions.delay, delay), $el, i, targetsLength) * timeScale;
             /** @type {CompositeOperation} */
@@ -8378,10 +8548,10 @@
             addWAAPIAnimation(this, $el, name, keyframes, tweenParams);
             if (!isUnd(from)) {
               if (!individualTransformProperty) {
-                $el.style[name] = keyframes[name][0];
+                elStyle[name] = keyframes[name][0];
               } else {
                 const key = `--${individualTransformProperty}`;
-                $el.style.setProperty(key, keyframes[key][0]);
+                elStyle.setProperty(key, keyframes[key][0]);
               }
             }
           } else {
@@ -8402,7 +8572,7 @@
           for (let t in cachedTransforms) {
             transforms += `${transformsFragmentStrings[t]}var(--${t})) `;
           }
-          $el.style.transform = transforms;
+          elStyle.transform = transforms;
         }
       });
 
@@ -8447,7 +8617,8 @@
         // Make sure the animation playState is not 'paused' in order to properly trigger an onfinish callback.
         // The "paused" play state supersedes the "finished" play state; if the animation is both paused and finished, the "paused" state is the one that will be reported.
         // https://developer.mozilla.org/en-US/docs/Web/API/Animation/finish_event
-        if (t >= this.duration) anim.play();
+        // This is not needed for persisting animations since they never finish.
+        if (!this.persist && t >= this.duration) anim.play();
         anim.currentTime = t;
       });
     }
@@ -8517,13 +8688,30 @@
     }
 
     cancel() {
-      this.forEach('cancel');
-      return this.pause();
+      this.muteCallbacks = true; // This prevents triggering the onComplete callback and resolving the Promise
+      return this.commitStyles().forEach('cancel');
     }
 
     revert() {
-      this.cancel();
-      this.targets.forEach(($el, i) => $el.setAttribute('style', this._inlineStyles[i]) );
+      // NOTE: We need a better way to revert the transforms, since right now the entire transform property value is reverted,
+      // This means if you have multiple animations animating different transforms on the same target,
+      // reverting one of them will also override the transform property of the other animations.
+      // A better approach would be to store the original custom property values is they exist instead of the entire transform value,
+      // and update the CSS variables with the orignal value
+      this.cancel().targets.forEach(($el, i) => {
+        const targetStyle = $el.style;
+        const targetInlineStyles = this._inlineStyles[i];
+        for (let name in targetInlineStyles) {
+          const originalInlinedValue = targetInlineStyles[name];
+          if (isUnd(originalInlinedValue) || originalInlinedValue === emptyString) {
+            targetStyle.removeProperty(toLowerCase(name));
+          } else {
+            targetStyle[name] = originalInlinedValue;
+          }
+        }
+        // Remove style attribute if empty
+        if ($el.getAttribute('style') === emptyString) $el.removeAttribute('style');
+      });
       return this;
     }
 
@@ -8593,7 +8781,6 @@
   exports.linear = linear;
   exports.mapRange = mapRange;
   exports.morphTo = morphTo;
-  exports.none = none;
   exports.onScroll = onScroll;
   exports.padEnd = padEnd;
   exports.padStart = padStart;
@@ -8609,6 +8796,7 @@
   exports.snap = snap;
   exports.split = split;
   exports.splitText = splitText;
+  exports.spring = spring;
   exports.stagger = stagger;
   exports.steps = steps;
   exports.svg = index$1;

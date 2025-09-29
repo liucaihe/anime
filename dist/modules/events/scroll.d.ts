@@ -59,6 +59,8 @@ export class ScrollObserver {
     /** @type {Boolean} */
     reverted: boolean;
     /** @type {Boolean} */
+    ready: boolean;
+    /** @type {Boolean} */
     completed: boolean;
     /** @type {Boolean} */
     began: boolean;

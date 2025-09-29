@@ -281,7 +281,9 @@ const render = (tickable, time, muteCallbacks, internalRender, tickMode) => {
   // Handle setters on timeline differently and allow re-trigering the onComplete callback when seeking backwards
   if (parent && isSetter) {
     if (!muteCallbacks && (
-      (parent.began && !isRunningBackwards && tickableAbsoluteTime >= duration && !completed) ||
+      // (tickableAbsoluteTime > 0 instead) of (tickableAbsoluteTime >= duration) to prevent floating point precision issues
+      // see: https://github.com/juliangarnier/anime/issues/1088
+      (parent.began && !isRunningBackwards && tickableAbsoluteTime > 0 && !completed) ||
       (isRunningBackwards && tickableAbsoluteTime <= minValue && completed)
     )) {
       tickable.onComplete(/** @type {CallbackArgument} */(tickable));

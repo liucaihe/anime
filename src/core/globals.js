@@ -30,6 +30,7 @@ export const defaults = {
   reversed: false,
   alternate: false,
   autoplay: true,
+  persist: false,
   duration: K,
   delay: 0,
   loopDelay: 0,

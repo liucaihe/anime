@@ -4,7 +4,7 @@ import {
   getTweenDelay,
 } from '../utils.js';
 
-import { animate, utils } from '../../../dist/modules/index.js';
+import { animate, utils } from '../../dist/modules/index.js';
 
 import {
   valueTypes,

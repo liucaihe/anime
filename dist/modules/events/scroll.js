@@ -15,7 +15,7 @@ import { Timer } from '../timer/timer.js';
 import { get, set } from '../utils/target.js';
 import { sync } from '../utils/time.js';
 import { none } from '../easings/none.js';
-import { parseEase } from '../easings/eases.js';
+import { parseEase } from '../easings/eases/parser.js';
 
 /**
  * @import {
@@ -433,6 +433,8 @@ class ScrollObserver {
     /** @type {Boolean} */
     this.reverted = false;
     /** @type {Boolean} */
+    this.ready = false;
+    /** @type {Boolean} */
     this.completed = false;
     /** @type {Boolean} */
     this.began = false;
@@ -442,8 +444,6 @@ class ScrollObserver {
     this.forceEnter = false;
     /** @type {Boolean} */
     this.hasEntered = false;
-    // /** @type {Array.<Number>} */
-    // this.offsets = [];
     /** @type {Number} */
     this.offset = 0;
     /** @type {Number} */
@@ -491,6 +491,8 @@ class ScrollObserver {
       // Make sure to pause the linked object in case it's added later
       linked.pause();
       this.linked = linked;
+      // Forces WAAPI Animation to persist; otherwise, they will stop syncing on finish.
+      if (!isUnd(/** @type {WAAPIAnimation} */(linked))) /** @type {WAAPIAnimation} */(linked).persist = true;
       // Try to use a target of the linked object if no target parameters specified
       if (!this._params.target) {
         /** @type {HTMLElement} */
@@ -530,6 +532,8 @@ class ScrollObserver {
   }
 
   refresh() {
+    // This flag is used to prevent running handleScroll() outside of this.refresh() with values not yet calculated
+    this.ready = true;
     this.reverted = false;
     const params = this._params;
     this.repeat = setValue(parseScrollObserverFunctionParameter(params.repeat, this), true);
@@ -775,8 +779,6 @@ class ScrollObserver {
     const offsetStart = parsedEnterTarget + offset - parsedEnterContainer;
     const offsetEnd = parsedLeaveTarget + offset - parsedLeaveContainer;
     const scrollDelta = offsetEnd - offsetStart;
-    // this.offsets[0] = offsetX;
-    // this.offsets[1] = offsetY;
     this.offset = offset;
     this.offsetStart = offsetStart;
     this.offsetEnd = offsetEnd;
@@ -795,6 +797,7 @@ class ScrollObserver {
   }
 
   handleScroll() {
+    if (!this.ready) return;
     const linked = this.linked;
     const sync = this.sync;
     const syncEase = this.syncEase;
@@ -918,6 +921,7 @@ class ScrollObserver {
       this.removeDebug();
     }
     this.reverted = true;
+    this.ready = false;
     return this;
   }
 

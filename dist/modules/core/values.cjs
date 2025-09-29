@@ -41,19 +41,30 @@ const setValue = (targetValue, defaultValue) => {
  * @return {any}
  */
 const getFunctionValue = (value, target, index, total, store) => {
+  let func;
   if (helpers.isFnc(value)) {
-    const func = () => {
+    func = () => {
       const computed = /** @type {Function} */(value)(target, index, total);
       // Fallback to 0 if the function returns undefined / NaN / null / false / 0
       return !isNaN(+computed) ? +computed : computed || 0;
     };
-    if (store) {
-      store.func = func;
-    }
-    return func();
+  } else if (helpers.isStr(value) && helpers.stringStartsWith(value, consts.cssVarPrefix)) {
+    func = () => {
+      const match = value.match(consts.cssVariableMatchRgx);
+      const cssVarName = match[1];
+      const fallbackValue = match[2];
+      let computed = getComputedStyle(/** @type {HTMLElement} */(target))?.getPropertyValue(cssVarName);
+      // Use fallback if CSS variable is not set or empty
+      if ((!computed || computed.trim() === consts.emptyString) && fallbackValue) {
+        computed = fallbackValue.trim();
+      }
+      return computed || 0;
+    };
   } else {
     return value;
   }
+  if (store) store.func = func;
+  return func();
 };
 
 /**

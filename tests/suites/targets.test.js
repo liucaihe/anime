@@ -10,7 +10,7 @@ import {
 
 import {
   animate,
-} from '../../../dist/modules/index.js';
+} from '../../dist/modules/index.js';
 
 suite('Targets', () => {
   test('Single element from CSS selector', () => {

@@ -14,7 +14,7 @@ var targets = require('../core/targets.cjs');
 var values = require('../core/values.cjs');
 var styles = require('../core/styles.cjs');
 var units = require('../core/units.cjs');
-var eases = require('../easings/eases.cjs');
+var parser = require('../easings/eases/parser.cjs');
 var timer = require('../timer/timer.cjs');
 var composition = require('./composition.cjs');
 var additive = require('./additive.cjs');
@@ -45,13 +45,14 @@ var additive = require('./additive.cjs');
  *
  * @import {
  *   Spring,
- * } from '../spring/spring.js'
+ * } from '../easings/spring/index.js'
  */
 
 // Defines decomposed values target objects only once and mutate their properties later to avoid GC
 // TODO: Maybe move the objects creation to values.js and use the decompose function to create the base object
 const fromTargetObject = values.createDecomposedValueTargetObject();
 const toTargetObject = values.createDecomposedValueTargetObject();
+const inlineStylesStore = {};
 const toFunctionStore = { func: null };
 const keyframesTargetArray = [null];
 const fastSetValuesArray = [null, null];
@@ -193,18 +194,18 @@ class JSAnimation extends timer.Timer {
 
     const animDefaults = parent ? parent.defaults : globals.globals.defaults;
     const animaPlaybackEase = values.setValue(playbackEase, animDefaults.playbackEase);
-    const animEase = animaPlaybackEase ? eases.parseEase(animaPlaybackEase) : null;
+    const animEase = animaPlaybackEase ? parser.parseEase(animaPlaybackEase) : null;
     const hasSpring = !helpers.isUnd(ease) && !helpers.isUnd(/** @type {Spring} */(ease).ease);
     const tEasing = hasSpring ? /** @type {Spring} */(ease).ease : values.setValue(ease, animEase ? 'linear' : animDefaults.ease);
-    const tDuration = hasSpring ? /** @type {Spring} */(ease).duration : values.setValue(duration, animDefaults.duration);
+    const tDuration = hasSpring ? /** @type {Spring} */(ease).settlingDuration : values.setValue(duration, animDefaults.duration);
     const tDelay = values.setValue(delay, animDefaults.delay);
     const tModifier = modifier || animDefaults.modifier;
     // If no composition is defined and the targets length is high (>= 1000) set the composition to 'none' (0) for faster tween creation
     const tComposition = helpers.isUnd(composition$1) && targetsLength >= consts.K ? consts.compositionTypes.none : !helpers.isUnd(composition$1) ? composition$1 : animDefaults.composition;
-    // TODO: Do not create an empty object until we know the animation will generate inline styles
-    const animInlineStyles = {};
     // const absoluteOffsetTime = this._offset;
     const absoluteOffsetTime = this._offset + (parent ? parent._offset : 0);
+    // This allows targeting the current animation in the spring onComplete callback
+    if (hasSpring) /** @type {Spring} */(ease).parent = this;
 
     let iterationDuration = NaN;
     let iterationDelay = NaN;
@@ -306,7 +307,7 @@ class JSAnimation extends timer.Timer {
             // Easing are treated differently and don't accept function based value to prevent having to pass a function wrapper that returns an other function all the time
             const tweenEasing = hasSpring ? /** @type {Spring} */(keyEasing).ease : keyEasing || tEasing;
             // Calculate default individual keyframe duration by dividing the tl of keyframes
-            const tweenDuration = hasSpring ? /** @type {Spring} */(keyEasing).duration : values.getFunctionValue(values.setValue(key.duration, (l > 1 ? values.getFunctionValue(tDuration, target, ti, tl) / l : tDuration)), target, ti, tl);
+            const tweenDuration = hasSpring ? /** @type {Spring} */(keyEasing).settlingDuration : values.getFunctionValue(values.setValue(key.duration, (l > 1 ? values.getFunctionValue(tDuration, target, ti, tl) / l : tDuration)), target, ti, tl);
             // Default delay value should only be applied to the first tween
             const tweenDelay = values.getFunctionValue(values.setValue(key.delay, (!tweenIndex ? tDelay : 0)), target, ti, tl);
             const computedComposition = values.getFunctionValue(values.setValue(key.composition, tComposition), target, ti, tl);
@@ -356,7 +357,7 @@ class JSAnimation extends timer.Timer {
                   }
                 } else {
                   values.decomposeRawValue(
-                    values.getOriginalAnimatableValue(target, propName, tweenType, animInlineStyles),
+                    values.getOriginalAnimatableValue(target, propName, tweenType, inlineStylesStore),
                     values.decomposedOriginalValue
                   );
                   if (values.decomposedOriginalValue.t === consts.valueTypes.UNIT) {
@@ -374,7 +375,7 @@ class JSAnimation extends timer.Timer {
                 } else {
                   // No need to get and parse the original value if the tween is part of a timeline and has a previous sibling part of the same timeline
                   values.decomposeRawValue(parent && prevSibling && prevSibling.parent.parent === parent ? prevSibling._value :
-                  values.getOriginalAnimatableValue(target, propName, tweenType, animInlineStyles), toTargetObject);
+                  values.getOriginalAnimatableValue(target, propName, tweenType, inlineStylesStore), toTargetObject);
                 }
               }
               if (hasFromvalue) {
@@ -385,7 +386,7 @@ class JSAnimation extends timer.Timer {
                 } else {
                   values.decomposeRawValue(parent && prevSibling && prevSibling.parent.parent === parent ? prevSibling._value :
                   // No need to get and parse the original value if the tween is part of a timeline and has a previous sibling part of the same timeline
-                  values.getOriginalAnimatableValue(target, propName, tweenType, animInlineStyles), fromTargetObject);
+                  values.getOriginalAnimatableValue(target, propName, tweenType, inlineStylesStore), fromTargetObject);
                 }
               }
             }
@@ -394,7 +395,7 @@ class JSAnimation extends timer.Timer {
             if (fromTargetObject.o) {
               fromTargetObject.n = values.getRelativeValue(
                 !prevSibling ? values.decomposeRawValue(
-                  values.getOriginalAnimatableValue(target, propName, tweenType, animInlineStyles),
+                  values.getOriginalAnimatableValue(target, propName, tweenType, inlineStylesStore),
                   values.decomposedOriginalValue
                 ).n : prevSibling._toNumber,
                 fromTargetObject.n,
@@ -450,6 +451,10 @@ class JSAnimation extends timer.Timer {
             // Rounding is necessary here to minimize floating point errors when working in seconds
             const tweenUpdateDuration = helpers.round(+tweenDuration || consts.minValue, 12);
 
+            // Copy the value of the iniline style if it exist and imediatly nullify it to prevents false positive on other targets
+            let inlineValue = inlineStylesStore[propName];
+            if (!helpers.isNil(inlineValue)) inlineStylesStore[propName] = null;
+
             /** @type {Tween} */
             const tween = {
               parent: this,
@@ -458,7 +463,7 @@ class JSAnimation extends timer.Timer {
               target: target,
               _value: null,
               _func: toFunctionStore.func,
-              _ease: eases.parseEase(tweenEasing),
+              _ease: parser.parseEase(tweenEasing),
               _fromNumbers: helpers.cloneArray(fromTargetObject.d),
               _toNumbers: helpers.cloneArray(toTargetObject.d),
               _strings: helpers.cloneArray(toTargetObject.s),
@@ -481,6 +486,7 @@ class JSAnimation extends timer.Timer {
               _isOverlapped: 0,
               _isOverridden: 0,
               _renderTransforms: 0,
+              _inlineValue: inlineValue,
               _prevRep: null, // For replaced tween
               _nextRep: null, // For replaced tween
               _prevAdd: null, // For additive tween
@@ -583,8 +589,6 @@ class JSAnimation extends timer.Timer {
     // this._offset += parent ? iterationDelay : 0;
     /** @type {Number} */
     this.iterationDuration = iterationDuration;
-    /** @type {{}} */
-    this._inlineStyles = animInlineStyles;
 
     if (!this._autoplay && shouldTriggerRender) this.onRender(this);
   }
@@ -618,6 +622,7 @@ class JSAnimation extends timer.Timer {
       if (tweenFunc) {
         const ogValue = values.getOriginalAnimatableValue(tween.target, tween.property, tween._tweenType);
         values.decomposeRawValue(ogValue, values.decomposedOriginalValue);
+        // TODO: Check for from / to Array based values here,
         values.decomposeRawValue(tweenFunc(), toTargetObject);
         tween._fromNumbers = helpers.cloneArray(values.decomposedOriginalValue.d);
         tween._fromNumber = values.decomposedOriginalValue.n;
@@ -627,6 +632,8 @@ class JSAnimation extends timer.Timer {
         tween._toNumber = toTargetObject.o ? values.getRelativeValue(values.decomposedOriginalValue.n, toTargetObject.n, toTargetObject.o) : toTargetObject.n;
       }
     });
+    // This forces setter animations to render once
+    if (this.duration === consts.minValue) this.restart();
     return this;
   }
 

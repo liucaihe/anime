@@ -8,6 +8,9 @@ import {
   isDomSymbol,
   isSvgSymbol,
   proxyTargetSymbol,
+  cssVarPrefix,
+  cssVariableMatchRgx,
+  emptyString,
 } from './consts.js';
 
 import {
@@ -17,6 +20,7 @@ import {
   isUnd,
   isCol,
   isValidSVGAttribute,
+  isStr,
 } from './helpers.js';
 
 import {
@@ -56,19 +60,30 @@ export const setValue = (targetValue, defaultValue) => {
  * @return {any}
  */
 export const getFunctionValue = (value, target, index, total, store) => {
+  let func;
   if (isFnc(value)) {
-    const func = () => {
+    func = () => {
       const computed = /** @type {Function} */(value)(target, index, total);
       // Fallback to 0 if the function returns undefined / NaN / null / false / 0
       return !isNaN(+computed) ? +computed : computed || 0;
     }
-    if (store) {
-      store.func = func;
+  } else if (isStr(value) && stringStartsWith(value, cssVarPrefix)) {
+    func = () => {
+      const match = value.match(cssVariableMatchRgx);
+      const cssVarName = match[1];
+      const fallbackValue = match[2];
+      let computed = getComputedStyle(/** @type {HTMLElement} */(target))?.getPropertyValue(cssVarName);
+      // Use fallback if CSS variable is not set or empty
+      if ((!computed || computed.trim() === emptyString) && fallbackValue) {
+        computed = fallbackValue.trim();
+      }
+      return computed || 0;
     }
-    return func();
   } else {
     return value;
   }
+  if (store) store.func = func;
+  return func();
 }
 
 /**

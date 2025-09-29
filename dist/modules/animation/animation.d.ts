@@ -15,8 +15,6 @@ export class JSAnimation extends Timer {
     onRender: Callback<this>;
     /** @type {EasingFunction} */
     _ease: EasingFunction;
-    /** @type {{}} */
-    _inlineStyles: {};
     /**
      * @param  {Number} newDuration
      * @return {this}

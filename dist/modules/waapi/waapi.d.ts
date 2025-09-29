@@ -22,6 +22,8 @@ export class WAAPIAnimation {
     paused: boolean;
     /** @type {Boolean} */
     reversed: boolean;
+    /** @type {Boolean} */
+    persist: boolean;
     /** @type {Boolean|ScrollObserver} */
     autoplay: boolean | ScrollObserver;
     /** @type {Number} */
@@ -30,7 +32,7 @@ export class WAAPIAnimation {
     _resolve: Function;
     /** @type {Number} */
     _completed: number;
-    /** @type {Array<Object>}] */
+    /** @type {Array.<Object>} */
     _inlineStyles: Array<any>;
     /**
      * @callback forEachCallback
@@ -96,7 +98,7 @@ import type { WAAPIAnimationParams } from '../types/index.js';
 /**
  * @import {
  *   Spring,
- * } from '../spring/spring.js'
+ * } from '../easings/spring/index.js'
 */
 /**
  * @import {

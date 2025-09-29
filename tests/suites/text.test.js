@@ -7,7 +7,7 @@ import {
   utils,
   splitText,
   animate,
-} from '../../../dist/modules/index.js';
+} from '../../dist/modules/index.js';
 
 // Firefox detect Japanse words differently
 const wordsLength = browserIs.firefox ? 44 : 45;

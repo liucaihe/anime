@@ -17,8 +17,8 @@ var timer = require('../timer/timer.cjs');
 var animation = require('../animation/animation.cjs');
 var composition = require('../animation/composition.cjs');
 var animatable = require('../animatable/animatable.cjs');
-var eases = require('../easings/eases.cjs');
-var spring = require('../spring/spring.cjs');
+var parser = require('../easings/eases/parser.cjs');
+var index = require('../easings/spring/index.cjs');
 var target = require('../utils/target.cjs');
 
 /**
@@ -40,7 +40,7 @@ var target = require('../utils/target.cjs');
 /**
  * @import {
  *   Spring,
- * } from '../spring/spring.js'
+ * } from '../easings/spring/index.js'
 */
 
 /**
@@ -178,7 +178,7 @@ class Draggable {
     const trigger = parameters.trigger;
     const modifier = parameters.modifier;
     const ease = parameters.releaseEase;
-    const customEase = ease && eases.parseEase(ease);
+    const customEase = ease && parser.parseEase(ease);
     const hasSpring = !helpers.isUnd(ease) && !helpers.isUnd(/** @type {Spring} */(ease).ease);
     const xProp = /** @type {String} */(helpers.isObj(paramX) && !helpers.isUnd(/** @type {Object} */(paramX).mapTo) ? /** @type {Object} */(paramX).mapTo : 'translateX');
     const yProp = /** @type {String} */(helpers.isObj(paramY) && !helpers.isUnd(/** @type {Object} */(paramY).mapTo) ? /** @type {Object} */(paramY).mapTo : 'translateY');
@@ -218,19 +218,19 @@ class Draggable {
     /** @type {Boolean|DraggableCursorParams} */
     this.cursor = false;
     /** @type {Spring} */
-    this.releaseXSpring = hasSpring ? /** @type {Spring} */(ease) : spring.createSpring({
+    this.releaseXSpring = hasSpring ? /** @type {Spring} */(ease) : index.spring({
       mass: values.setValue(parameters.releaseMass, 1),
       stiffness: values.setValue(parameters.releaseStiffness, 80),
       damping: values.setValue(parameters.releaseDamping, 20),
     });
     /** @type {Spring} */
-    this.releaseYSpring = hasSpring ? /** @type {Spring} */(ease) : spring.createSpring({
+    this.releaseYSpring = hasSpring ? /** @type {Spring} */(ease) : index.spring({
       mass: values.setValue(parameters.releaseMass, 1),
       stiffness: values.setValue(parameters.releaseStiffness, 80),
       damping: values.setValue(parameters.releaseDamping, 20),
     });
     /** @type {EasingFunction} */
-    this.releaseEase = customEase || eases.eases.outQuint;
+    this.releaseEase = customEase || parser.eases.outQuint;
     /** @type {Boolean} */
     this.hasReleaseSpring = hasSpring;
     /** @type {Callback<this>} */
@@ -753,7 +753,7 @@ class Draggable {
    * @param {EasingParam} [ease]
    * @return {this}
    */
-  scrollInView(duration, gap = 0, ease = eases.eases.inOutQuad) {
+  scrollInView(duration, gap = 0, ease = parser.eases.inOutQuad) {
     this.updateScrollCoords();
     const x = this.destX;
     const y = this.destY;
@@ -796,7 +796,7 @@ class Draggable {
    * @param  {EasingParam} [ease]
    * @return {this}
    */
-  animateInView(duration, gap = 0, ease = eases.eases.inOutQuad) {
+  animateInView(duration, gap = 0, ease = parser.eases.inOutQuad) {
     this.stop();
     this.updateBoundingValues();
     const x = this.x;
@@ -877,7 +877,7 @@ class Draggable {
         cursor: /** @type {DraggableCursorParams} */(this.cursor).onGrab
       });
     }
-    this.scrollInView(100, 0, eases.eases.out(3));
+    this.scrollInView(100, 0, parser.eases.out(3));
     this.onGrab(this);
 
     consts.doc.addEventListener('touchmove', this);
@@ -941,8 +941,8 @@ class Draggable {
       this.$trigger.addEventListener('touchmove', preventDefault, { passive: false });
       this.$trigger.addEventListener('touchend', preventDefault);
 
-
-      if ((!this.disabled[0] && helpers.abs(movedX) > 3) || (!this.disabled[1] && helpers.abs(movedY) > 3)) {
+      // Don't check for a miminim distance move if already dragging
+      if (this.dragged || (!this.disabled[0] && helpers.abs(movedX) > 3) || (!this.disabled[1] && helpers.abs(movedY) > 3)) {
 
         this.updateTicker.resume();
         this.pointer[2] = this.pointer[0];
@@ -1008,8 +1008,8 @@ class Draggable {
       const directionX = dx === cr ? cx > cr ? -1 : 1 : cx < cl ? -1 : 1;
       const distanceX = helpers.round(cx - dx, 0);
       springX.velocity = disabledY && hasReleaseSpring ? distanceX ? (ds * directionX) / helpers.abs(distanceX) : 0 : pv;
-      const { ease, duration, restDuration } = springX;
-      durationX = cx === dx ? 0 : hasReleaseSpring ? duration : duration - (restDuration * globals.globals.timeScale);
+      const { ease, settlingDuration, restDuration } = springX;
+      durationX = cx === dx ? 0 : hasReleaseSpring ? settlingDuration : settlingDuration - (restDuration * globals.globals.timeScale);
       if (hasReleaseSpring) easeX = ease;
       if (durationX > longestReleaseDuration) longestReleaseDuration = durationX;
     }
@@ -1018,8 +1018,8 @@ class Draggable {
       const directionY = dy === cb ? cy > cb ? -1 : 1 : cy < ct ? -1 : 1;
       const distanceY = helpers.round(cy - dy, 0);
       springY.velocity = disabledX && hasReleaseSpring ? distanceY ? (ds * directionY) / helpers.abs(distanceY) : 0 : pv;
-      const { ease, duration, restDuration } = springY;
-      durationY = cy === dy ? 0 : hasReleaseSpring ? duration : duration - (restDuration * globals.globals.timeScale);
+      const { ease, settlingDuration, restDuration } = springY;
+      durationY = cy === dy ? 0 : hasReleaseSpring ? settlingDuration : settlingDuration - (restDuration * globals.globals.timeScale);
       if (hasReleaseSpring) easeY = ease;
       if (durationY > longestReleaseDuration) longestReleaseDuration = durationY;
     }

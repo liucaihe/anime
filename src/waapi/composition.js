@@ -21,16 +21,18 @@ const WAAPIAnimationsLookups = {
  * @param {DOMTarget} $el
  * @param {String} [property]
  * @param {WAAPIAnimation} [parent]
+ * @return {globalThis.Animation}
  */
 export const removeWAAPIAnimation = ($el, property, parent) => {
   let nextLookup = WAAPIAnimationsLookups._head;
+  let anim;
   while (nextLookup) {
     const next = nextLookup._next;
     const matchTarget = nextLookup.$el === $el;
     const matchProperty = !property || nextLookup.property === property;
     const matchParent = !parent || nextLookup.parent === parent;
     if (matchTarget && matchProperty && matchParent) {
-      const anim = nextLookup.animation;
+      anim = nextLookup.animation;
       try { anim.commitStyles(); } catch {};
       anim.cancel();
       removeChild(WAAPIAnimationsLookups, nextLookup);
@@ -39,8 +41,8 @@ export const removeWAAPIAnimation = ($el, property, parent) => {
         lookupParent._completed++;
         if (lookupParent.animations.length === lookupParent._completed) {
           lookupParent.completed = true;
+          lookupParent.paused = true;
           if (!lookupParent.muteCallbacks) {
-            lookupParent.paused = true;
             lookupParent.onComplete(lookupParent);
             lookupParent._resolve(lookupParent);
           }
@@ -49,6 +51,7 @@ export const removeWAAPIAnimation = ($el, property, parent) => {
     }
     nextLookup = next;
   }
+  return anim;
 }
 
 /**
@@ -57,7 +60,7 @@ export const removeWAAPIAnimation = ($el, property, parent) => {
  * @param {String} property
  * @param {PropertyIndexedKeyframes} keyframes
  * @param {KeyframeAnimationOptions} params
- * @retun {Animation}
+ * @retun {globalThis.Animation}
  */
 export const addWAAPIAnimation = (parent, $el, property, keyframes, params) => {
   const animation = $el.animate(keyframes, params);
@@ -72,7 +75,10 @@ export const addWAAPIAnimation = (parent, $el, property, keyframes, params) => {
   removeWAAPIAnimation($el, property);
   addChild(WAAPIAnimationsLookups, { parent, animation, $el, property, _next: null, _prev: null });
   const handleRemove = () => { removeWAAPIAnimation($el, property, parent); };
+  animation.oncancel = handleRemove;
   animation.onremove = handleRemove;
-  animation.onfinish = handleRemove;
+  if (!parent.persist) {
+    animation.onfinish = handleRemove;
+  }
   return animation;
 }

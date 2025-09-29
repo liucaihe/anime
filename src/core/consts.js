@@ -61,6 +61,8 @@ export const maxFps = 120;
 // Strings
 
 export const emptyString = '';
+export const cssVarPrefix = 'var(';
+
 export const shortTransforms = /*#__PURE__*/ (() => {
   const map = new Map();
   map.set('x', 'translateX');
@@ -84,9 +86,9 @@ export const validTransforms = [
   'skew',
   'skewX',
   'skewY',
-  'perspective',
   'matrix',
   'matrix3d',
+  'perspective',
 ];
 
 export const transformsFragmentStrings = /*#__PURE__*/ validTransforms.reduce((a, v) => ({...a, [v]: v + '('}), {});
@@ -110,3 +112,4 @@ export const unitsExecRgx = /^([-+]?\d*\.?\d+(?:e[-+]?\d+)?)([a-z]+|%)$/i
 export const lowerCaseRgx = /([a-z])([A-Z])/g;
 export const transformsExecRgx = /(\w+)(\([^)]+\)+)/g; // Match inline transforms with cacl() values, returns the value wrapped in ()
 export const relativeValuesExecRgx = /(\*=|\+=|-=)/;
+export const cssVariableMatchRgx = /var\(\s*(--[\w-]+)(?:\s*,\s*([^)]+))?\s*\)/;

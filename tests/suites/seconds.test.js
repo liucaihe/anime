@@ -12,7 +12,7 @@ import {
   createTimeline,
   createTimer,
   engine,
-} from '../../../dist/modules/index.js';
+} from '../../dist/modules/index.js';
 
 
 suite('Seconds', () => {

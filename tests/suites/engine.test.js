@@ -6,7 +6,7 @@ import {
   animate,
   engine,
   utils,
-} from '../../../dist/modules/index.js';
+} from '../../dist/modules/index.js';
 
 const defaultEnginePauseState = engine.paused;
 const defaultEngineReqId = engine.reqId;

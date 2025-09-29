@@ -4,7 +4,7 @@ import {
 
 import {
   createScope,
-} from '../../../dist/modules/index.js';
+} from '../../dist/modules/index.js';
 
 suite('Scope', () => {
 

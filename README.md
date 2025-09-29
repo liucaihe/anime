@@ -21,6 +21,12 @@
   <img alt="GitHub Sponsors" src="https://img.shields.io/github/sponsors/juliangarnier?style=flat-square&logo=github">
 </p>
 
+## Private Anime.js Discord
+
+Join us on Discord by following this link https://discord.gg/N2vjsQsq9w
+
+Please don't forget to **share your GitHub username** and **your Discord username** to julian@animejs.com so I can give you the sponsor role!!
+
 ## Sponsors
 
 Anime.js is 100% free and is only made possible with the help of our sponsors.
@@ -35,6 +41,12 @@ Help the project become sustainable by sponsoring us on <a target="_blank" href=
     <img align="center" src="./assets/sponsors/ice-open-network-logomark-dark.png" width="250">
   </picture>
 </a>
+<a target="_blank" href="https://go.warp.dev/anime">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./assets/sponsors/wrap-logomark.png">
+    <img align="center" src="./assets/sponsors/wrap-logomark-dark.png" width="250">
+  </picture>
+</a>
 </p>
 
 ### Silver sponsors
@@ -46,7 +58,6 @@ Help the project become sustainable by sponsoring us on <a target="_blank" href=
     <img align="center" src="./assets/sponsors/lambdatest-logomark-dark.png" width="150">
   </picture>
 </a>
-
 <a target="_blank" href="https://inspatialapp.com/?ref=animejs">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="./assets/sponsors/inspatial-logomark.png">

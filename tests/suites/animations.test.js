@@ -12,7 +12,7 @@ import {
   animate,
   createTimer,
   utils,
-} from '../../../dist/modules/index.js';
+} from '../../dist/modules/index.js';
 
 import {
   minValue,

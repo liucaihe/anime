@@ -19,7 +19,7 @@ import {
 
 import {
   parseEase,
-} from '../easings/eases.js';
+} from '../easings/eases/parser.js';
 
 import {
   parseTimelinePosition,
@@ -47,7 +47,7 @@ import {
 /**
  * @import {
  *   Spring,
- * } from '../spring/spring.js'
+ * } from '../easings/spring/index.js'
 */
 
 /**

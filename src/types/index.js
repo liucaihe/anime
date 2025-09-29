@@ -1,4 +1,4 @@
-// Needed to transform this file as an valid ESM module
+// Needed to transform this file into a valid ESM module
 
 export {}
 
@@ -14,7 +14,7 @@ export {}
  * @import { Draggable } from '../draggable/draggable.js';
  * @import { TextSplitter } from '../text/split.js';
  * @import { Scope } from '../scope/scope.js';
- * @import { Spring } from '../spring/spring.js';
+ * @import { Spring } from '../easings/spring/index.js';
  * @import { compositionTypes, tweenTypes, valueTypes } from '../core/consts.js';
  */
 
@@ -32,6 +32,7 @@ export {}
  * @property {Number|Boolean} [loop]
  * @property {Boolean} [reversed]
  * @property {Boolean} [alternate]
+ * @property {Boolean} [persist]
  * @property {Boolean|ScrollObserver} [autoplay]
  * @property {Number|FunctionValue} [duration]
  * @property {Number|FunctionValue} [delay]
@@ -39,13 +40,13 @@ export {}
  * @property {EasingParam} [ease]
  * @property {'none'|'replace'|'blend'|compositionTypes} [composition]
  * @property {(v: any) => any} [modifier]
- * @property {(tickable: Tickable) => void} [onBegin]
- * @property {(tickable: Tickable) => void} [onBeforeUpdate]
- * @property {(tickable: Tickable) => void} [onUpdate]
- * @property {(tickable: Tickable) => void} [onLoop]
- * @property {(tickable: Tickable) => void} [onPause]
- * @property {(tickable: Tickable) => void} [onComplete]
- * @property {(renderable: Renderable) => void} [onRender]
+ * @property {Callback<Tickable>} [onBegin]
+ * @property {Callback<Tickable>} [onBeforeUpdate]
+ * @property {Callback<Tickable>} [onUpdate]
+ * @property {Callback<Tickable>} [onLoop]
+ * @property {Callback<Tickable>} [onPause]
+ * @property {Callback<Tickable>} [onComplete]
+ * @property {Callback<Renderable>} [onRender]
  */
 
 /** @typedef {JSAnimation|Timeline} Renderable */
@@ -101,7 +102,11 @@ export {}
  */
 
 /**
- * @typedef {('linear'|'linear(x1, x2 25%, x3)'|'in'|'out'|'inOut'|'inQuad'|'outQuad'|'inOutQuad'|'inCubic'|'outCubic'|'inOutCubic'|'inQuart'|'outQuart'|'inOutQuart'|'inQuint'|'outQuint'|'inOutQuint'|'inSine'|'outSine'|'inOutSine'|'inCirc'|'outCirc'|'inOutCirc'|'inExpo'|'outExpo'|'inOutExpo'|'inBounce'|'outBounce'|'inOutBounce'|'inBack'|'outBack'|'inOutBack'|'inElastic'|'outElastic'|'inOutElastic'|'irregular'|'cubicBezier'|'steps'|'in(p = 1.675)'|'out(p = 1.675)'|'inOut(p = 1.675)'|'inBack(overshoot = 1.70158)'|'outBack(overshoot = 1.70158)'|'inOutBack(overshoot = 1.70158)'|'inElastic(amplitude = 1, period = .3)'|'outElastic(amplitude = 1, period = .3)'|'inOutElastic(amplitude = 1, period = .3)'|'irregular(length = 10, randomness = 1)'|'cubicBezier(x1, y1, x2, y2)'|'steps(steps = 10)')} EaseStringParamNames
+ * @typedef {('linear'|'none'|'in'|'out'|'inOut'|'inQuad'|'outQuad'|'inOutQuad'|'inCubic'|'outCubic'|'inOutCubic'|'inQuart'|'outQuart'|'inOutQuart'|'inQuint'|'outQuint'|'inOutQuint'|'inSine'|'outSine'|'inOutSine'|'inCirc'|'outCirc'|'inOutCirc'|'inExpo'|'outExpo'|'inOutExpo'|'inBounce'|'outBounce'|'inOutBounce'|'inBack'|'outBack'|'inOutBack'|'inElastic'|'outElastic'|'inOutElastic'|'out(p = 1.675)'|'inOut(p = 1.675)'|'inBack(overshoot = 1.7)'|'outBack(overshoot = 1.7)'|'inOutBack(overshoot = 1.7)'|'inElastic(amplitude = 1, period = .3)'|'outElastic(amplitude = 1, period = .3)'|'inOutElastic(amplitude = 1, period = .3)')} EaseStringParamNames
+ */
+
+/**
+ * @typedef {('ease'|'ease-in'|'ease-out'|'ease-in-out'|'linear(0, 0.25, 1)'|'steps'|'steps(6, start)'|'step-start'|'step-end'|'cubic-bezier(0.42, 0, 1, 1)') } WAAPIEaseStringParamNames
  */
 
 /**
@@ -112,7 +117,7 @@ export {}
 
 /**
  * @callback BackEasing
- * @param {Number|String} [overshoot=1.70158]
+ * @param {Number|String} [overshoot=1.7]
  * @return {EasingFunction}
  */
 
@@ -128,6 +133,7 @@ export {}
 // A hack to get both ease names suggestions AND allow any strings
 // https://github.com/microsoft/TypeScript/issues/29729#issuecomment-460346421
 /** @typedef {(String & {})|EaseStringParamNames|EasingFunction|Spring} EasingParam */
+/** @typedef {(String & {})|EaseStringParamNames|WAAPIEaseStringParamNames|EasingFunction|Spring} WAAPIEasingParam */
 
 // Spring types
 
@@ -137,6 +143,9 @@ export {}
  * @property {Number} [stiffness=100] - Stiffness, default 100
  * @property {Number} [damping=10] - Damping, default 10
  * @property {Number} [velocity=0] - Initial velocity, default 0
+ * @property {Number} [bounce=0] - Initial bounce, default 0
+ * @property {Number} [duration=0] - The perceived duration, default 0
+ * @property {Callback<JSAnimation>} [onComplete] - Callback function called when the spring currentTime hits the perceived duration
  */
 
  // Callback types
@@ -234,6 +243,7 @@ export {}
  * @property {Number} _isOverlapped
  * @property {Number} _isOverridden
  * @property {Number} _renderTransforms
+ * @property {String} _inlineValue
  * @property {Tween} _prevRep
  * @property {Tween} _nextRep
  * @property {Tween} _prevAdd
@@ -391,7 +401,7 @@ export {}
  */
 
 /**
- * @typedef {(animation: WAAPIAnimation) => void} WAAPICallback
+ * @typedef {Callback<WAAPIAnimation>} WAAPICallback
  */
 
 /**
@@ -400,7 +410,7 @@ export {}
  * @property {WAAPIKeyframeValue} [from]
  * @property {Number|WAAPIFunctionValue} [duration]
  * @property {Number|WAAPIFunctionValue} [delay]
- * @property {EasingParam} [ease]
+ * @property {WAAPIEasingParam} [ease]
  * @property {CompositeOperation} [composition]
  */
 
@@ -413,13 +423,14 @@ export {}
  * @property {Number} [playbackRate]
  * @property {Number|WAAPIFunctionValue} [duration]
  * @property {Number|WAAPIFunctionValue} [delay]
- * @property {EasingParam} [ease]
+ * @property {WAAPIEasingParam} [ease]
  * @property {CompositeOperation} [composition]
+ * @property {Boolean} [persist]
  * @property {WAAPICallback} [onComplete]
  */
 
 /**
- * @typedef {Record<String, WAAPIKeyframeValue | WAAPIAnimationOptions | Boolean | ScrollObserver | WAAPICallback | EasingParam | WAAPITweenOptions> & WAAPIAnimationOptions} WAAPIAnimationParams
+ * @typedef {Record<String, WAAPIKeyframeValue | WAAPIAnimationOptions | Boolean | ScrollObserver | WAAPICallback | WAAPIEasingParam | WAAPITweenOptions> & WAAPIAnimationOptions} WAAPIAnimationParams
  */
 
 // Animatable types

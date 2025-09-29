@@ -15,8 +15,8 @@ import { Timer } from '../timer/timer.js';
 import { JSAnimation } from '../animation/animation.js';
 import { removeTargetsFromRenderable } from '../animation/composition.js';
 import { Animatable } from '../animatable/animatable.js';
-import { parseEase, eases } from '../easings/eases.js';
-import { createSpring } from '../spring/spring.js';
+import { parseEase, eases } from '../easings/eases/parser.js';
+import { spring } from '../easings/spring/index.js';
 import { get, set } from '../utils/target.js';
 
 /**
@@ -38,7 +38,7 @@ import { get, set } from '../utils/target.js';
 /**
  * @import {
  *   Spring,
- * } from '../spring/spring.js'
+ * } from '../easings/spring/index.js'
 */
 
 /**
@@ -216,13 +216,13 @@ class Draggable {
     /** @type {Boolean|DraggableCursorParams} */
     this.cursor = false;
     /** @type {Spring} */
-    this.releaseXSpring = hasSpring ? /** @type {Spring} */(ease) : createSpring({
+    this.releaseXSpring = hasSpring ? /** @type {Spring} */(ease) : spring({
       mass: setValue(parameters.releaseMass, 1),
       stiffness: setValue(parameters.releaseStiffness, 80),
       damping: setValue(parameters.releaseDamping, 20),
     });
     /** @type {Spring} */
-    this.releaseYSpring = hasSpring ? /** @type {Spring} */(ease) : createSpring({
+    this.releaseYSpring = hasSpring ? /** @type {Spring} */(ease) : spring({
       mass: setValue(parameters.releaseMass, 1),
       stiffness: setValue(parameters.releaseStiffness, 80),
       damping: setValue(parameters.releaseDamping, 20),
@@ -939,8 +939,8 @@ class Draggable {
       this.$trigger.addEventListener('touchmove', preventDefault, { passive: false });
       this.$trigger.addEventListener('touchend', preventDefault);
 
-
-      if ((!this.disabled[0] && abs(movedX) > 3) || (!this.disabled[1] && abs(movedY) > 3)) {
+      // Don't check for a miminim distance move if already dragging
+      if (this.dragged || (!this.disabled[0] && abs(movedX) > 3) || (!this.disabled[1] && abs(movedY) > 3)) {
 
         this.updateTicker.resume();
         this.pointer[2] = this.pointer[0];
@@ -1006,8 +1006,8 @@ class Draggable {
       const directionX = dx === cr ? cx > cr ? -1 : 1 : cx < cl ? -1 : 1;
       const distanceX = round(cx - dx, 0);
       springX.velocity = disabledY && hasReleaseSpring ? distanceX ? (ds * directionX) / abs(distanceX) : 0 : pv;
-      const { ease, duration, restDuration } = springX;
-      durationX = cx === dx ? 0 : hasReleaseSpring ? duration : duration - (restDuration * globals.timeScale);
+      const { ease, settlingDuration, restDuration } = springX;
+      durationX = cx === dx ? 0 : hasReleaseSpring ? settlingDuration : settlingDuration - (restDuration * globals.timeScale);
       if (hasReleaseSpring) easeX = ease;
       if (durationX > longestReleaseDuration) longestReleaseDuration = durationX;
     }
@@ -1016,8 +1016,8 @@ class Draggable {
       const directionY = dy === cb ? cy > cb ? -1 : 1 : cy < ct ? -1 : 1;
       const distanceY = round(cy - dy, 0);
       springY.velocity = disabledX && hasReleaseSpring ? distanceY ? (ds * directionY) / abs(distanceY) : 0 : pv;
-      const { ease, duration, restDuration } = springY;
-      durationY = cy === dy ? 0 : hasReleaseSpring ? duration : duration - (restDuration * globals.timeScale);
+      const { ease, settlingDuration, restDuration } = springY;
+      durationY = cy === dy ? 0 : hasReleaseSpring ? settlingDuration : settlingDuration - (restDuration * globals.timeScale);
       if (hasReleaseSpring) easeY = ease;
       if (durationY > longestReleaseDuration) longestReleaseDuration = durationY;
     }

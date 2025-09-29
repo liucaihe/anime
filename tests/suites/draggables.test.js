@@ -6,7 +6,7 @@ import {
   createTimer,
   createDraggable,
   utils,
-} from '../../../dist/modules/index.js';
+} from '../../dist/modules/index.js';
 
 const createMouseEvent = ($target, name, x, y) => $target.dispatchEvent(new MouseEvent('mouse' + name, {
   clientX: x,
@@ -112,7 +112,7 @@ suite('Draggables', () => {
         resolve();
         draggable.revert();
       },
-      duration: 33,
+      duration: 50,
     });
   });
 
@@ -125,8 +125,8 @@ suite('Draggables', () => {
 
     const draggable = createDraggable($target, {
       container: $container,
-      releaseDamping: 2000,
-      releaseStiffness: 2000,
+      releaseStiffness: 10000,
+      releaseDamping: 300,
       onUpdate: () => {
         updates++;
       },
@@ -148,7 +148,7 @@ suite('Draggables', () => {
         createMouseEvent(document, 'move', ++x, 0);
         createMouseEvent(document, 'up', ++x, 0);
       },
-      duration: 33,
+      duration: 50,
     });
   });
 
@@ -167,9 +167,11 @@ suite('Draggables', () => {
     let y = 0;
 
     const draggable = createDraggable($target, {
-      releaseDamping: 2000,
-      releaseStiffness: 2000,
-      onUpdate: () => updates++,
+      releaseStiffness: 10000,
+      releaseDamping: 300,
+      onUpdate: () => {
+        updates++;
+      },
       onSettle: () => {
         expect(updates).to.be.above(0);
         draggable.revert();
@@ -187,7 +189,7 @@ suite('Draggables', () => {
       onComplete: () => {
         createTouchEvent($target, 'end', ++x, 0);
       },
-      duration: 33,
+      duration: 100,
     });
   });
 

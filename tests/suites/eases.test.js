@@ -6,8 +6,11 @@ import {
   animate,
   utils,
   eases,
-  createSpring,
-} from '../../../dist/modules/index.js';
+  cubicBezier,
+  spring,
+  linear,
+  steps,
+} from '../../dist/modules/index.js';
 
 function createEasingParam(ease) {
   return {
@@ -24,7 +27,7 @@ function getOpacityValue() {
 
 suite('Eases', () => {
 
-  test("'linear' / eases.linear()", () => {
+  test("'linear' / eases.linear", () => {
     const anim1 = animate('#target-id', createEasingParam('linear'));
     anim1.seek(0);
     expect(parseFloat(utils.get('#target-id', 'opacity'))).to.equal(0);
@@ -33,7 +36,7 @@ suite('Eases', () => {
     anim1.seek(100);
     expect(parseFloat(utils.get('#target-id', 'opacity'))).to.equal(1);
     utils.set('#target-id', { opacity: 0 });
-    const anim2 = animate('#target-id', createEasingParam(eases.linear()));
+    const anim2 = animate('#target-id', createEasingParam(eases.linear));
     anim2.seek(0);
     expect(parseFloat(utils.get('#target-id', 'opacity'))).to.equal(0);
     anim2.seek(50);
@@ -42,8 +45,8 @@ suite('Eases', () => {
     expect(parseFloat(utils.get('#target-id', 'opacity'))).to.equal(1);
   });
 
-  test("'linear(0, 1)' / eases.linear(0, 1)", () => {
-    const anim1 = animate('#target-id', createEasingParam('linear(0, 1)'));
+  test("'none' / eases.none", () => {
+    const anim1 = animate('#target-id', createEasingParam('none'));
     anim1.seek(0);
     expect(parseFloat(utils.get('#target-id', 'opacity'))).to.equal(0);
     anim1.seek(50);
@@ -51,7 +54,7 @@ suite('Eases', () => {
     anim1.seek(100);
     expect(parseFloat(utils.get('#target-id', 'opacity'))).to.equal(1);
     utils.set('#target-id', { opacity: 0 });
-    const anim2 = animate('#target-id', createEasingParam(eases.linear(0, 1)));
+    const anim2 = animate('#target-id', createEasingParam(eases.none));
     anim2.seek(0);
     expect(parseFloat(utils.get('#target-id', 'opacity'))).to.equal(0);
     anim2.seek(50);
@@ -60,16 +63,18 @@ suite('Eases', () => {
     expect(parseFloat(utils.get('#target-id', 'opacity'))).to.equal(1);
   });
 
-  test("Custom linear 'linear(0, 0.25, 1)' / eases.linear(0, 0.25, 1)", () => {
-    const anim1 = animate('#target-id', createEasingParam('linear(0, 0.25, 1)'));
-    anim1.seek(0);
+  test("linear(0, 1)", () => {
+    const anim2 = animate('#target-id', createEasingParam(linear(0, 1)));
+    anim2.seek(0);
     expect(parseFloat(utils.get('#target-id', 'opacity'))).to.equal(0);
-    anim1.seek(50);
-    expect(parseFloat(utils.get('#target-id', 'opacity'))).to.equal(.25);
-    anim1.seek(100);
+    anim2.seek(50);
+    expect(parseFloat(utils.get('#target-id', 'opacity'))).to.equal(.5);
+    anim2.seek(100);
     expect(parseFloat(utils.get('#target-id', 'opacity'))).to.equal(1);
-    utils.set('#target-id', { opacity: 0 });
-    const anim2 = animate('#target-id', createEasingParam(eases.linear(0, 0.25, 1)));
+  });
+
+  test("Custom linear linear(0, 0.25, 1)", () => {
+    const anim2 = animate('#target-id', createEasingParam(linear(0, 0.25, 1)));
     anim2.seek(0);
     expect(parseFloat(utils.get('#target-id', 'opacity'))).to.equal(0);
     anim2.seek(50);
@@ -78,16 +83,8 @@ suite('Eases', () => {
     expect(parseFloat(utils.get('#target-id', 'opacity'))).to.equal(1);
   });
 
-  test("Custom uneven linear 'linear(0, 0.25 75%, 1)' / eases.linear(0, '0.25 75%', 1)", () => {
-    const anim1 = animate('#target-id', createEasingParam('linear(0, 0.25 75%, 1)'));
-    anim1.seek(0);
-    expect(parseFloat(utils.get('#target-id', 'opacity'))).to.equal(0);
-    anim1.seek(75);
-    expect(parseFloat(utils.get('#target-id', 'opacity'))).to.equal(.25);
-    anim1.seek(100);
-    expect(parseFloat(utils.get('#target-id', 'opacity'))).to.equal(1);
-    utils.set('#target-id', { opacity: 0 });
-    const anim2 = animate('#target-id', createEasingParam(eases.linear(0, '0.25 75%', 1)));
+  test("Custom uneven linear linear(0, '0.25 75%', 1)", () => {
+    const anim2 = animate('#target-id', createEasingParam(linear(0, '0.25 75%', 1)));
     anim2.seek(0);
     expect(parseFloat(utils.get('#target-id', 'opacity'))).to.equal(0);
     anim2.seek(75);
@@ -162,7 +159,7 @@ suite('Eases', () => {
   });
 
   test('Spring ease overrides animation\'s duration parameter', () => {
-    const animationParams = createEasingParam(createSpring());
+    const animationParams = createEasingParam(spring());
     animationParams.duration = 500;
     const animation = animate('#target-id', animationParams);
     expect(animation.duration).to.be.above(1000);
@@ -173,7 +170,7 @@ suite('Eases', () => {
       opacity: [0, 1],
       translateX: {
         to: 100,
-        ease: createSpring(),
+        ease: spring(),
         duration: 500
       },
       duration: 400,
@@ -184,101 +181,92 @@ suite('Eases', () => {
 
   test('Spring ease parameters affect animation\'s duration', () => {
     const target = '#target-id';
-    expect(animate(target, createEasingParam(createSpring())).duration).to.equal(1740);
-    expect(animate(target, createEasingParam(createSpring({ mass: 10 }))).duration).to.equal(13680);
-    expect(animate(target, createEasingParam(createSpring({ stiffness: 50 }))).duration).to.equal(1740);
-    expect(animate(target, createEasingParam(createSpring({ damping: 50 }))).duration).to.equal(1180);
-    expect(animate(target, createEasingParam(createSpring({ velocity: 10 }))).duration).to.equal(1680);
+    expect(animate(target, createEasingParam(spring())).duration).to.equal(1760);
+    expect(animate(target, createEasingParam(spring({ mass: 10 }))).duration).to.equal(13700);
+    expect(animate(target, createEasingParam(spring({ stiffness: 50 }))).duration).to.equal(1760);
+    expect(animate(target, createEasingParam(spring({ damping: 50 }))).duration).to.equal(3880);
+    expect(animate(target, createEasingParam(spring({ velocity: 10 }))).duration).to.equal(1700);
   });
 
   test('Setting a Spring parameter after creation should update its duration', () => {
-    const spring = createSpring();
-    expect(spring.duration).to.equal(1740);
-    spring.mass = 10;
-    expect(spring.duration).to.equal(13680);
-    expect(spring.mass).to.equal(10);
-    spring.mass = 1;
-    spring.stiffness = 50;
-    expect(spring.mass).to.equal(1);
-    expect(spring.stiffness).to.equal(50);
-    expect(spring.duration).to.equal(1740);
-    spring.stiffness = 100;
-    spring.damping = 50;
-    expect(spring.stiffness).to.equal(100);
-    expect(spring.damping).to.equal(50);
-    expect(spring.duration).to.equal(1180);
-    spring.damping = 10;
-    spring.velocity = 10;
-    expect(spring.damping).to.equal(10);
-    expect(spring.velocity).to.equal(10);
-    expect(spring.duration).to.equal(1680);
+    const springEasing = spring();
+    expect(springEasing.settlingDuration).to.equal(1760);
+    springEasing.mass = 10;
+    expect(springEasing.settlingDuration).to.equal(13700);
+    expect(springEasing.mass).to.equal(10);
+    springEasing.mass = 1;
+    springEasing.stiffness = 50;
+    expect(springEasing.mass).to.equal(1);
+    expect(springEasing.stiffness).to.equal(50);
+    expect(springEasing.settlingDuration).to.equal(1760);
+    springEasing.stiffness = 100;
+    springEasing.damping = 50;
+    expect(springEasing.stiffness).to.equal(100);
+    expect(springEasing.damping).to.equal(50);
+    expect(springEasing.settlingDuration).to.equal(3880);
+    springEasing.damping = 10;
+    springEasing.velocity = 10;
+    expect(springEasing.damping).to.equal(10);
+    expect(springEasing.velocity).to.equal(10);
+    expect(springEasing.settlingDuration).to.equal(1700);
   });
 
   test('Spring parameters must be clamped at 10000', () => {
-    const spring = createSpring({
+    const springEasing = spring({
       mass: 15000,
       stiffness: 15000,
       damping: 15000,
       velocity: 15000,
     });
-    expect(spring.mass).to.equal(10000);
-    expect(spring.stiffness).to.equal(10000);
-    expect(spring.damping).to.equal(10000);
-    expect(spring.velocity).to.equal(10000);
-    expect(spring.duration).to.be.above(0);
+    expect(springEasing.mass).to.equal(10000);
+    expect(springEasing.stiffness).to.equal(10000);
+    expect(springEasing.damping).to.equal(10000);
+    expect(springEasing.velocity).to.equal(10000);
+    expect(springEasing.settlingDuration).to.be.above(0);
 
-    spring.mass = 20000;
-    spring.stiffness = 20000;
-    spring.damping = 20000;
-    spring.velocity = 20000;
+    springEasing.mass = 20000;
+    springEasing.stiffness = 20000;
+    springEasing.damping = 20000;
+    springEasing.velocity = 20000;
 
-    expect(spring.mass).to.equal(10000);
-    expect(spring.stiffness).to.equal(10000);
-    expect(spring.damping).to.equal(10000);
-    expect(spring.velocity).to.equal(10000);
-    expect(spring.duration).to.be.above(0);
+    expect(springEasing.mass).to.equal(10000);
+    expect(springEasing.stiffness).to.equal(10000);
+    expect(springEasing.damping).to.equal(10000);
+    expect(springEasing.velocity).to.equal(10000);
+    expect(springEasing.settlingDuration).to.be.above(0);
   });
 
   test('Spring velocity can be negative', () => {
-    const spring = createSpring({
+    const springEasing = spring({
       velocity: -15000,
     });
-    expect(spring.velocity).to.equal(-10000);
-    expect(spring.duration).to.be.above(0);
-    spring.velocity = -20000;
-    expect(spring.velocity).to.equal(-10000);
-    expect(spring.duration).to.be.above(0);
+    expect(springEasing.velocity).to.equal(-10000);
+    expect(springEasing.settlingDuration).to.be.above(0);
+    springEasing.velocity = -20000;
+    expect(springEasing.velocity).to.equal(-10000);
+    expect(springEasing.settlingDuration).to.be.above(0);
   });
 
-  test('Cubic bézier in: "cubicBezier(1,0,1,0)" / eases.cubicBezier(1,0,1,0)', () => {
-    const cubicBezierIn = animate('#target-id', createEasingParam(eases.cubicBezier(1,0,1,0)));
+  test('Cubic bézier in: cubicBezier(1,0,1,0)', () => {
+    const cubicBezierIn = animate('#target-id', createEasingParam(cubicBezier(1,0,1,0)));
     cubicBezierIn.seek(50);
     expect(getOpacityValue()).to.be.below(.5);
-    const cubicBezierInString = animate('#target-id', createEasingParam('cubicBezier(1,0,1,0)'));
-    cubicBezierInString.seek(50);
-    expect(getOpacityValue()).to.be.below(.5);
   });
 
-  test('Cubic bézier out: "cubicBezier(0,1,0,1)" / eases.cubicBezier(0,1,0,1)', () => {
-    const cubicBezierOut = animate('#target-id', createEasingParam(eases.cubicBezier(0,1,0,1)));
+  test('Cubic bézier out: cubicBezier(0,1,0,1)', () => {
+    const cubicBezierOut = animate('#target-id', createEasingParam(cubicBezier(0,1,0,1)));
     cubicBezierOut.seek(50);
     expect(getOpacityValue()).to.be.above(.5);
-    const cubicBezierOutString = animate('#target-id', createEasingParam('cubicBezier(0,1,0,1)'));
-    cubicBezierOutString.seek(50);
-    expect(getOpacityValue()).to.be.above(.5);
   });
 
-  test('Cubic bézier inOut: "cubicBezier(1,0,0,1)" / eases.cubicBezier(1,0,0,1)', () => {
-    const cubicBezierInOut = animate('#target-id', createEasingParam(eases.cubicBezier(1,0,0,1)));
+  test('Cubic bézier inOut: cubicBezier(1,0,0,1)', () => {
+    const cubicBezierInOut = animate('#target-id', createEasingParam(cubicBezier(1,0,0,1)));
     cubicBezierInOut.seek(50);
-    expect(getOpacityValue()).to.be.equal(.5);
-    const cubicBezierInOutString = animate('#target-id', createEasingParam('cubicBezier(1,0,0,1)'));
-    cubicBezierInOutString.seek(50);
     expect(getOpacityValue()).to.be.equal(.5);
   });
 
   test('Steps from end (default)', () => {
-    const cubicBezierIn = animate('#target-id', createEasingParam('steps(4)'));
+    const cubicBezierIn = animate('#target-id', createEasingParam(steps(4)));
     cubicBezierIn.seek(0);
     expect(getOpacityValue()).to.equal(0);
     cubicBezierIn.seek(24);
@@ -300,7 +288,7 @@ suite('Eases', () => {
   });
 
   test('Steps from start', () => {
-    const cubicBezierIn = animate('#target-id', createEasingParam('steps(4, true)'));
+    const cubicBezierIn = animate('#target-id', createEasingParam(steps(4, true)));
     cubicBezierIn.seek(0);
     expect(getOpacityValue()).to.equal(0);
     cubicBezierIn.seek(1);

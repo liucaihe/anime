@@ -1,6 +1,6 @@
-export { none } from "./none.js";
-export { cubicBezier } from "./cubic-bezier.js";
-export { steps } from "./steps.js";
-export { linear } from "./linear.js";
-export { irregular } from "./irregular.js";
-export { eases } from "./eases.js";
+export * from "./cubic-bezier/index.js";
+export * from "./steps/index.js";
+export * from "./linear/index.js";
+export * from "./irregular/index.js";
+export * from "./spring/index.js";
+export * from "./eases/index.js";

@@ -7,6 +7,7 @@ export type DefaultsParams = {
     loop?: number | boolean;
     reversed?: boolean;
     alternate?: boolean;
+    persist?: boolean;
     autoplay?: boolean | ScrollObserver;
     duration?: number | FunctionValue;
     delay?: number | FunctionValue;
@@ -14,13 +15,13 @@ export type DefaultsParams = {
     ease?: EasingParam;
     composition?: "none" | "replace" | "blend" | compositionTypes;
     modifier?: (v: any) => any;
-    onBegin?: (tickable: Tickable) => void;
-    onBeforeUpdate?: (tickable: Tickable) => void;
-    onUpdate?: (tickable: Tickable) => void;
-    onLoop?: (tickable: Tickable) => void;
-    onPause?: (tickable: Tickable) => void;
-    onComplete?: (tickable: Tickable) => void;
-    onRender?: (renderable: Renderable) => void;
+    onBegin?: Callback<Tickable>;
+    onBeforeUpdate?: Callback<Tickable>;
+    onUpdate?: Callback<Tickable>;
+    onLoop?: Callback<Tickable>;
+    onPause?: Callback<Tickable>;
+    onComplete?: Callback<Tickable>;
+    onRender?: Callback<Renderable>;
 };
 export type Renderable = JSAnimation | Timeline;
 export type Tickable = Timer | Renderable;
@@ -50,12 +51,14 @@ export type JSTargetsArray = Array<JSTarget>;
 export type TargetsParam = Array<TargetSelector> | TargetSelector;
 export type TargetsArray = Array<Target>;
 export type EasingFunction = (time: number) => number;
-export type EaseStringParamNames = ("linear" | "linear(x1, x2 25%, x3)" | "in" | "out" | "inOut" | "inQuad" | "outQuad" | "inOutQuad" | "inCubic" | "outCubic" | "inOutCubic" | "inQuart" | "outQuart" | "inOutQuart" | "inQuint" | "outQuint" | "inOutQuint" | "inSine" | "outSine" | "inOutSine" | "inCirc" | "outCirc" | "inOutCirc" | "inExpo" | "outExpo" | "inOutExpo" | "inBounce" | "outBounce" | "inOutBounce" | "inBack" | "outBack" | "inOutBack" | "inElastic" | "outElastic" | "inOutElastic" | "irregular" | "cubicBezier" | "steps" | "in(p = 1.675)" | "out(p = 1.675)" | "inOut(p = 1.675)" | "inBack(overshoot = 1.70158)" | "outBack(overshoot = 1.70158)" | "inOutBack(overshoot = 1.70158)" | "inElastic(amplitude = 1, period = .3)" | "outElastic(amplitude = 1, period = .3)" | "inOutElastic(amplitude = 1, period = .3)" | "irregular(length = 10, randomness = 1)" | "cubicBezier(x1, y1, x2, y2)" | "steps(steps = 10)");
+export type EaseStringParamNames = ("linear" | "none" | "in" | "out" | "inOut" | "inQuad" | "outQuad" | "inOutQuad" | "inCubic" | "outCubic" | "inOutCubic" | "inQuart" | "outQuart" | "inOutQuart" | "inQuint" | "outQuint" | "inOutQuint" | "inSine" | "outSine" | "inOutSine" | "inCirc" | "outCirc" | "inOutCirc" | "inExpo" | "outExpo" | "inOutExpo" | "inBounce" | "outBounce" | "inOutBounce" | "inBack" | "outBack" | "inOutBack" | "inElastic" | "outElastic" | "inOutElastic" | "out(p = 1.675)" | "inOut(p = 1.675)" | "inBack(overshoot = 1.7)" | "outBack(overshoot = 1.7)" | "inOutBack(overshoot = 1.7)" | "inElastic(amplitude = 1, period = .3)" | "outElastic(amplitude = 1, period = .3)" | "inOutElastic(amplitude = 1, period = .3)");
+export type WAAPIEaseStringParamNames = ("ease" | "ease-in" | "ease-out" | "ease-in-out" | "linear(0, 0.25, 1)" | "steps" | "steps(6, start)" | "step-start" | "step-end" | "cubic-bezier(0.42, 0, 1, 1)");
 export type PowerEasing = (power?: number | string) => EasingFunction;
 export type BackEasing = (overshoot?: number | string) => EasingFunction;
 export type ElasticEasing = (amplitude?: number | string, period?: number | string) => EasingFunction;
 export type EasingFunctionWithParams = PowerEasing | BackEasing | ElasticEasing;
 export type EasingParam = (string & {}) | EaseStringParamNames | EasingFunction | Spring;
+export type WAAPIEasingParam = (string & {}) | EaseStringParamNames | WAAPIEaseStringParamNames | EasingFunction | Spring;
 export type SpringParams = {
     /**
      * - Mass, default 1
@@ -73,6 +76,18 @@ export type SpringParams = {
      * - Initial velocity, default 0
      */
     velocity?: number;
+    /**
+     * - Initial bounce, default 0
+     */
+    bounce?: number;
+    /**
+     * - The perceived duration, default 0
+     */
+    duration?: number;
+    /**
+     * - Callback function called when the spring currentTime hits the perceived duration
+     */
+    onComplete?: Callback<JSAnimation>;
 };
 export type Callback<T> = (self: T, e?: PointerEvent) => any;
 export type TickableCallbacks<T extends unknown> = {
@@ -131,6 +146,7 @@ export type Tween = {
     _isOverlapped: number;
     _isOverridden: number;
     _renderTransforms: number;
+    _inlineValue: string;
     _prevRep: Tween;
     _nextRep: Tween;
     _prevAdd: Tween;
@@ -238,13 +254,13 @@ export type TimelineParams = TimerOptions & TimelineOptions & TickableCallbacks<
 export type WAAPITweenValue = string | number | Array<string> | Array<number>;
 export type WAAPIFunctionValue = (target: DOMTarget, index: number, length: number) => WAAPITweenValue;
 export type WAAPIKeyframeValue = WAAPITweenValue | WAAPIFunctionValue | Array<string | number | WAAPIFunctionValue>;
-export type WAAPICallback = (animation: WAAPIAnimation) => void;
+export type WAAPICallback = Callback<WAAPIAnimation>;
 export type WAAPITweenOptions = {
     to?: WAAPIKeyframeValue;
     from?: WAAPIKeyframeValue;
     duration?: number | WAAPIFunctionValue;
     delay?: number | WAAPIFunctionValue;
-    ease?: EasingParam;
+    ease?: WAAPIEasingParam;
     composition?: CompositeOperation;
 };
 export type WAAPIAnimationOptions = {
@@ -255,11 +271,12 @@ export type WAAPIAnimationOptions = {
     playbackRate?: number;
     duration?: number | WAAPIFunctionValue;
     delay?: number | WAAPIFunctionValue;
-    ease?: EasingParam;
+    ease?: WAAPIEasingParam;
     composition?: CompositeOperation;
+    persist?: boolean;
     onComplete?: WAAPICallback;
 };
-export type WAAPIAnimationParams = Record<string, WAAPIKeyframeValue | WAAPIAnimationOptions | boolean | ScrollObserver | WAAPICallback | EasingParam | WAAPITweenOptions> & WAAPIAnimationOptions;
+export type WAAPIAnimationParams = Record<string, WAAPIKeyframeValue | WAAPIAnimationOptions | boolean | ScrollObserver | WAAPICallback | WAAPIEasingParam | WAAPITweenOptions> & WAAPIAnimationOptions;
 export type AnimatablePropertySetter = (to: number | Array<number>, duration?: number, ease?: EasingParam) => AnimatableObject;
 export type AnimatablePropertyGetter = () => number | Array<number>;
 export type AnimatableProperty = AnimatablePropertySetter & AnimatablePropertyGetter;
@@ -382,6 +399,6 @@ import type { WAAPIAnimation } from '../waapi/waapi.js';
 import type { Draggable } from '../draggable/draggable.js';
 import type { TextSplitter } from '../text/split.js';
 import type { Scope } from '../scope/scope.js';
-import type { Spring } from '../spring/spring.js';
+import type { Spring } from '../easings/spring/index.js';
 import type { tweenTypes } from '../core/consts.js';
 import type { valueTypes } from '../core/consts.js';

@@ -13,7 +13,7 @@ var targets = require('../core/targets.cjs');
 var values = require('../core/values.cjs');
 var consts = require('../core/consts.cjs');
 var none = require('../easings/none.cjs');
-var parser = require('../easings/parser.cjs');
+var parser = require('../easings/eases/parser.cjs');
 var composition = require('./composition.cjs');
 
 /**
@@ -35,7 +35,7 @@ var composition = require('./composition.cjs');
 /**
  * @import {
  *   Spring,
- * } from '../spring/spring.js'
+ * } from '../easings/spring/index.js'
 */
 
 /**
@@ -52,21 +52,11 @@ var composition = require('./composition.cjs');
  */
 const easingToLinear = (fn, samples = 100) => {
   const points = [];
-  for (let i = 0; i <= samples; i++) points.push(fn(i / samples));
+  for (let i = 0; i <= samples; i++) points.push(helpers.round(fn(i / samples), 4));
   return `linear(${points.join(', ')})`;
 };
 
-const WAAPIEasesLookups = {
-  in: 'ease-in',
-  out: 'ease-out',
-  inOut: 'ease-in-out',
-};
-
-const WAAPIeases = /*#__PURE__*/(() => {
-  const list = {};
-  for (let type in parser.easeTypes) list[type] = (/** @type {String|Number} */p) => parser.easeTypes[type](parser.easeInPower(p));
-  return /** @type {Record<String, EasingFunction>} */(list);
-})();
+const WAAPIEasesLookups = {};
 
 /**
  * @param  {EasingParam} ease
@@ -87,9 +77,10 @@ const parseWAAPIEasing = (ease) => {
     } else if (helpers.stringStartsWith(ease, 'cubicB')) {
       parsedEase = helpers.toLowerCase(ease);
     } else {
-      const parsed = parser.parseEaseString(ease, WAAPIeases, WAAPIEasesLookups);
+      const parsed = parser.parseEaseString(ease);
       if (helpers.isFnc(parsed)) parsedEase = parsed === none.none ? 'linear' : easingToLinear(parsed);
     }
+    // Only cache string based easing name, otherwise function arguments get lost
     WAAPIEasesLookups[ease] = parsedEase;
   } else if (helpers.isFnc(ease)) {
     const easing = easingToLinear(ease);
@@ -130,7 +121,8 @@ let transformsPropertiesRegistered = null;
  * @return {String}
  */
 const normalizeTweenValue = (propName, value, $el, i, targetsLength) => {
-  let v = values.getFunctionValue(/** @type {any} */(value), $el, i, targetsLength);
+  // Do not try to compute strings with getFunctionValue otherwise it will convert CSS variables
+  let v = helpers.isStr(value) ? value : values.getFunctionValue(/** @type {any} */(value), $el, i, targetsLength);
   if (!helpers.isNum(v)) return v;
   if (commonDefaultPXProperties.includes(propName) || helpers.stringStartsWith(propName, 'translate')) return `${v}px`;
   if (helpers.stringStartsWith(propName, 'rotate') || helpers.stringStartsWith(propName, 'skew')) return `${v}deg`;
@@ -210,7 +202,7 @@ class WAAPIAnimation {
     /** @type {PlaybackDirection} */
     const direction = alternate ? reversed ? 'alternate-reverse' : 'alternate' : reversed ? 'reverse' : 'normal';
     /** @type {FillMode} */
-    const fill = 'forwards';
+    const fill = 'both'; // We use 'both' here because the animation can be reversed during playback
     /** @type {String} */
     const easing = parseWAAPIEasing(ease);
     const timeScale = (globals.globals.timeScale === 1 ? 1 : consts.K);
@@ -222,7 +214,7 @@ class WAAPIAnimation {
     /** @type {globalThis.Animation}] */
     this.controlAnimation = null;
     /** @type {Callback<this>} */
-    this.onComplete = params.onComplete || consts.noop;
+    this.onComplete = params.onComplete || /** @type {Callback<WAAPIAnimation>} */(/** @type {unknown} */(globals.globals.defaults.onComplete));
     /** @type {Number} */
     this.duration = 0;
     /** @type {Boolean} */
@@ -233,6 +225,8 @@ class WAAPIAnimation {
     this.paused = !autoplay || scroll !== false;
     /** @type {Boolean} */
     this.reversed = reversed;
+    /** @type {Boolean} */
+    this.persist = values.setValue(params.persist, globals.globals.defaults.persist);
     /** @type {Boolean|ScrollObserver} */
     this.autoplay = autoplay;
     /** @type {Number} */
@@ -241,17 +235,18 @@ class WAAPIAnimation {
     this._resolve = consts.noop; // Used by .then()
     /** @type {Number} */
     this._completed = 0;
-    /** @type {Array<Object>}] */
-    this._inlineStyles = parsedTargets.map($el => $el.getAttribute('style'));
+    /** @type {Array.<Object>} */
+    this._inlineStyles = [];
 
     parsedTargets.forEach(($el, i) => {
 
       const cachedTransforms = $el[consts.transformsSymbol];
-
       const hasIndividualTransforms = validIndividualTransforms.some(t => params.hasOwnProperty(t));
+      const elStyle = $el.style;
+      const inlineStyles = this._inlineStyles[i] = {};
 
       /** @type {Number} */
-      const duration = (spring ? /** @type {Spring} */(spring).duration : values.getFunctionValue(values.setValue(params.duration, globals.globals.defaults.duration), $el, i, targetsLength)) * timeScale;
+      const duration = (spring ? /** @type {Spring} */(spring).settlingDuration : values.getFunctionValue(values.setValue(params.duration, globals.globals.defaults.duration), $el, i, targetsLength)) * timeScale;
       /** @type {Number} */
       const delay = values.getFunctionValue(values.setValue(params.delay, globals.globals.defaults.delay), $el, i, targetsLength) * timeScale;
       /** @type {CompositeOperation} */
@@ -265,6 +260,12 @@ class WAAPIAnimation {
         const tweenParams = { iterations, direction, fill, easing, duration, delay, composite };
         const propertyValue = params[name];
         const individualTransformProperty = hasIndividualTransforms ? consts.validTransforms.includes(name) ? name : consts.shortTransforms.get(name) : false;
+
+        const styleName = individualTransformProperty ? 'transform' : name;
+        if (!inlineStyles[styleName]) {
+          inlineStyles[styleName] = elStyle[styleName];
+        }
+
         let parsedPropertyValue;
         if (helpers.isObj(propertyValue)) {
           const tweenOptions = /** @type {WAAPITweenOptions} */(propertyValue);
@@ -273,7 +274,7 @@ class WAAPIAnimation {
           const to = /** @type {WAAPITweenOptions} */(tweenOptions).to;
           const from = /** @type {WAAPITweenOptions} */(tweenOptions).from;
           /** @type {Number} */
-          tweenParams.duration = (tweenOptionsSpring ? /** @type {Spring} */(tweenOptionsSpring).duration : values.getFunctionValue(values.setValue(tweenOptions.duration, duration), $el, i, targetsLength)) * timeScale;
+          tweenParams.duration = (tweenOptionsSpring ? /** @type {Spring} */(tweenOptionsSpring).settlingDuration : values.getFunctionValue(values.setValue(tweenOptions.duration, duration), $el, i, targetsLength)) * timeScale;
           /** @type {Number} */
           tweenParams.delay = values.getFunctionValue(values.setValue(tweenOptions.delay, delay), $el, i, targetsLength) * timeScale;
           /** @type {CompositeOperation} */
@@ -290,10 +291,10 @@ class WAAPIAnimation {
           composition.addWAAPIAnimation(this, $el, name, keyframes, tweenParams);
           if (!helpers.isUnd(from)) {
             if (!individualTransformProperty) {
-              $el.style[name] = keyframes[name][0];
+              elStyle[name] = keyframes[name][0];
             } else {
               const key = `--${individualTransformProperty}`;
-              $el.style.setProperty(key, keyframes[key][0]);
+              elStyle.setProperty(key, keyframes[key][0]);
             }
           }
         } else {
@@ -314,7 +315,7 @@ class WAAPIAnimation {
         for (let t in cachedTransforms) {
           transforms += `${consts.transformsFragmentStrings[t]}var(--${t})) `;
         }
-        $el.style.transform = transforms;
+        elStyle.transform = transforms;
       }
     });
 
@@ -359,7 +360,8 @@ class WAAPIAnimation {
       // Make sure the animation playState is not 'paused' in order to properly trigger an onfinish callback.
       // The "paused" play state supersedes the "finished" play state; if the animation is both paused and finished, the "paused" state is the one that will be reported.
       // https://developer.mozilla.org/en-US/docs/Web/API/Animation/finish_event
-      if (t >= this.duration) anim.play();
+      // This is not needed for persisting animations since they never finish.
+      if (!this.persist && t >= this.duration) anim.play();
       anim.currentTime = t;
     });
   }
@@ -429,13 +431,30 @@ class WAAPIAnimation {
   }
 
   cancel() {
-    this.forEach('cancel');
-    return this.pause();
+    this.muteCallbacks = true; // This prevents triggering the onComplete callback and resolving the Promise
+    return this.commitStyles().forEach('cancel');
   }
 
   revert() {
-    this.cancel();
-    this.targets.forEach(($el, i) => $el.setAttribute('style', this._inlineStyles[i]) );
+    // NOTE: We need a better way to revert the transforms, since right now the entire transform property value is reverted,
+    // This means if you have multiple animations animating different transforms on the same target,
+    // reverting one of them will also override the transform property of the other animations.
+    // A better approach would be to store the original custom property values is they exist instead of the entire transform value,
+    // and update the CSS variables with the orignal value
+    this.cancel().targets.forEach(($el, i) => {
+      const targetStyle = $el.style;
+      const targetInlineStyles = this._inlineStyles[i];
+      for (let name in targetInlineStyles) {
+        const originalInlinedValue = targetInlineStyles[name];
+        if (helpers.isUnd(originalInlinedValue) || originalInlinedValue === consts.emptyString) {
+          targetStyle.removeProperty(helpers.toLowerCase(name));
+        } else {
+          targetStyle[name] = originalInlinedValue;
+        }
+      }
+      // Remove style attribute if empty
+      if ($el.getAttribute('style') === consts.emptyString) $el.removeAttribute('style');
+    });
     return this;
   }
 

@@ -6,7 +6,7 @@ import {
 import {
   animate,
   utils
-} from '../../../dist/modules/index.js';
+} from '../../dist/modules/index.js';
 
 suite('Timings', () => {
   test('Specified timings parameters', resolve => {

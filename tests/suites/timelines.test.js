@@ -6,10 +6,11 @@ import {
 import {
   createTimeline,
   eases,
+  steps,
   utils,
   createTimer,
   animate,
-} from '../../../dist/modules/index.js';
+} from '../../dist/modules/index.js';
 
 import {
   compositionTypes,
@@ -821,7 +822,7 @@ suite('Timelines', () => {
       duration: 500,
       opacity: [1, .5],
       delay: (el, i) => i * 500,
-      ease: 'steps(1)',
+      ease: steps(1),
     }, 0)
     .call(() => { timer1Log += 1; }, 0)
     .call(() => { timer2Log += 1; }, 500)
@@ -848,6 +849,48 @@ suite('Timelines', () => {
     expect($targets[2].style.opacity).to.equal('1');
   });
 
+  test('.call with odd floating points values A', resolve => {
+    let timer1Log = 0;
+    let timer2Log = 0;
+    let timer3Log = 0;
+    let timer4Log = 0;
+    const tl = createTimeline({
+      onComplete: () => {
+        expect(timer1Log).to.equal(1);
+        expect(timer2Log).to.equal(1);
+        expect(timer3Log).to.equal(1);
+        expect(timer4Log).to.equal(1);
+        resolve();
+      }
+    })
+    .call(() => ++timer1Log, 0)
+    .call(() => ++timer2Log, 800)
+    .call(() => ++timer3Log, 8700)
+    .call(() => ++timer4Log, 8650)
+    .seek(8650);
+  });
+
+  test('.call with odd floating points values B', resolve => {
+    let timer1Log = 0;
+    let timer2Log = 0;
+    let timer3Log = 0;
+    let timer4Log = 0;
+    const tl = createTimeline({
+      onComplete: () => {
+        expect(timer1Log).to.equal(1);
+        expect(timer2Log).to.equal(1);
+        expect(timer3Log).to.equal(1);
+        expect(timer4Log).to.equal(1);
+        resolve();
+      }
+    })
+    .call(() => ++timer1Log, 0)
+    .call(() => ++timer2Log, 800)
+    .call(() => ++timer3Log, 8000)
+    .call(() => ++timer4Log, 8450)
+    .seek(8400);
+  });
+
   test('Set values should properly update on loop', () => {
     const $targets = utils.$(['.target-class:nth-child(1)', '.target-class:nth-child(2)', '.target-class:nth-child(3)']);
     const tl = createTimeline({
@@ -862,7 +905,7 @@ suite('Timelines', () => {
       duration: 500,
       opacity: [1, .5],
       delay: (el, i) => i * 500,
-      ease: 'steps(1)',
+      ease: steps(1),
     }, 0)
     .init()
 

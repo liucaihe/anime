@@ -2,7 +2,7 @@ import {
   utils,
   animate,
   createTimeline,
-} from '../../../dist/modules/index.js';
+} from '../../dist/modules/index.js';
 
 import {
   expect,

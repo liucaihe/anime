@@ -10,9 +10,6 @@
 var consts = require('./consts.cjs');
 var helpers = require('./helpers.cjs');
 
-const propertyNamesCache = {};
-
-
 /**
  * @import {
  *   JSAnimation,
@@ -27,6 +24,8 @@ const propertyNamesCache = {};
 *   Tween,
 * } from '../types/index.js'
 */
+
+const propertyNamesCache = {};
 
 /**
  * @param  {String} propertyName
@@ -74,10 +73,11 @@ const cleanInlineStyles = renderable => {
       const tweenTarget = tween.target;
       if (tweenTarget[consts.isDomSymbol]) {
         const targetStyle = /** @type {DOMTarget} */(tweenTarget).style;
-        const originalInlinedValue = animation._inlineStyles[tweenProperty];
+        const originalInlinedValue = tween._inlineValue;
+        const tweenHadNoInlineValue = helpers.isNil(originalInlinedValue) || originalInlinedValue === consts.emptyString;
         if (tween._tweenType === consts.tweenTypes.TRANSFORM) {
           const cachedTransforms = tweenTarget[consts.transformsSymbol];
-          if (helpers.isUnd(originalInlinedValue) || originalInlinedValue === consts.emptyString) {
+          if (tweenHadNoInlineValue) {
             delete cachedTransforms[tweenProperty];
           } else {
             cachedTransforms[tweenProperty] = originalInlinedValue;
@@ -94,8 +94,8 @@ const cleanInlineStyles = renderable => {
             }
           }
         } else {
-          if (helpers.isUnd(originalInlinedValue) || originalInlinedValue === consts.emptyString) {
-            targetStyle.removeProperty(tweenProperty);
+          if (tweenHadNoInlineValue) {
+            targetStyle.removeProperty(helpers.toLowerCase(tweenProperty));
           } else {
             targetStyle[tweenProperty] = originalInlinedValue;
           }
