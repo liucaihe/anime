@@ -1,16 +1,16 @@
 {
-  "name": "@juliangarnierorg/anime-beta",
+  "name": "animejs",
   "version": "4.2.0",
-  "description": "JavaScript animation engine",
   "homepage": "https://animejs.com",
+  "description": "JavaScript animation engine",
   "author": "Julian Garnier <julian@animejs.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/juliangarnierorg/anime-beta.git"
+    "url": "git+https://github.com/juliangarnier/anime.git"
   },
   "bugs": {
-    "url": "https://github.com/juliangarnierorg/anime-beta/issues"
+    "url": "https://github.com/juliangarnier/anime/issues"
   },
   "funding": {
     "type": "github",
