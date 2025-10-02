@@ -30,6 +30,7 @@ import {
   sin,
   abs,
   now,
+  isNum,
 } from '../core/helpers.js';
 
 import {
@@ -75,6 +76,7 @@ import {
  *   DOMTarget,
  *   DOMTargetSelector,
  *   DraggableCursorParams,
+ *   DraggableDragThresholdParams,
  *   TargetsParam,
  *   DraggableParams,
  *   EasingFunction,
@@ -205,7 +207,7 @@ class Transforms {
 }
 
 /**
- * @template {Array<Number>|DOMTargetSelector|String|Number|Boolean|Function|DraggableCursorParams} T
+ * @template {Array<Number>|DOMTargetSelector|String|Number|Boolean|Function|DraggableCursorParams|DraggableDragThresholdParams} T
  * @param {T | ((draggable: Draggable) => T)} value
  * @param {Draggable} draggable
  * @return {T}
@@ -678,6 +680,16 @@ export class Draggable {
       if (onHover) cursorStyles.onHover = onHover;
       if (onGrab) cursorStyles.onGrab = onGrab;
     }
+    const parsedDragThreshold = parseDraggableFunctionParameter(params.dragThreshold, this);
+    const dragThreshold = { mouse: 3, touch: 8 };
+    if (isNum(parsedDragThreshold)) {
+      dragThreshold.mouse = parsedDragThreshold;
+      dragThreshold.touch = parsedDragThreshold;
+    } else if (parsedDragThreshold) {
+      const { mouse, touch } = parsedDragThreshold;
+      if (!isUnd(mouse)) dragThreshold.mouse = mouse;
+      if (!isUnd(touch)) dragThreshold.touch = touch;
+    }
     this.containerArray = isArr(container) ? container : null;
     this.$container = /** @type {HTMLElement} */(container && !this.containerArray ? parseTargets(/** @type {DOMTarget} */(container))[0] : doc.body);
     this.useWin = this.$container === doc.body;
@@ -692,7 +704,7 @@ export class Draggable {
     this.scrollSpeed = setValue(parseDraggableFunctionParameter(params.scrollSpeed, this), 1.5);
     this.scrollThreshold = setValue(parseDraggableFunctionParameter(params.scrollThreshold, this), 20);
     this.dragSpeed = setValue(parseDraggableFunctionParameter(params.dragSpeed, this), 1);
-    this.dragThreshold = setValue(parseDraggableFunctionParameter(params.dragThreshold, this), 3);
+    this.dragThreshold = this.isFinePointer ? dragThreshold.mouse : dragThreshold.touch;
     this.minVelocity = setValue(parseDraggableFunctionParameter(params.minVelocity, this), 0);
     this.maxVelocity = setValue(parseDraggableFunctionParameter(params.maxVelocity, this), 50);
     this.velocityMultiplier = setValue(parseDraggableFunctionParameter(params.velocityMultiplier, this), 1);
