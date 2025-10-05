@@ -340,6 +340,10 @@ export type DraggableCursorParams = {
     onHover?: string;
     onGrab?: string;
 };
+export type DraggableDragThresholdParams = {
+    mouse?: number;
+    touch?: number;
+};
 export type DraggableParams = {
     trigger?: DOMTargetSelector;
     container?: DOMTargetSelector | Array<number> | ((draggable: Draggable) => DOMTargetSelector | Array<number>);
@@ -351,6 +355,7 @@ export type DraggableParams = {
     containerFriction?: number | ((draggable: Draggable) => number);
     releaseContainerFriction?: number | ((draggable: Draggable) => number);
     dragSpeed?: number | ((draggable: Draggable) => number);
+    dragThreshold?: number | DraggableDragThresholdParams | ((draggable: Draggable) => number | DraggableDragThresholdParams);
     scrollSpeed?: number | ((draggable: Draggable) => number);
     scrollThreshold?: number | ((draggable: Draggable) => number);
     minVelocity?: number | ((draggable: Draggable) => number);

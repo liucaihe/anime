@@ -205,7 +205,7 @@ const flickDraggable = createDraggable(flickData, {
   y: false,
   onGrab: () => animate(flickData, { speedX: 0, duration: 500 }),
   onRelease: () => animate(flickData, { speedX: 2, duration: 500 }),
-  releaseStiffness: 10,
+  releaseDamping: 10,
 });
 
 createTimer({

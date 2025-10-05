@@ -30,6 +30,8 @@ export class Draggable {
     /** @type {Number} */
     dragSpeed: number;
     /** @type {Number} */
+    dragThreshold: number;
+    /** @type {Number} */
     maxVelocity: number;
     /** @type {Number} */
     minVelocity: number;
