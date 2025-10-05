@@ -118,7 +118,7 @@ function addTlChild(childParams, tl, timePosition, targets, index, length) {
   const tlChild = targets ?
     new JSAnimation(targets,/** @type {AnimationParams} */(childParams), tl, adjustedPosition, false, index, length) :
     new Timer(/** @type {TimerParams} */(childParams), tl, adjustedPosition);
-  tlChild.init(1);
+  tlChild.init(true);
   // TODO: Might be better to insert at a position relative to startTime?
   addChild(tl, tlChild);
   forEachChildren(tl, (/** @type {Renderable} */child) => {
@@ -222,7 +222,7 @@ export class Timeline extends Timer {
           parseTimelinePosition(this,a2),
         );
       }
-      return this.init(1); // 1 = internalRender
+      return this.init(true);
     }
   }
 

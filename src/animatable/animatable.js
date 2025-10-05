@@ -133,7 +133,7 @@ export class Animatable {
             tween._currentTime = 0;
           });
           if (!isUnd(duration)) animation.stretch(duration);
-          animation.reset(1).resume();
+          animation.reset(true).resume();
           return this;
         }
       };
