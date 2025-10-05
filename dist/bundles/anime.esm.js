@@ -1,6 +1,6 @@
 /**
  * Anime.js - ESM bundle
- * @version v4.2.0
+ * @version v4.2.1
  * @license MIT
  * @copyright 2025 - Julian Garnier
  */
@@ -386,10 +386,6 @@
  */
 
 /**
- * @typedef {Callback<WAAPIAnimation>} WAAPICallback
- */
-
-/**
  * @typedef {Object} WAAPITweenOptions
  * @property {WAAPIKeyframeValue} [to]
  * @property {WAAPIKeyframeValue} [from]
@@ -411,11 +407,11 @@
  * @property {WAAPIEasingParam} [ease]
  * @property {CompositeOperation} [composition]
  * @property {Boolean} [persist]
- * @property {WAAPICallback} [onComplete]
+ * @property {Callback<WAAPIAnimation>} [onComplete]
  */
 
 /**
- * @typedef {Record<String, WAAPIKeyframeValue | WAAPIAnimationOptions | Boolean | ScrollObserver | WAAPICallback | WAAPIEasingParam | WAAPITweenOptions> & WAAPIAnimationOptions} WAAPIAnimationParams
+ * @typedef {Record<String, WAAPIKeyframeValue | WAAPIAnimationOptions | Boolean | ScrollObserver | Callback<WAAPIAnimation> | WAAPIEasingParam | WAAPITweenOptions> & WAAPIAnimationOptions} WAAPIAnimationParams
  */
 
 // Animatable types
@@ -559,6 +555,12 @@
  */
 
 /**
+ * @typedef {Object} DraggableDragThresholdParams
+ * @property {Number} [mouse]
+ * @property {Number} [touch]
+ */
+
+/**
  * @typedef {Object} DraggableParams
  * @property {DOMTargetSelector} [trigger]
  * @property {DOMTargetSelector|Array<Number>|((draggable: Draggable) => DOMTargetSelector|Array<Number>)} [container]
@@ -570,6 +572,7 @@
  * @property {Number|((draggable: Draggable) => Number)} [containerFriction]
  * @property {Number|((draggable: Draggable) => Number)} [releaseContainerFriction]
  * @property {Number|((draggable: Draggable) => Number)} [dragSpeed]
+ * @property {Number|DraggableDragThresholdParams|((draggable: Draggable) => Number|DraggableDragThresholdParams)} [dragThreshold]
  * @property {Number|((draggable: Draggable) => Number)} [scrollSpeed]
  * @property {Number|((draggable: Draggable) => Number)} [scrollThreshold]
  * @property {Number|((draggable: Draggable) => Number)} [minVelocity]
@@ -793,7 +796,7 @@ const globals = {
   tickThreshold: 200,
 };
 
-const globalVersions = { version: '4.2.0', engine: null };
+const globalVersions = { version: '4.2.1', engine: null };
 
 if (isBrowser) {
   if (!win.AnimeJS) win.AnimeJS = [];
@@ -2480,7 +2483,7 @@ const reviveTimer = timer => {
   if (timer._hasChildren) {
     forEachChildren(timer, reviveTimer);
   } else {
-    forEachChildren(timer, (/** @type {Tween} tween*/tween) => {
+    forEachChildren(timer, (/** @type {Tween} tween */tween) => {
       if (tween._composition !== compositionTypes.none) {
         composeTween(tween, getTweenSiblings(tween.target, tween.property));
       }
@@ -2536,7 +2539,6 @@ class Timer extends Clock {
                                 timerLoop === Infinity ||
                                 /** @type {Number} */(timerLoop) < 0 ? Infinity :
                                 /** @type {Number} */(timerLoop) + 1;
-
 
     let offsetPosition = 0;
 
@@ -2627,7 +2629,7 @@ class Timer extends Clock {
   }
 
   set cancelled(cancelled) {
-    cancelled ? this.cancel() : this.reset(1).play();
+    cancelled ? this.cancel() : this.reset(true).play();
   }
 
   get currentTime() {
@@ -2692,10 +2694,10 @@ class Timer extends Clock {
   }
 
   /**
-   * @param  {Number} internalRender
+   * @param  {Boolean} [softReset]
    * @return {this}
    */
-  reset(internalRender = 0) {
+  reset(softReset = false) {
     // If cancelled, revive the timer before rendering in order to have propertly composed tweens siblings
     reviveTimer(this);
     if (this._reversed && !this._reverse) this.reversed = false;
@@ -2704,7 +2706,7 @@ class Timer extends Clock {
     // NOTE: This is only required for Timelines and might be better to move to the Timeline class?
     this._iterationTime = this.iterationDuration;
     // Set tickMode to tickModes.FORCE to force rendering
-    tick(this, 0, 1, internalRender, tickModes.FORCE);
+    tick(this, 0, 1, ~~softReset, tickModes.FORCE);
     // Reset timer properties after revive / render to make sure the props are not updated again
     resetTimerProperties(this);
     // Also reset children properties
@@ -2715,16 +2717,16 @@ class Timer extends Clock {
   }
 
   /**
-   * @param  {Number} internalRender
+   * @param  {Boolean} internalRender
    * @return {this}
    */
-  init(internalRender = 0) {
+  init(internalRender = false) {
     this.fps = this._fps;
     this.speed = this._speed;
     // Manually calling .init() on timelines should render all children intial state
     // Forces all children to render once then render to 0 when reseted
     if (!internalRender && this._hasChildren) {
-      tick(this, this.duration, 1, internalRender, tickModes.FORCE);
+      tick(this, this.duration, 1, ~~internalRender, tickModes.FORCE);
     }
     this.reset(internalRender);
     // Make sure to set autoplay to false to child timers so it doesn't attempt to autoplay / link
@@ -2778,7 +2780,7 @@ class Timer extends Clock {
 
   /** @return {this} */
   restart() {
-    return this.reset(0).resume();
+    return this.reset().resume();
   }
 
   /**
@@ -2881,8 +2883,12 @@ class Timer extends Clock {
   }
 
   /**
-   * @param  {Callback<this>} [callback]
-   * @return {Promise}
+   * @typedef {this & {then: null}} ResolvedTimer
+   */
+
+  /**
+   * @param  {Callback<ResolvedTimer>} [callback]
+   * @return Promise<this>
    */
   then(callback = noop) {
     const then = this.then;
@@ -2890,7 +2896,7 @@ class Timer extends Clock {
       // this.then = null prevents infinite recursion if returned by an async function
       // https://github.com/juliangarnierorg/anime-beta/issues/26
       this.then = null;
-      callback(this);
+      callback(/** @type {ResolvedTimer} */(this));
       this.then = then;
       this._resolve = noop;
     };
@@ -3839,8 +3845,12 @@ class JSAnimation extends Timer {
   }
 
   /**
-   * @param  {Callback<this>} [callback]
-   * @return {Promise}
+   * @typedef {this & {then: null}} ResolvedJSAnimation
+   */
+
+  /**
+   * @param  {Callback<ResolvedJSAnimation>} [callback]
+   * @return Promise<this>
    */
   then(callback) {
     return super.then(callback);
@@ -4111,7 +4121,7 @@ function addTlChild(childParams, tl, timePosition, targets, index, length) {
   const tlChild = targets ?
     new JSAnimation(targets,/** @type {AnimationParams} */(childParams), tl, adjustedPosition, false, index, length) :
     new Timer(/** @type {TimerParams} */(childParams), tl, adjustedPosition);
-  tlChild.init(1);
+  tlChild.init(true);
   // TODO: Might be better to insert at a position relative to startTime?
   addChild(tl, tlChild);
   forEachChildren(tl, (/** @type {Renderable} */child) => {
@@ -4215,7 +4225,7 @@ class Timeline extends Timer {
           parseTimelinePosition(this,a2),
         );
       }
-      return this.init(1); // 1 = internalRender
+      return this.init(true);
     }
   }
 
@@ -4324,8 +4334,12 @@ class Timeline extends Timer {
   }
 
   /**
-   * @param  {Callback<this>} [callback]
-   * @return {Promise}
+   * @typedef {this & {then: null}} ResolvedTimeline
+   */
+
+  /**
+   * @param  {Callback<ResolvedTimeline>} [callback]
+   * @return Promise<this>
    */
   then(callback) {
     return super.then(callback);
@@ -4435,7 +4449,7 @@ class Animatable {
             tween._currentTime = 0;
           });
           if (!isUnd(duration)) animation.stretch(duration);
-          animation.reset(1).resume();
+          animation.reset(true).resume();
           return this;
         }
       };
@@ -4896,7 +4910,7 @@ class Transforms {
 }
 
 /**
- * @template {Array<Number>|DOMTargetSelector|String|Number|Boolean|Function|DraggableCursorParams} T
+ * @template {Array<Number>|DOMTargetSelector|String|Number|Boolean|Function|DraggableCursorParams|DraggableDragThresholdParams} T
  * @param {T | ((draggable: Draggable) => T)} value
  * @param {Draggable} draggable
  * @return {T}
@@ -4949,6 +4963,8 @@ class Draggable {
     this.scrollThreshold = 0;
     /** @type {Number} */
     this.dragSpeed = 0;
+    /** @type {Number} */
+    this.dragThreshold = 3;
     /** @type {Number} */
     this.maxVelocity = 0;
     /** @type {Number} */
@@ -5367,6 +5383,16 @@ class Draggable {
       if (onHover) cursorStyles.onHover = onHover;
       if (onGrab) cursorStyles.onGrab = onGrab;
     }
+    const parsedDragThreshold = parseDraggableFunctionParameter(params.dragThreshold, this);
+    const dragThreshold = { mouse: 3, touch: 7 };
+    if (isNum(parsedDragThreshold)) {
+      dragThreshold.mouse = parsedDragThreshold;
+      dragThreshold.touch = parsedDragThreshold;
+    } else if (parsedDragThreshold) {
+      const { mouse, touch } = parsedDragThreshold;
+      if (!isUnd(mouse)) dragThreshold.mouse = mouse;
+      if (!isUnd(touch)) dragThreshold.touch = touch;
+    }
     this.containerArray = isArr(container) ? container : null;
     this.$container = /** @type {HTMLElement} */(container && !this.containerArray ? parseTargets(/** @type {DOMTarget} */(container))[0] : doc.body);
     this.useWin = this.$container === doc.body;
@@ -5381,6 +5407,7 @@ class Draggable {
     this.scrollSpeed = setValue(parseDraggableFunctionParameter(params.scrollSpeed, this), 1.5);
     this.scrollThreshold = setValue(parseDraggableFunctionParameter(params.scrollThreshold, this), 20);
     this.dragSpeed = setValue(parseDraggableFunctionParameter(params.dragSpeed, this), 1);
+    this.dragThreshold = this.isFinePointer ? dragThreshold.mouse : dragThreshold.touch;
     this.minVelocity = setValue(parseDraggableFunctionParameter(params.minVelocity, this), 0);
     this.maxVelocity = setValue(parseDraggableFunctionParameter(params.maxVelocity, this), 50);
     this.velocityMultiplier = setValue(parseDraggableFunctionParameter(params.velocityMultiplier, this), 1);
@@ -5682,8 +5709,7 @@ class Draggable {
       this.$trigger.addEventListener('touchend', preventDefault);
 
       // Don't check for a miminim distance move if already dragging
-      if (this.dragged || (!this.disabled[0] && abs(movedX) > 3) || (!this.disabled[1] && abs(movedY) > 3)) {
-
+      if (this.dragged || (!this.disabled[0] && abs(movedX) > this.dragThreshold) || (!this.disabled[1] && abs(movedY) > this.dragThreshold)) {
         this.updateTicker.resume();
         this.pointer[2] = this.pointer[0];
         this.pointer[3] = this.pointer[1];
@@ -6272,6 +6298,8 @@ class ScrollContainer {
     /** @type {Number} */
     this.top = 0;
     /** @type {Number} */
+    this.scale = 1;
+    /** @type {Number} */
     this.zIndex = 0;
     /** @type {Number} */
     this.scrollX = 0;
@@ -6383,6 +6411,7 @@ class ScrollContainer {
       height = $el.clientHeight;
       this.top = elRect.top;
       this.left = elRect.left;
+      this.scale = elRect.width ? width / elRect.width : (elRect.height ? height / elRect.height : 1);
     }
     this.width = width;
     this.height = height;
@@ -6908,10 +6937,9 @@ class ScrollObserver {
       }
     }
     const rect = $target.getBoundingClientRect();
-    const offsetUnscaled = isHori ? rect.left + container.scrollX - container.left : rect.top + container.scrollY - container.top;
-    const scale = rect.width ? $target.clientWidth / rect.width : (rect.height ? $target.clientHeight / rect.height : 1);
-    const offset = offsetUnscaled * scale;
-    const targetSize = isHori ? rect.width * scale : rect.height * scale;
+    const scale = container.scale;
+    const offset = (isHori ? rect.left + container.scrollX - container.left : rect.top + container.scrollY - container.top) * scale;
+    const targetSize = (isHori ? rect.width : rect.height) * scale;
     const containerSize = isHori ? container.width : container.height;
     const scrollSize = isHori ? container.scrollWidth : container.scrollHeight;
     const maxScroll = scrollSize - containerSize;
@@ -7625,20 +7653,24 @@ const getPath = path => {
 
 /**
  * @param {SVGGeometryElement} $path
+ * @param {Number} totalLength
  * @param {Number} progress
  * @param {Number}lookup
  * @return {DOMPoint}
  */
-const getPathPoint = ($path, progress, lookup = 0) => {
-  return $path.getPointAtLength(progress + lookup >= 1 ? progress + lookup : 0);
+const getPathPoint = ($path, totalLength, progress, lookup = 0) => {
+  const point = progress + lookup;
+  const pointOnPath = (point % totalLength + totalLength) % totalLength;
+  return $path.getPointAtLength(pointOnPath);
 };
 
 /**
  * @param {SVGGeometryElement} $path
  * @param {String} pathProperty
+ * @param {Number} [offset=0]
  * @return {FunctionValue}
  */
-const getPathProgess = ($path, pathProperty) => {
+const getPathProgess = ($path, pathProperty, offset = 0) => {
   return $el => {
     const totalLength = +($path.getTotalLength());
     const inSvg = $el[isSvgSymbol];
@@ -7649,12 +7681,14 @@ const getPathProgess = ($path, pathProperty) => {
       to: totalLength,
       /** @type {TweenModifier} */
       modifier: progress => {
+        const offsetLength = offset * totalLength;
+        const newProgress = progress + offsetLength;
         if (pathProperty === 'a') {
-          const p0 = getPathPoint($path, progress, -1);
-          const p1 = getPathPoint($path, progress, 1);
+          const p0 = getPathPoint($path, totalLength, newProgress, -1);
+          const p1 = getPathPoint($path, totalLength, newProgress, 1);
           return atan2(p1.y - p0.y, p1.x - p0.x) * 180 / PI;
         } else {
-          const p = getPathPoint($path, progress, 0);
+          const p = getPathPoint($path, totalLength, newProgress, 0);
           return pathProperty === 'x' ?
             inSvg || !ctm ? p.x : p.x * ctm.a + p.y * ctm.c + ctm.e :
             inSvg || !ctm ? p.y : p.x * ctm.b + p.y * ctm.d + ctm.f
@@ -7666,14 +7700,15 @@ const getPathProgess = ($path, pathProperty) => {
 
 /**
  * @param {TargetsParam} path
+ * @param {Number} [offset=0]
  */
-const createMotionPath = path => {
+const createMotionPath = (path, offset = 0) => {
   const $path = getPath(path);
   if (!$path) return;
   return {
-    translateX: getPathProgess($path, 'x'),
-    translateY: getPathProgess($path, 'y'),
-    rotate: getPathProgess($path, 'a'),
+    translateX: getPathProgess($path, 'x', offset),
+    translateY: getPathProgess($path, 'y', offset),
+    rotate: getPathProgess($path, 'a', offset),
   }
 };
 
@@ -7785,8 +7820,18 @@ const createDrawable = (selector, start = 0, end = 0) => {
  * @return {FunctionValue}
  */
 const morphTo = (path2, precision = .33) => ($path1) => {
+  const tagName1 = ($path1.tagName || '').toLowerCase();
+  if (!tagName1.match(/^(path|polygon|polyline)$/)) {
+    throw new Error(`Can't morph a <${$path1.tagName}> SVG element. Use <path>, <polygon> or <polyline>.`);
+  }
   const $path2 = /** @type {SVGGeometryElement} */(getPath(path2));
-  if (!$path2) return;
+  if (!$path2) {
+    throw new Error("Can't morph to an invalid target. 'path2' must resolve to an existing <path>, <polygon> or <polyline> SVG element.");
+  }
+  const tagName2 = ($path2.tagName || '').toLowerCase();
+  if (!tagName2.match(/^(path|polygon|polyline)$/)) {
+    throw new Error(`Can't morph a <${$path2.tagName}> SVG element. Use <path>, <polygon> or <polyline>.`);
+  }
   const isPath = $path1.tagName === 'path';
   const separator = isPath ? ' ' : ',';
   const previousPoints = $path1[morphPointsSymbol];
@@ -8712,14 +8757,18 @@ class WAAPIAnimation {
   }
 
   /**
-   * @param  {WAAPICallback} [callback]
-   * @return {Promise}
+   * @typedef {this & {then: null}} ResolvedWAAPIAnimation
+   */
+
+  /**
+   * @param  {Callback<ResolvedWAAPIAnimation>} [callback]
+   * @return Promise<this>
    */
   then(callback = noop) {
     const then = this.then;
     const onResolve = () => {
       this.then = null;
-      callback(this);
+      callback(/** @type {ResolvedWAAPIAnimation} */(this));
       this.then = then;
       this._resolve = noop;
     };
