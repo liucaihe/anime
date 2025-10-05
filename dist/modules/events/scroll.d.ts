@@ -134,6 +134,8 @@ declare class ScrollContainer {
     /** @type {Number} */
     top: number;
     /** @type {Number} */
+    scale: number;
+    /** @type {Number} */
     zIndex: number;
     /** @type {Number} */
     scrollX: number;

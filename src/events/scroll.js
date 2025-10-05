@@ -137,6 +137,8 @@ class ScrollContainer {
     /** @type {Number} */
     this.top = 0;
     /** @type {Number} */
+    this.scale = 1;
+    /** @type {Number} */
     this.zIndex = 0;
     /** @type {Number} */
     this.scrollX = 0;
@@ -248,6 +250,7 @@ class ScrollContainer {
       height = $el.clientHeight;
       this.top = elRect.top;
       this.left = elRect.left;
+      this.scale = elRect.width ? width / elRect.width : (elRect.height ? height / elRect.height : 1);
     }
     this.width = width;
     this.height = height;
@@ -773,8 +776,9 @@ export class ScrollObserver {
       }
     }
     const rect = $target.getBoundingClientRect();
-    const offset = isHori ? rect.left + container.scrollX - container.left : rect.top + container.scrollY - container.top;
-    const targetSize = isHori ? rect.width : rect.height;
+    const scale = container.scale;
+    const offset = (isHori ? rect.left + container.scrollX - container.left : rect.top + container.scrollY - container.top) * scale;
+    const targetSize = (isHori ? rect.width : rect.height) * scale;
     const containerSize = isHori ? container.width : container.height;
     const scrollSize = isHori ? container.scrollWidth : container.scrollHeight;
     const maxScroll = scrollSize - containerSize;
