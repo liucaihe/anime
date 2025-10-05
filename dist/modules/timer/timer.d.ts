@@ -127,10 +127,15 @@ export class Timer extends Clock {
       */
     complete(): this;
     /**
-     * @param  {Callback<this>} [callback]
-     * @return {Promise}
+     * @typedef {this & {then: null}} ResolvedTimer
      */
-    then(callback?: Callback<this>): Promise<any>;
+    /**
+     * @param  {Callback<ResolvedTimer>} [callback]
+     * @return Promise<this>
+     */
+    then(callback?: Callback<this & {
+        then: null;
+    }>): Promise<any>;
 }
 export function createTimer(parameters?: TimerParams): Timer;
 import { Clock } from '../core/clock.js';

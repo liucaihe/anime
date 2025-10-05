@@ -87,7 +87,7 @@ const reviveTimer = timer => {
   if (timer._hasChildren) {
     forEachChildren(timer, reviveTimer);
   } else {
-    forEachChildren(timer, (/** @type {Tween} tween*/tween) => {
+    forEachChildren(timer, (/** @type {Tween} tween */tween) => {
       if (tween._composition !== compositionTypes.none) {
         composeTween(tween, getTweenSiblings(tween.target, tween.property));
       }
@@ -487,8 +487,12 @@ export class Timer extends Clock {
   }
 
   /**
-   * @param  {Callback<this>} [callback]
-   * @return {Promise}
+   * @typedef {this & {then: null}} ResolvedTimer
+   */
+
+  /**
+   * @param  {Callback<ResolvedTimer>} [callback]
+   * @return Promise<this>
    */
   then(callback = noop) {
     const then = this.then;
@@ -496,7 +500,7 @@ export class Timer extends Clock {
       // this.then = null prevents infinite recursion if returned by an async function
       // https://github.com/juliangarnierorg/anime-beta/issues/26
       this.then = null;
-      callback(this);
+      callback(/** @type {ResolvedTimer} */(this));
       this.then = then;
       this._resolve = noop;
     }

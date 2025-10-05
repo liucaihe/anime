@@ -254,7 +254,6 @@ export type TimelineParams = TimerOptions & TimelineOptions & TickableCallbacks<
 export type WAAPITweenValue = string | number | Array<string> | Array<number>;
 export type WAAPIFunctionValue = (target: DOMTarget, index: number, length: number) => WAAPITweenValue;
 export type WAAPIKeyframeValue = WAAPITweenValue | WAAPIFunctionValue | Array<string | number | WAAPIFunctionValue>;
-export type WAAPICallback = Callback<WAAPIAnimation>;
 export type WAAPITweenOptions = {
     to?: WAAPIKeyframeValue;
     from?: WAAPIKeyframeValue;
@@ -274,9 +273,9 @@ export type WAAPIAnimationOptions = {
     ease?: WAAPIEasingParam;
     composition?: CompositeOperation;
     persist?: boolean;
-    onComplete?: WAAPICallback;
+    onComplete?: Callback<WAAPIAnimation>;
 };
-export type WAAPIAnimationParams = Record<string, WAAPIKeyframeValue | WAAPIAnimationOptions | boolean | ScrollObserver | WAAPICallback | WAAPIEasingParam | WAAPITweenOptions> & WAAPIAnimationOptions;
+export type WAAPIAnimationParams = Record<string, WAAPIKeyframeValue | WAAPIAnimationOptions | boolean | ScrollObserver | Callback<WAAPIAnimation> | WAAPIEasingParam | WAAPITweenOptions> & WAAPIAnimationOptions;
 export type AnimatablePropertySetter = (to: number | Array<number>, duration?: number, ease?: EasingParam) => AnimatableObject;
 export type AnimatablePropertyGetter = () => number | Array<number>;
 export type AnimatableProperty = AnimatablePropertySetter & AnimatablePropertyGetter;

@@ -65,10 +65,15 @@ export class WAAPIAnimation {
     cancel(): this;
     revert(): this;
     /**
-     * @param  {WAAPICallback} [callback]
-     * @return {Promise}
+     * @typedef {this & {then: null}} ResolvedWAAPIAnimation
      */
-    then(callback?: WAAPICallback): Promise<any>;
+    /**
+     * @param  {Callback<ResolvedWAAPIAnimation>} [callback]
+     * @return Promise<this>
+     */
+    then(callback?: Callback<this & {
+        then: null;
+    }>): Promise<any>;
 }
 export namespace waapi {
     export function animate(targets: DOMTargetsParam, params: WAAPIAnimationParams): WAAPIAnimation;
@@ -77,7 +82,6 @@ export namespace waapi {
 import type { DOMTargetsArray } from '../types/index.js';
 import type { Callback } from '../types/index.js';
 import type { ScrollObserver } from '../events/scroll.js';
-import type { WAAPICallback } from '../types/index.js';
 import type { DOMTargetsParam } from '../types/index.js';
 import type { WAAPIAnimationParams } from '../types/index.js';
 /**
@@ -91,7 +95,6 @@ import type { WAAPIAnimationParams } from '../types/index.js';
  *   WAAPIAnimationParams,
  *   WAAPITweenOptions,
  *   WAAPIKeyframeValue,
- *   WAAPICallback,
  *   WAAPITweenValue
  * } from '../types/index.js'
 */

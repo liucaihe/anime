@@ -30,10 +30,15 @@ export class JSAnimation extends Timer {
      */
     revert(): this;
     /**
-     * @param  {Callback<this>} [callback]
-     * @return {Promise}
+     * @typedef {this & {then: null}} ResolvedJSAnimation
      */
-    then(callback?: Callback<this>): Promise<any>;
+    /**
+     * @param  {Callback<ResolvedJSAnimation>} [callback]
+     * @return Promise<this>
+     */
+    then(callback?: Callback<this & {
+        then: null;
+    }>): Promise<any>;
 }
 export function animate(targets: TargetsParam, parameters: AnimationParams): JSAnimation;
 import { Timer } from '../timer/timer.js';

@@ -25,7 +25,6 @@ import { addWAAPIAnimation } from './composition.js';
  *   WAAPIAnimationParams,
  *   WAAPITweenOptions,
  *   WAAPIKeyframeValue,
- *   WAAPICallback,
  *   WAAPITweenValue
  * } from '../types/index.js'
 */
@@ -457,14 +456,18 @@ class WAAPIAnimation {
   }
 
   /**
-   * @param  {WAAPICallback} [callback]
-   * @return {Promise}
+   * @typedef {this & {then: null}} ResolvedWAAPIAnimation
+   */
+
+  /**
+   * @param  {Callback<ResolvedWAAPIAnimation>} [callback]
+   * @return Promise<this>
    */
   then(callback = noop) {
     const then = this.then;
     const onResolve = () => {
       this.then = null;
-      callback(this);
+      callback(/** @type {ResolvedWAAPIAnimation} */(this));
       this.then = then;
       this._resolve = noop;
     };

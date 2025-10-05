@@ -294,8 +294,12 @@ class Timeline extends timer.Timer {
   }
 
   /**
-   * @param  {Callback<this>} [callback]
-   * @return {Promise}
+   * @typedef {this & {then: null}} ResolvedTimeline
+   */
+
+  /**
+   * @param  {Callback<ResolvedTimeline>} [callback]
+   * @return Promise<this>
    */
   then(callback) {
     return super.then(callback);

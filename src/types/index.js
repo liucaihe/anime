@@ -401,10 +401,6 @@ export {}
  */
 
 /**
- * @typedef {Callback<WAAPIAnimation>} WAAPICallback
- */
-
-/**
  * @typedef {Object} WAAPITweenOptions
  * @property {WAAPIKeyframeValue} [to]
  * @property {WAAPIKeyframeValue} [from]
@@ -426,11 +422,11 @@ export {}
  * @property {WAAPIEasingParam} [ease]
  * @property {CompositeOperation} [composition]
  * @property {Boolean} [persist]
- * @property {WAAPICallback} [onComplete]
+ * @property {Callback<WAAPIAnimation>} [onComplete]
  */
 
 /**
- * @typedef {Record<String, WAAPIKeyframeValue | WAAPIAnimationOptions | Boolean | ScrollObserver | WAAPICallback | WAAPIEasingParam | WAAPITweenOptions> & WAAPIAnimationOptions} WAAPIAnimationParams
+ * @typedef {Record<String, WAAPIKeyframeValue | WAAPIAnimationOptions | Boolean | ScrollObserver | Callback<WAAPIAnimation> | WAAPIEasingParam | WAAPITweenOptions> & WAAPIAnimationOptions} WAAPIAnimationParams
  */
 
 // Animatable types

@@ -144,10 +144,15 @@ export class Timeline extends Timer {
      */
     revert(): this;
     /**
-     * @param  {Callback<this>} [callback]
-     * @return {Promise}
+     * @typedef {this & {then: null}} ResolvedTimeline
      */
-    then(callback?: Callback<this>): Promise<any>;
+    /**
+     * @param  {Callback<ResolvedTimeline>} [callback]
+     * @return Promise<this>
+     */
+    then(callback?: Callback<this & {
+        then: null;
+    }>): Promise<any>;
 }
 export function createTimeline(parameters?: TimelineParams): Timeline;
 import { Timer } from '../timer/timer.js';

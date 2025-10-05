@@ -645,8 +645,12 @@ class JSAnimation extends Timer {
   }
 
   /**
-   * @param  {Callback<this>} [callback]
-   * @return {Promise}
+   * @typedef {this & {then: null}} ResolvedJSAnimation
+   */
+
+  /**
+   * @param  {Callback<ResolvedJSAnimation>} [callback]
+   * @return Promise<this>
    */
   then(callback) {
     return super.then(callback);
