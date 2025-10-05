@@ -24,20 +24,24 @@ var helpers = require('./helpers.cjs');
 
 /**
  * @param {SVGGeometryElement} $path
+ * @param {Number} totalLength
  * @param {Number} progress
  * @param {Number}lookup
  * @return {DOMPoint}
  */
-const getPathPoint = ($path, progress, lookup = 0) => {
-  return $path.getPointAtLength(progress + lookup >= 1 ? progress + lookup : 0);
+const getPathPoint = ($path, totalLength, progress, lookup = 0) => {
+  const point = progress + lookup;
+  const pointOnPath = (point % totalLength + totalLength) % totalLength;
+  return $path.getPointAtLength(pointOnPath);
 };
 
 /**
  * @param {SVGGeometryElement} $path
  * @param {String} pathProperty
+ * @param {Number} [offset=0]
  * @return {FunctionValue}
  */
-const getPathProgess = ($path, pathProperty) => {
+const getPathProgess = ($path, pathProperty, offset = 0) => {
   return $el => {
     const totalLength = +($path.getTotalLength());
     const inSvg = $el[consts.isSvgSymbol];
@@ -48,12 +52,14 @@ const getPathProgess = ($path, pathProperty) => {
       to: totalLength,
       /** @type {TweenModifier} */
       modifier: progress => {
+        const offsetLength = offset * totalLength;
+        const newProgress = progress + offsetLength;
         if (pathProperty === 'a') {
-          const p0 = getPathPoint($path, progress, -1);
-          const p1 = getPathPoint($path, progress, 1);
+          const p0 = getPathPoint($path, totalLength, newProgress, -1);
+          const p1 = getPathPoint($path, totalLength, newProgress, 1);
           return helpers$1.atan2(p1.y - p0.y, p1.x - p0.x) * 180 / helpers$1.PI;
         } else {
-          const p = getPathPoint($path, progress, 0);
+          const p = getPathPoint($path, totalLength, newProgress, 0);
           return pathProperty === 'x' ?
             inSvg || !ctm ? p.x : p.x * ctm.a + p.y * ctm.c + ctm.e :
             inSvg || !ctm ? p.y : p.x * ctm.b + p.y * ctm.d + ctm.f
@@ -65,14 +71,15 @@ const getPathProgess = ($path, pathProperty) => {
 
 /**
  * @param {TargetsParam} path
+ * @param {Number} [offset=0]
  */
-const createMotionPath = path => {
+const createMotionPath = (path, offset = 0) => {
   const $path = helpers.getPath(path);
   if (!$path) return;
   return {
-    translateX: getPathProgess($path, 'x'),
-    translateY: getPathProgess($path, 'y'),
-    rotate: getPathProgess($path, 'a'),
+    translateX: getPathProgess($path, 'x', offset),
+    translateY: getPathProgess($path, 'y', offset),
+    rotate: getPathProgess($path, 'a', offset),
   }
 };
 

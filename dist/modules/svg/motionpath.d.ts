@@ -1,4 +1,4 @@
-export function createMotionPath(path: TargetsParam): {
+export function createMotionPath(path: TargetsParam, offset?: number): {
     translateX: FunctionValue;
     translateY: FunctionValue;
     rotate: FunctionValue;
