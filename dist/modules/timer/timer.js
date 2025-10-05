@@ -1,6 +1,6 @@
 /**
  * Anime.js - timer - ESM
- * @version v4.2.0
+ * @version v4.2.1
  * @license MIT
  * @copyright 2025 - Julian Garnier
  */
@@ -112,7 +112,6 @@ class Timer extends Clock {
                                 /** @type {Number} */(timerLoop) < 0 ? Infinity :
                                 /** @type {Number} */(timerLoop) + 1;
 
-
     let offsetPosition = 0;
 
     if (parent) {
@@ -202,7 +201,7 @@ class Timer extends Clock {
   }
 
   set cancelled(cancelled) {
-    cancelled ? this.cancel() : this.reset(1).play();
+    cancelled ? this.cancel() : this.reset(true).play();
   }
 
   get currentTime() {
@@ -267,10 +266,10 @@ class Timer extends Clock {
   }
 
   /**
-   * @param  {Number} internalRender
+   * @param  {Boolean} [softReset]
    * @return {this}
    */
-  reset(internalRender = 0) {
+  reset(softReset = false) {
     // If cancelled, revive the timer before rendering in order to have propertly composed tweens siblings
     reviveTimer(this);
     if (this._reversed && !this._reverse) this.reversed = false;
@@ -279,7 +278,7 @@ class Timer extends Clock {
     // NOTE: This is only required for Timelines and might be better to move to the Timeline class?
     this._iterationTime = this.iterationDuration;
     // Set tickMode to tickModes.FORCE to force rendering
-    tick(this, 0, 1, internalRender, tickModes.FORCE);
+    tick(this, 0, 1, ~~softReset, tickModes.FORCE);
     // Reset timer properties after revive / render to make sure the props are not updated again
     resetTimerProperties(this);
     // Also reset children properties
@@ -290,16 +289,16 @@ class Timer extends Clock {
   }
 
   /**
-   * @param  {Number} internalRender
+   * @param  {Boolean} internalRender
    * @return {this}
    */
-  init(internalRender = 0) {
+  init(internalRender = false) {
     this.fps = this._fps;
     this.speed = this._speed;
     // Manually calling .init() on timelines should render all children intial state
     // Forces all children to render once then render to 0 when reseted
     if (!internalRender && this._hasChildren) {
-      tick(this, this.duration, 1, internalRender, tickModes.FORCE);
+      tick(this, this.duration, 1, ~~internalRender, tickModes.FORCE);
     }
     this.reset(internalRender);
     // Make sure to set autoplay to false to child timers so it doesn't attempt to autoplay / link
@@ -353,7 +352,7 @@ class Timer extends Clock {
 
   /** @return {this} */
   restart() {
-    return this.reset(0).resume();
+    return this.reset().resume();
   }
 
   /**

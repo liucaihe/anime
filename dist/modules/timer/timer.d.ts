@@ -79,15 +79,15 @@ export class Timer extends Clock {
     set reversed(reverse: boolean);
     get reversed(): boolean;
     /**
-     * @param  {Number} internalRender
+     * @param  {Boolean} [softReset]
      * @return {this}
      */
-    reset(internalRender?: number): this;
+    reset(softReset?: boolean): this;
     /**
-     * @param  {Number} internalRender
+     * @param  {Boolean} internalRender
      * @return {this}
      */
-    init(internalRender?: number): this;
+    init(internalRender?: boolean): this;
     /** @return {this} */
     resetTime(): this;
     /** @return {this} */

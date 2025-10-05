@@ -1,6 +1,6 @@
 /**
  * Anime.js - animatable - ESM
- * @version v4.2.0
+ * @version v4.2.1
  * @license MIT
  * @copyright 2025 - Julian Garnier
  */
@@ -118,7 +118,7 @@ class Animatable {
             tween._currentTime = 0;
           });
           if (!isUnd(duration)) animation.stretch(duration);
-          animation.reset(1).resume();
+          animation.reset(true).resume();
           return this;
         }
       };

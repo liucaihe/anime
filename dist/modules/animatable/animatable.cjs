@@ -1,6 +1,6 @@
 /**
  * Anime.js - animatable - CJS
- * @version v4.2.0
+ * @version v4.2.1
  * @license MIT
  * @copyright 2025 - Julian Garnier
  */
@@ -120,7 +120,7 @@ class Animatable {
             tween._currentTime = 0;
           });
           if (!helpers.isUnd(duration)) animation$1.stretch(duration);
-          animation$1.reset(1).resume();
+          animation$1.reset(true).resume();
           return this;
         }
       };

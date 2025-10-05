@@ -1,6 +1,6 @@
 /**
  * Anime.js - timeline - ESM
- * @version v4.2.0
+ * @version v4.2.1
  * @license MIT
  * @copyright 2025 - Julian Garnier
  */
@@ -79,7 +79,7 @@ function addTlChild(childParams, tl, timePosition, targets, index, length) {
   const tlChild = targets ?
     new JSAnimation(targets,/** @type {AnimationParams} */(childParams), tl, adjustedPosition, false, index, length) :
     new Timer(/** @type {TimerParams} */(childParams), tl, adjustedPosition);
-  tlChild.init(1);
+  tlChild.init(true);
   // TODO: Might be better to insert at a position relative to startTime?
   addChild(tl, tlChild);
   forEachChildren(tl, (/** @type {Renderable} */child) => {
@@ -183,7 +183,7 @@ class Timeline extends Timer {
           parseTimelinePosition(this,a2),
         );
       }
-      return this.init(1); // 1 = internalRender
+      return this.init(true);
     }
   }
 
