@@ -681,7 +681,7 @@ export class Draggable {
       if (onGrab) cursorStyles.onGrab = onGrab;
     }
     const parsedDragThreshold = parseDraggableFunctionParameter(params.dragThreshold, this);
-    const dragThreshold = { mouse: 3, touch: 8 };
+    const dragThreshold = { mouse: 3, touch: 7 };
     if (isNum(parsedDragThreshold)) {
       dragThreshold.mouse = parsedDragThreshold;
       dragThreshold.touch = parsedDragThreshold;

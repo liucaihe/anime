@@ -26,6 +26,7 @@ var target = require('../utils/target.cjs');
  *   DOMTarget,
  *   DOMTargetSelector,
  *   DraggableCursorParams,
+ *   DraggableDragThresholdParams,
  *   TargetsParam,
  *   DraggableParams,
  *   EasingFunction,
@@ -156,7 +157,7 @@ class Transforms {
 }
 
 /**
- * @template {Array<Number>|DOMTargetSelector|String|Number|Boolean|Function|DraggableCursorParams} T
+ * @template {Array<Number>|DOMTargetSelector|String|Number|Boolean|Function|DraggableCursorParams|DraggableDragThresholdParams} T
  * @param {T | ((draggable: Draggable) => T)} value
  * @param {Draggable} draggable
  * @return {T}
@@ -209,6 +210,8 @@ class Draggable {
     this.scrollThreshold = 0;
     /** @type {Number} */
     this.dragSpeed = 0;
+    /** @type {Number} */
+    this.dragThreshold = 3;
     /** @type {Number} */
     this.maxVelocity = 0;
     /** @type {Number} */
@@ -627,6 +630,16 @@ class Draggable {
       if (onHover) cursorStyles.onHover = onHover;
       if (onGrab) cursorStyles.onGrab = onGrab;
     }
+    const parsedDragThreshold = parseDraggableFunctionParameter(params.dragThreshold, this);
+    const dragThreshold = { mouse: 3, touch: 7 };
+    if (helpers.isNum(parsedDragThreshold)) {
+      dragThreshold.mouse = parsedDragThreshold;
+      dragThreshold.touch = parsedDragThreshold;
+    } else if (parsedDragThreshold) {
+      const { mouse, touch } = parsedDragThreshold;
+      if (!helpers.isUnd(mouse)) dragThreshold.mouse = mouse;
+      if (!helpers.isUnd(touch)) dragThreshold.touch = touch;
+    }
     this.containerArray = helpers.isArr(container) ? container : null;
     this.$container = /** @type {HTMLElement} */(container && !this.containerArray ? targets.parseTargets(/** @type {DOMTarget} */(container))[0] : consts.doc.body);
     this.useWin = this.$container === consts.doc.body;
@@ -641,6 +654,7 @@ class Draggable {
     this.scrollSpeed = values.setValue(parseDraggableFunctionParameter(params.scrollSpeed, this), 1.5);
     this.scrollThreshold = values.setValue(parseDraggableFunctionParameter(params.scrollThreshold, this), 20);
     this.dragSpeed = values.setValue(parseDraggableFunctionParameter(params.dragSpeed, this), 1);
+    this.dragThreshold = this.isFinePointer ? dragThreshold.mouse : dragThreshold.touch;
     this.minVelocity = values.setValue(parseDraggableFunctionParameter(params.minVelocity, this), 0);
     this.maxVelocity = values.setValue(parseDraggableFunctionParameter(params.maxVelocity, this), 50);
     this.velocityMultiplier = values.setValue(parseDraggableFunctionParameter(params.velocityMultiplier, this), 1);
@@ -942,8 +956,7 @@ class Draggable {
       this.$trigger.addEventListener('touchend', preventDefault);
 
       // Don't check for a miminim distance move if already dragging
-      if (this.dragged || (!this.disabled[0] && helpers.abs(movedX) > 3) || (!this.disabled[1] && helpers.abs(movedY) > 3)) {
-
+      if (this.dragged || (!this.disabled[0] && helpers.abs(movedX) > this.dragThreshold) || (!this.disabled[1] && helpers.abs(movedY) > this.dragThreshold)) {
         this.updateTicker.resume();
         this.pointer[2] = this.pointer[0];
         this.pointer[3] = this.pointer[1];
