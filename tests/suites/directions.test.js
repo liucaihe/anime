@@ -5,7 +5,7 @@ import {
 import {
   animate,
   utils,
-} from '../../src/anime.js';
+} from '../../dist/modules/index.js';
 
 suite('Directions', () => {
   test('Direction normal should update from 0 to 1', resolve => {

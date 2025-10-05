@@ -1,4 +1,4 @@
-import { createTimeline, stagger, svg, utils, eases } from '../../lib/anime.esm.js';
+import { createTimeline, stagger, svg, utils, cubicBezier, eases } from '../../dist/modules/index.js';
 
 const [ $dot1 ] = utils.$('#dot-1');
 const onions = [];
@@ -31,7 +31,7 @@ utils.set(['#line', '#line-0'], {
   opacity: 1,
 });
 
-const splashCurve = eases.cubicBezier(0.225, 1, 0.915, 0.980);
+const splashCurve = cubicBezier(0.225, 1, 0.915, 0.980);
 const sweechCurve = eases.outElastic(1.1, 0.9);
 
 const tl = createTimeline({

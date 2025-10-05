@@ -4,7 +4,7 @@ import {
   onScroll,
   createTimeline,
   animate,
-} from '../../src/anime.js';
+} from '../../dist/modules/index.js';
 
 utils.set('.card', {
   rotate: () => utils.random(-1, 1, 2),
@@ -29,7 +29,7 @@ createTimeline({
     enter: 'top top',
     leave: 'bottom bottom',
     sync: .5,
-    // debug: true,
+    debug: true,
   }),
 })
 .add('.stack', {

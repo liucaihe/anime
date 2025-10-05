@@ -1,5 +1,5 @@
-import { createTimeline, stagger } from '../../../lib/anime.esm.js';
-import { inspect } from '../../../lib/gui/index.js';
+import { createTimeline, stagger } from '../../../../dist/modules/index.js';
+// import { inspect } from '../../../lib/gui/index.js';
 
 const duration = 1000;
 

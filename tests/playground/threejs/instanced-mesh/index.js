@@ -1,4 +1,4 @@
-import { animate, createTimer, createTimeline, utils, engine, stagger } from '../../../lib/anime.esm.js';
+import { animate, createTimer, createTimeline, utils, engine, stagger } from '../../../../dist/modules/index.js';
 
 import {
   Object3D,

@@ -12,12 +12,12 @@ import {
   animate,
   createTimer,
   utils,
-} from '../../src/anime.js';
+} from '../../dist/modules/index.js';
 
 import {
   minValue,
   tweenTypes,
-} from '../../src/consts.js';
+} from '../../dist/modules/core/consts.js';
 
 suite('Animations', () => {
 

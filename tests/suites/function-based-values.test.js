@@ -4,12 +4,12 @@ import {
   getTweenDelay,
 } from '../utils.js';
 
-import { animate, stagger, utils } from '../../src/anime.js';
+import { animate, stagger, utils } from '../../dist/modules/index.js';
 
 import {
   valueTypes,
   minValue,
-} from '../../src/consts.js';
+} from '../../dist/modules/core/consts.js';
 
 suite('Function based values', () => {
 

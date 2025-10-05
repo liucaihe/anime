@@ -3,7 +3,7 @@ import {
   createDraggable,
   utils,
   Draggable
-} from '../../../../lib/anime.esm.js';
+} from '../../../../dist/modules/index.js';
 
 const [ $log1, $log2 ] = utils.$('.log');
 const [ $container ] = /** @type {Array<HTMLElement>} */(utils.$('#container '));

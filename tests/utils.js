@@ -4,7 +4,7 @@ import {
   addChild,
   removeChild,
   forEachChildren,
-} from '../src/helpers.js';
+} from '../dist/modules/core/helpers.js';
 
 export const { expect } = chai;
 
@@ -28,6 +28,10 @@ export const getChildLength = (parent) => {
     i++;
   }
   return i;
+}
+
+export const browserIs = {
+  firefox: /firefox|fxios/i.test(navigator.userAgent) && !/seamonkey/i.test(navigator.userAgent),
 }
 
 // export const getTweenDelay = t => (t.parent._offset + t._startTime) - t._absoluteStartTime;

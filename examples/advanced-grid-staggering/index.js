@@ -1,4 +1,4 @@
-import { createTimeline, utils, stagger } from '../../lib/anime.esm.js';
+import { createTimeline, utils, stagger } from '../../dist/modules/index.js';
 
 const staggerVisualizerEl = document.querySelector('.stagger-visualizer');
 const fragment = document.createDocumentFragment();

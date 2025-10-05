@@ -9,7 +9,7 @@ import {
   createSpring,
   createTimeline,
   engine,
-} from '../../lib/anime.esm.js';
+} from '../../dist/modules/index.js';
 
 engine.timeUnit = 'ms';
 // engine.timeUnit = 's';
@@ -295,6 +295,7 @@ utils.set('#map-props .carousel-item', {
 });
 
 const carousel = createDraggable('#map-props .carousel', {
+  trigger: '#map-props',
   x: { mapTo: 'rotateY' },
   y: false,
   snap: itemAngle,

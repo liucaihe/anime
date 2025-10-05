@@ -1,4 +1,4 @@
-import { waapi, animate, stagger, createSpring, utils } from '../../../../lib/anime.esm.js';
+import { waapi, animate, stagger, createSpring, utils } from '../../../../dist/modules/index.js';
 
 const $animation = document.querySelector('.animation');
 const total = 36;

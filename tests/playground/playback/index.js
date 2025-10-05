@@ -3,7 +3,7 @@ import {
   stagger,
   utils,
   engine,
-} from '../../../lib/anime.esm.js';
+} from '../../../dist/modules/index.js';
 
 const [$animPlay] = utils.$('#animation-play');
 const [$animPause] = utils.$('#animation-pause');

@@ -6,7 +6,7 @@ import {
   createAnimatable,
   createTimer,
   utils,
-} from '../../src/anime.js';
+} from '../../dist/modules/index.js';
 
 suite('Animatables', () => {
 
@@ -105,6 +105,94 @@ suite('Animatables', () => {
         expect(utils.get('#target-id', 'x')).to.equal('10em');
         expect(utils.get('#target-id', 'y')).to.equal('15rem');
         expect(utils.get('#target-id', 'rotate')).to.equal('1rad');
+        resolve();
+      }
+    });
+  });
+
+  test('Animatable onBegin callbacks', resolve => {
+    let began = 0;
+    const animatable = createAnimatable('#target-id', {
+      x: 10,
+      y: 10,
+      rotate: 5,
+      onBegin: () => {
+        began++;
+      },
+    });
+    animatable.x(100).y(100).rotate(100);
+    createTimer({
+      duration: 20,
+      onComplete: () => {
+        animatable.x(-100).y(-100).rotate(-100);
+        createTimer({
+          duration: 20,
+          onComplete: () => {
+            expect(began).to.equal(2);
+            animatable.revert();
+            resolve();
+          }
+        });
+      }
+    });
+  });
+
+  test('Animatable onComplete callbacks', resolve => {
+    let completes = 0;
+    const animatable = createAnimatable('#target-id', {
+      x: 40,
+      y: 40,
+      rotate: 5,
+      onComplete: () => {
+        completes++;
+      },
+    });
+    animatable.x(100).y(100).rotate(100);
+    createTimer({
+      duration: 20,
+      onComplete: () => {
+        animatable.x(-100).y(-100).rotate(-100);
+        createTimer({
+          duration: 60,
+          onComplete: () => {
+            animatable.x(-50).y(-50).rotate(-50);
+            createTimer({
+              duration: 60,
+              onComplete: () => {
+                expect(completes).to.equal(2);
+                animatable.revert();
+                resolve();
+              }
+            });
+          }
+        });
+      }
+    });
+  });
+
+  test('Animatable onUpdate callbacks', resolve => {
+    let updates = 0;
+    const animatable = createAnimatable('#target-id', {
+      x: 20,
+      y: 20,
+      rotate: 5,
+      onUpdate: () => {
+        updates++;
+      },
+    });
+    animatable.x(100).y(100).rotate(100);
+    createTimer({
+      duration: 20,
+      onComplete: () => {
+        animatable.x(-100).y(-100).rotate(-100);
+      }
+    });
+    createTimer({
+      duration: 40,
+      onComplete: () => {
+        expect(updates).to.be.above(1);
+        expect(updates).to.be.below(6);
+        animatable.revert();
         resolve();
       }
     });

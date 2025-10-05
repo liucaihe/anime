@@ -2,7 +2,7 @@ import {
   createTimeline,
   stagger,
   utils,
-} from '../../lib/anime.esm.js';
+} from '../../../dist/modules/index.js';
 
 const count = 2000;
 
@@ -27,6 +27,5 @@ for (let i = 0; i < count; i++) {
  * @param  {MouseEvent} e [description]
  */
 window.onmousemove = (e) => {
-  const progress = e.clientX / window.innerWidth;
-  tl.seek(progress * tl.duration);
+  tl.progress = e.clientX / window.innerWidth;
 }

@@ -2,7 +2,7 @@ import {
   createAnimatable,
   utils,
   stagger,
-} from '../../lib/anime.esm.js';
+} from '../../dist/modules/index.js';
 
 // Setup
 

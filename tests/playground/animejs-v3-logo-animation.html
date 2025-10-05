@@ -200,8 +200,8 @@
 </div>
   <script type="module">
 
-    import { createTimeline, utils, stagger, svg, createSpring } from '../../lib/anime.esm.js';
-    import { inspect } from '../lib/gui/index.js';
+    import { createTimeline, utils, stagger, svg, createSpring } from '../../../dist/modules/index.js';
+    
 
    function fitElementToParent(el, padding, exception) {
     var timeout = null;
@@ -293,8 +293,8 @@
       ease: createSpring({velocity:10}),
     }, '-=680')
     .add('.dot', {
-      translateX: bouncePath.x,
-      translateY: bouncePath.y,
+      translateX: bouncePath.translateX,
+      translateY: bouncePath.translateY,
       rotate: { to: '1turn', duration: 790 },
       scaleX: { to: 1, duration: 50, ease: 'outSine' },
       scaleY: [

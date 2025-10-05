@@ -1,14 +1,12 @@
 {
   "compilerOptions": {
     "lib": ["ESNext", "DOM"],
+    "module": "ESNext",
     "target": "ESNext",
-    "strict": false,
+    "moduleResolution": "nodenext",
     "allowJs": true,
     "checkJs": true,
-    "noEmit": true,
-    "declarationDir": "types",
-    "declaration": true
+    "noEmit": true
   },
-  "include": ["src/**/*.js"],
-  "exclude": ["node_modules", "tests", "lib", "documentation", "src/gui/*.js"]
+  "include": ["src/**/*.js"]
 }

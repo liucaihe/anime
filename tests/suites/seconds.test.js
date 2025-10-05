@@ -5,14 +5,14 @@ import {
 
 import {
   minValue,
-} from '../../src/consts.js';
+} from '../../dist/modules/core/consts.js';
 
 import {
   animate,
   createTimeline,
   createTimer,
   engine,
-} from '../../src/anime.js';
+} from '../../dist/modules/index.js';
 
 
 suite('Seconds', () => {
@@ -51,6 +51,14 @@ suite('Seconds', () => {
 
     tl.play();
 
+  });
+
+  test('Timers offset time should be properly scaled when not controlled by a Timeline', () => {
+    engine.timeUnit = 's';
+    const timer1 = createTimer({ duration: .05, autoplay: false, });
+    const timer2 = createTimer({ duration: .05, delay: .01, autoplay: false, });
+    expect(timer1._offset).to.be.below(1);
+    expect(timer2._offset).to.be.below(1);
   });
 
   test('Stretch a looped timer', () => {

@@ -4,7 +4,7 @@ import {
 
 import {
   engine,
-} from '../../src/anime.js';
+} from '../../dist/modules/index.js';
 
 suite('Leaks', () => {
   test('Engine should not contain any active tickable', resolve => {

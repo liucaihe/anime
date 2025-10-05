@@ -7,7 +7,7 @@ import {
   utils,
   stagger,
   eases,
-} from '../../src/anime.js';
+} from '../../dist/modules/index.js';
 
 suite('WAAPI', () => {
 
@@ -188,10 +188,11 @@ suite('WAAPI', () => {
         targets.forEach($el => {
           expect(utils.get($el, 'opacity')).to.equal('0.5');
           expect(utils.get($el, 'backgroundColor')).to.equal('rgb(255, 0, 0)');
-          expect(utils.get($el, '--translateX')).to.equal('0px');
-          expect(utils.get($el, '--translateY')).to.equal('0px');
-          expect(utils.get($el, '--rotate')).to.equal('0deg');
-          expect(utils.get($el, '--scale')).to.equal('1');
+          expect(utils.get($el, 'transform')).to.equal('none');
+          // expect(utils.get($el, '--translateX')).to.equal('0px');
+          // expect(utils.get($el, '--translateY')).to.equal('0px');
+          // expect(utils.get($el, '--rotate')).to.equal('0deg');
+          // expect(utils.get($el, '--scale')).to.equal('1');
         });
         resolve();
       },

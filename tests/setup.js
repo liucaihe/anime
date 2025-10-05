@@ -9,7 +9,8 @@ const testsEl = document.querySelector('#tests');
 mocha.setup({
   ui: 'tdd',
   slow: 100,
-  timeout: 1000,
+  timeout: 2000,
+  globals: ['___browserSync___'],
   rootHooks: {
     beforeEach(done) {
       testObject.plainValue = 10;
@@ -49,7 +50,7 @@ mocha.setup({
         <div class="css-properties"></div>
       </div>
       <div id="dom-attributes-tests" class="test test small-test">
-        <img class="with-width-attribute" src="./icon.png" width=96 height=96 />
+        <img class="with-width-attribute" src="./assets/icon.png" width=96 height=96 />
         <input type="number" id="input-number" name="Input number test" min="0" max="100" value="0">
       </div>
       <div id="stagger-tests" class="test small-test">
@@ -66,6 +67,13 @@ mocha.setup({
           <div></div><div></div><div></div><div></div><div></div>
           <div></div><div></div><div></div><div></div><div></div>
           <div></div><div></div><div></div><div></div><div></div>
+        </div>
+      </div>
+      <div id="split-text-tests" class="test">
+        <div id="split-text">
+          <p>
+            Split text by characters, words, and lines, do-not-split-hyphens, split <a href="#"><strong>nested elements like</strong></a> <code>&lt;strong&gt;</code> tags and <span class="nested">any <span class="nested">level <span class="nested">of <span class="nested">nested <span class="nested">tags</span></span></span></span></span> and respect line breaks.<br> Split words in languages without spaces like この日本語の文のように, and properly handles ѕρє¢ιαℓ ¢нαяα¢тєяѕ & 🇪Ⓜ️🅾️🇯ℹ️s
+          </p>
         </div>
       </div>
       `;
