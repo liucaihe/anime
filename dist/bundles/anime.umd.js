@@ -1,6 +1,6 @@
 /**
  * Anime.js - UMD bundle
- * @version v4.2.1
+ * @version v4.2.2
  * @license MIT
  * @copyright 2025 - Julian Garnier
  */
@@ -802,7 +802,7 @@
     tickThreshold: 200,
   };
 
-  const globalVersions = { version: '4.2.1', engine: null };
+  const globalVersions = { version: '4.2.2', engine: null };
 
   if (isBrowser) {
     if (!win.AnimeJS) win.AnimeJS = [];
@@ -7661,12 +7661,15 @@
    * @param {SVGGeometryElement} $path
    * @param {Number} totalLength
    * @param {Number} progress
-   * @param {Number}lookup
+   * @param {Number} lookup
+   * @param {Boolean} shouldClamp
    * @return {DOMPoint}
    */
-  const getPathPoint = ($path, totalLength, progress, lookup = 0) => {
+  const getPathPoint = ($path, totalLength, progress, lookup, shouldClamp) => {
     const point = progress + lookup;
-    const pointOnPath = (point % totalLength + totalLength) % totalLength;
+    const pointOnPath = shouldClamp
+      ? Math.max(0, Math.min(point, totalLength)) // Clamp between 0 and totalLength
+      : (point % totalLength + totalLength) % totalLength; // Wrap around
     return $path.getPointAtLength(pointOnPath);
   };
 
@@ -7681,6 +7684,7 @@
       const totalLength = +($path.getTotalLength());
       const inSvg = $el[isSvgSymbol];
       const ctm = $path.getCTM();
+      const shouldClamp = offset === 0;
       /** @type {TweenObjectValue} */
       return {
         from: 0,
@@ -7690,11 +7694,11 @@
           const offsetLength = offset * totalLength;
           const newProgress = progress + offsetLength;
           if (pathProperty === 'a') {
-            const p0 = getPathPoint($path, totalLength, newProgress, -1);
-            const p1 = getPathPoint($path, totalLength, newProgress, 1);
+            const p0 = getPathPoint($path, totalLength, newProgress, -1, shouldClamp);
+            const p1 = getPathPoint($path, totalLength, newProgress, 1, shouldClamp);
             return atan2(p1.y - p0.y, p1.x - p0.x) * 180 / PI;
           } else {
-            const p = getPathPoint($path, totalLength, newProgress, 0);
+            const p = getPathPoint($path, totalLength, newProgress, 0, shouldClamp);
             return pathProperty === 'x' ?
               inSvg || !ctm ? p.x : p.x * ctm.a + p.y * ctm.c + ctm.e :
               inSvg || !ctm ? p.y : p.x * ctm.b + p.y * ctm.d + ctm.f
