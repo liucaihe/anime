@@ -59,8 +59,6 @@ Help the project become sustainable by sponsoring us on <a target="_blank" href=
   </tbody>
 </table>
 
-Get featured here by becoming a <a target="_blank" href="https://github.com/sponsors/juliangarnier">GitHub Sponsor</a>.
-
 ### Silver sponsors
 
 <table>
