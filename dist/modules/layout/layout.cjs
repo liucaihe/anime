@@ -1,6 +1,6 @@
 /**
  * Anime.js - layout - CJS
- * @version v4.3.0-beta.0
+ * @version v4.3.0-beta.1
  * @license MIT
  * @copyright 2025 - Julian Garnier
  */
@@ -53,8 +53,8 @@ var globals = require('../core/globals.cjs');
 
 /**
  * @typedef {Object} LayoutAnimationParams
- * @property {Number} [duration]
  * @property {Number|FunctionValue} [delay]
+ * @property {Number|FunctionValue} [duration]
  * @property {EasingParam} [ease]
  * @property {LayoutStateParams} [frozen]
  * @property {LayoutStateParams} [added]
@@ -857,12 +857,12 @@ class AutoLayout {
     this.children = params.children || '*';
     /** @type {Boolean} */
     this.absoluteCoords = false;
-    /** @type {Number} */
+    /** @type {Number|FunctionValue} */
     this.duration = values.setValue(params.duration, 500);
     /** @type {Number|FunctionValue} */
     this.delay = values.setValue(params.delay, 0);
     /** @type {EasingParam} */
-    this.ease = values.setValue(params.ease, 'inOutExpo');
+    this.ease = values.setValue(params.ease, 'inOut(3.5)');
     /** @type {Callback<this>} */
     this.onComplete = values.setValue(params.onComplete, /** @type {Callback<this>} */(consts.noop));
     /** @type {LayoutStateParams} */

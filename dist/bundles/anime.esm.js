@@ -1,6 +1,6 @@
 /**
  * Anime.js - ESM bundle
- * @version v4.3.0-beta.0
+ * @version v4.3.0-beta.1
  * @license MIT
  * @copyright 2025 - Julian Garnier
  */
@@ -801,7 +801,7 @@ const globals = {
 
 const devTools = isBrowser && win.AnimeJSDevTools;
 
-const globalVersions = { version: '4.3.0-beta.0', engine: null };
+const globalVersions = { version: '4.3.0-beta.1', engine: null };
 
 if (isBrowser) {
   if (!win.AnimeJS) win.AnimeJS = [];
@@ -7796,8 +7796,8 @@ const waapi = {
 
 /**
  * @typedef {Object} LayoutAnimationParams
- * @property {Number} [duration]
  * @property {Number|FunctionValue} [delay]
+ * @property {Number|FunctionValue} [duration]
  * @property {EasingParam} [ease]
  * @property {LayoutStateParams} [frozen]
  * @property {LayoutStateParams} [added]
@@ -8600,12 +8600,12 @@ class AutoLayout {
     this.children = params.children || '*';
     /** @type {Boolean} */
     this.absoluteCoords = false;
-    /** @type {Number} */
+    /** @type {Number|FunctionValue} */
     this.duration = setValue(params.duration, 500);
     /** @type {Number|FunctionValue} */
     this.delay = setValue(params.delay, 0);
     /** @type {EasingParam} */
-    this.ease = setValue(params.ease, 'inOutExpo');
+    this.ease = setValue(params.ease, 'inOut(3.5)');
     /** @type {Callback<this>} */
     this.onComplete = setValue(params.onComplete, /** @type {Callback<this>} */(noop));
     /** @type {LayoutStateParams} */

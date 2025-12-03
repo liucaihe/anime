@@ -14,8 +14,8 @@ export class AutoLayout {
     children: LayoutChildrenParam;
     /** @type {Boolean} */
     absoluteCoords: boolean;
-    /** @type {Number} */
-    duration: number;
+    /** @type {Number|FunctionValue} */
+    duration: number | FunctionValue;
     /** @type {Number|FunctionValue} */
     delay: number | FunctionValue;
     /** @type {EasingParam} */
@@ -74,8 +74,8 @@ export function createLayout(root: DOMTargetSelector, params?: AutoLayoutParams)
 export type LayoutChildrenParam = DOMTargetSelector | Array<DOMTargetSelector>;
 export type LayoutStateParams = Record<string, number | string>;
 export type LayoutAnimationParams = {
-    duration?: number;
     delay?: number | FunctionValue;
+    duration?: number | FunctionValue;
     ease?: EasingParam;
     frozen?: LayoutStateParams;
     added?: LayoutStateParams;
