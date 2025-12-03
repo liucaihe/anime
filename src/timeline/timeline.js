@@ -114,11 +114,11 @@ function addTlChild(childParams, tl, timePosition, targets, index, length) {
   const isSetter = isNum(childParams.duration) && /** @type {Number} */(childParams.duration) <= minValue;
   // Offset the tl position with -minValue for 0 duration animations or .set() calls in order to align their end value with the defined position
   const adjustedPosition = isSetter ? timePosition - minValue : timePosition;
-  tick(tl, adjustedPosition, 1, 1, tickModes.AUTO);
+  if (tl.composition) tick(tl, adjustedPosition, 1, 1, tickModes.AUTO);
   const tlChild = targets ?
     new JSAnimation(targets,/** @type {AnimationParams} */(childParams), tl, adjustedPosition, false, index, length) :
     new Timer(/** @type {TimerParams} */(childParams), tl, adjustedPosition);
-  tlChild.init(true);
+  if (tl.composition) tlChild.init(true);
   // TODO: Might be better to insert at a position relative to startTime?
   addChild(tl, tlChild);
   forEachChildren(tl, (/** @type {Renderable} */child) => {
@@ -130,6 +130,8 @@ function addTlChild(childParams, tl, timePosition, targets, index, length) {
   return tl;
 }
 
+let TLId = 0;
+
 export class Timeline extends Timer {
 
   /**
@@ -137,6 +139,9 @@ export class Timeline extends Timer {
    */
   constructor(parameters = {}) {
     super(/** @type {TimerParams&TimelineParams} */(parameters), null, 0);
+    ++TLId;
+    /** @type {String|Number} */
+    this.id = !isUnd(parameters.id) ? parameters.id : TLId;
     /** @type {Number} */
     this.duration = 0; // TL duration starts at 0 and grows when adding children
     /** @type {Record<String, Number>} */
@@ -145,6 +150,8 @@ export class Timeline extends Timer {
     const globalDefaults = globals.defaults;
     /** @type {DefaultsParams} */
     this.defaults = defaultsParams ? mergeObjects(defaultsParams, globalDefaults) : globalDefaults;
+    /** @type {Boolean} */
+    this.composition = setValue(parameters.composition, true);
     /** @type {Callback<this>} */
     this.onRender = parameters.onRender || globalDefaults.onRender;
     const tlPlaybackEase = setValue(parameters.playbackEase, globalDefaults.playbackEase);
@@ -222,7 +229,8 @@ export class Timeline extends Timer {
           parseTimelinePosition(this,a2),
         );
       }
-      return this.init(true);
+      if (this.composition) this.init(true);
+      return this;
     }
   }
 
@@ -249,7 +257,7 @@ export class Timeline extends Timer {
     if (isUnd(synced) || synced && isUnd(synced.pause)) return this;
     synced.pause();
     const duration = +(/** @type {globalThis.Animation} */(synced).effect ? /** @type {globalThis.Animation} */(synced).effect.getTiming().duration : /** @type {Tickable} */(synced).duration);
-    return this.add(synced, { currentTime: [0, duration], duration, ease: 'linear' }, position);
+    return this.add(synced, { currentTime: [0, duration], duration, delay: 0, ease: 'linear', playbackEase: 'linear' }, position);
   }
 
   /**
@@ -272,7 +280,7 @@ export class Timeline extends Timer {
    */
   call(callback, position) {
     if (isUnd(callback) || callback && !isFnc(callback)) return this;
-    return this.add({ duration: 0, onComplete: () => callback(this) }, position);
+    return this.add({ duration: 0, delay: 0, onComplete: () => callback(this) }, position);
   }
 
   /**

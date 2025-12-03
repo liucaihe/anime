@@ -14,6 +14,7 @@ export {}
  * @import { Draggable } from '../draggable/draggable.js';
  * @import { TextSplitter } from '../text/split.js';
  * @import { Scope } from '../scope/scope.js';
+ * @import { AutoLayout } from '../layout/layout.js';
  * @import { Spring } from '../easings/spring/index.js';
  * @import { compositionTypes, tweenTypes, valueTypes } from '../core/consts.js';
  */
@@ -52,7 +53,7 @@ export {}
 /** @typedef {JSAnimation|Timeline} Renderable */
 /** @typedef {Timer|Renderable} Tickable */
 /** @typedef {Timer&JSAnimation&Timeline} CallbackArgument */
-/** @typedef {Animatable|Tickable|WAAPIAnimation|Draggable|ScrollObserver|TextSplitter|Scope} Revertible */
+/** @typedef {Animatable|Tickable|WAAPIAnimation|Draggable|ScrollObserver|TextSplitter|Scope|AutoLayout} Revertible */
 
 // Stagger types
 
@@ -376,6 +377,7 @@ export {}
  * @typedef {Object} TimelineOptions
  * @property {DefaultsParams} [defaults]
  * @property {EasingParam} [playbackEase]
+ * @property {Boolean} [composition]
  */
 
 /**

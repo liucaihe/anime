@@ -64,6 +64,8 @@ export const globals = {
   tickThreshold: 200,
 }
 
+export const devTools = isBrowser && win.AnimeJSDevTools;
+
 export const globalVersions = { version: '__packageVersion__', engine: null };
 
 if (isBrowser) {

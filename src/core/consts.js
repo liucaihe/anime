@@ -3,8 +3,10 @@
 // TODO: Do we need to check if we're running inside a worker ?
 export const isBrowser = typeof window !== 'undefined';
 
-/** @type {Window & {AnimeJS: Array}|null} */
-export const win = isBrowser ? /** @type {Window & {AnimeJS: Array}} */(/** @type {unknown} */(window)) : null;
+/** @typedef {Window & {AnimeJS: Array} & {AnimeJSDevTools: any}|null} AnimeJSWindow
+
+/** @type {AnimeJSWindow} */
+export const win = isBrowser ? /** @type {AnimeJSWindow} */(/** @type {unknown} */(window)) : null;
 
 /** @type {Document|null} */
 export const doc = isBrowser ? document : null;
@@ -56,7 +58,7 @@ export const proxyTargetSymbol = Symbol();
 export const minValue = 1e-11;
 export const maxValue = 1e12;
 export const K = 1e3;
-export const maxFps = 120;
+export const maxFps = 240;
 
 // Strings
 

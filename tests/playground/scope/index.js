@@ -70,7 +70,7 @@ const scope = createScope({
   }
 
   self.keepTime(() => animate('.square', {
-    background: ($el) => utils.get($el, utils.randomPick(['--skyblue', '--lavender', '--pink'])),
+    background: ($el) => utils.get($el, utils.randomPick(['--blue', '--lavender', '--pink'])),
     loop: true,
     ease: 'inOut(2)',
     alternate: true,

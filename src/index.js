@@ -7,6 +7,7 @@ export * from './scope/index.js';
 export * from './events/index.js';
 export * from './engine/index.js';
 export * from './easings/index.js';
+export * from './layout/index.js';
 export * as easings from './easings/index.js';
 export * from './utils/index.js';
 export * as utils from './utils/index.js';
