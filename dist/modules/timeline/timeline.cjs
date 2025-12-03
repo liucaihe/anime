@@ -1,6 +1,6 @@
 /**
  * Anime.js - timeline - CJS
- * @version v4.2.2
+ * @version v4.3.0-beta.0
  * @license MIT
  * @copyright 2025 - Julian Garnier
  */
@@ -77,11 +77,11 @@ function addTlChild(childParams, tl, timePosition, targets, index, length) {
   const isSetter = helpers.isNum(childParams.duration) && /** @type {Number} */(childParams.duration) <= consts.minValue;
   // Offset the tl position with -minValue for 0 duration animations or .set() calls in order to align their end value with the defined position
   const adjustedPosition = isSetter ? timePosition - consts.minValue : timePosition;
-  render.tick(tl, adjustedPosition, 1, 1, consts.tickModes.AUTO);
+  if (tl.composition) render.tick(tl, adjustedPosition, 1, 1, consts.tickModes.AUTO);
   const tlChild = targets ?
     new animation.JSAnimation(targets,/** @type {AnimationParams} */(childParams), tl, adjustedPosition, false, index, length) :
     new timer.Timer(/** @type {TimerParams} */(childParams), tl, adjustedPosition);
-  tlChild.init(true);
+  if (tl.composition) tlChild.init(true);
   // TODO: Might be better to insert at a position relative to startTime?
   helpers.addChild(tl, tlChild);
   helpers.forEachChildren(tl, (/** @type {Renderable} */child) => {
@@ -93,6 +93,8 @@ function addTlChild(childParams, tl, timePosition, targets, index, length) {
   return tl;
 }
 
+let TLId = 0;
+
 class Timeline extends timer.Timer {
 
   /**
@@ -100,6 +102,9 @@ class Timeline extends timer.Timer {
    */
   constructor(parameters = {}) {
     super(/** @type {TimerParams&TimelineParams} */(parameters), null, 0);
+    ++TLId;
+    /** @type {String|Number} */
+    this.id = !helpers.isUnd(parameters.id) ? parameters.id : TLId;
     /** @type {Number} */
     this.duration = 0; // TL duration starts at 0 and grows when adding children
     /** @type {Record<String, Number>} */
@@ -108,6 +113,8 @@ class Timeline extends timer.Timer {
     const globalDefaults = globals.globals.defaults;
     /** @type {DefaultsParams} */
     this.defaults = defaultsParams ? helpers.mergeObjects(defaultsParams, globalDefaults) : globalDefaults;
+    /** @type {Boolean} */
+    this.composition = values.setValue(parameters.composition, true);
     /** @type {Callback<this>} */
     this.onRender = parameters.onRender || globalDefaults.onRender;
     const tlPlaybackEase = values.setValue(parameters.playbackEase, globalDefaults.playbackEase);
@@ -185,7 +192,8 @@ class Timeline extends timer.Timer {
           position.parseTimelinePosition(this,a2),
         );
       }
-      return this.init(true);
+      if (this.composition) this.init(true);
+      return this;
     }
   }
 
@@ -212,7 +220,7 @@ class Timeline extends timer.Timer {
     if (helpers.isUnd(synced) || synced && helpers.isUnd(synced.pause)) return this;
     synced.pause();
     const duration = +(/** @type {globalThis.Animation} */(synced).effect ? /** @type {globalThis.Animation} */(synced).effect.getTiming().duration : /** @type {Tickable} */(synced).duration);
-    return this.add(synced, { currentTime: [0, duration], duration, ease: 'linear' }, position);
+    return this.add(synced, { currentTime: [0, duration], duration, delay: 0, ease: 'linear', playbackEase: 'linear' }, position);
   }
 
   /**
@@ -235,7 +243,7 @@ class Timeline extends timer.Timer {
    */
   call(callback, position) {
     if (helpers.isUnd(callback) || callback && !helpers.isFnc(callback)) return this;
-    return this.add({ duration: 0, onComplete: () => callback(this) }, position);
+    return this.add({ duration: 0, delay: 0, onComplete: () => callback(this) }, position);
   }
 
   /**

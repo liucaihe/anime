@@ -1,6 +1,6 @@
 /**
  * Anime.js - easings - CJS
- * @version v4.2.2
+ * @version v4.3.0-beta.0
  * @license MIT
  * @copyright 2025 - Julian Garnier
  */

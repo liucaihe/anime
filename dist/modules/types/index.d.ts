@@ -26,7 +26,7 @@ export type DefaultsParams = {
 export type Renderable = JSAnimation | Timeline;
 export type Tickable = Timer | Renderable;
 export type CallbackArgument = Timer & JSAnimation & Timeline;
-export type Revertible = Animatable | Tickable | WAAPIAnimation | Draggable | ScrollObserver | TextSplitter | Scope;
+export type Revertible = Animatable | Tickable | WAAPIAnimation | Draggable | ScrollObserver | TextSplitter | Scope | AutoLayout;
 export type StaggerFunction<T> = (target?: Target, index?: number, length?: number, tl?: Timeline) => T;
 export type StaggerParams = {
     start?: number | string;
@@ -249,6 +249,7 @@ export type TimelineAnimationPosition = TimelinePosition | StaggerFunction<numbe
 export type TimelineOptions = {
     defaults?: DefaultsParams;
     playbackEase?: EasingParam;
+    composition?: boolean;
 };
 export type TimelineParams = TimerOptions & TimelineOptions & TickableCallbacks<Timeline> & RenderableCallbacks<Timeline>;
 export type WAAPITweenValue = string | number | Array<string> | Array<number>;
@@ -403,6 +404,7 @@ import type { WAAPIAnimation } from '../waapi/waapi.js';
 import type { Draggable } from '../draggable/draggable.js';
 import type { TextSplitter } from '../text/split.js';
 import type { Scope } from '../scope/scope.js';
+import type { AutoLayout } from '../layout/layout.js';
 import type { Spring } from '../easings/spring/index.js';
 import type { tweenTypes } from '../core/consts.js';
 import type { valueTypes } from '../core/consts.js';

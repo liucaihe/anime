@@ -20,6 +20,7 @@ export namespace globals {
     export let timeScale: number;
     export let tickThreshold: number;
 }
+export const devTools: any;
 export namespace globalVersions {
     let version: string;
     let engine: any;

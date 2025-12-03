@@ -7,6 +7,8 @@ export class Timeline extends Timer {
     labels: Record<string, number>;
     /** @type {DefaultsParams} */
     defaults: DefaultsParams;
+    /** @type {Boolean} */
+    composition: boolean;
     /** @type {Callback<this>} */
     onRender: Callback<this>;
     _ease: import("../types/index.js").EasingFunction;

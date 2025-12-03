@@ -1,6 +1,6 @@
 /**
  * Anime.js - engine - ESM
- * @version v4.2.2
+ * @version v4.3.0-beta.0
  * @license MIT
  * @copyright 2025 - Julian Garnier
  */
@@ -75,7 +75,7 @@ class Engine extends Clock {
 
   wake() {
     if (this.useDefaultMainLoop && !this.reqId) {
-      // Imediatly request a tick to update engine._elapsedTime and get accurate offsetPosition calculation in timer.js
+      // Imediatly request a tick to update engine._lastTickTime and get accurate offsetPosition calculation in timer.js
       this.requestTick(now());
       this.reqId = engineTickMethod(tickEngine);
     }

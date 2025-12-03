@@ -1,6 +1,6 @@
 /**
  * Anime.js - core - ESM
- * @version v4.2.2
+ * @version v4.3.0-beta.0
  * @license MIT
  * @copyright 2025 - Julian Garnier
  */
@@ -10,8 +10,10 @@
 // TODO: Do we need to check if we're running inside a worker ?
 const isBrowser = typeof window !== 'undefined';
 
-/** @type {Window & {AnimeJS: Array}|null} */
-const win = isBrowser ? /** @type {Window & {AnimeJS: Array}} */(/** @type {unknown} */(window)) : null;
+/** @typedef {Window & {AnimeJS: Array} & {AnimeJSDevTools: any}|null} AnimeJSWindow
+
+/** @type {AnimeJSWindow} */
+const win = isBrowser ? /** @type {AnimeJSWindow} */(/** @type {unknown} */(window)) : null;
 
 /** @type {Document|null} */
 const doc = isBrowser ? document : null;
@@ -63,7 +65,7 @@ const proxyTargetSymbol = Symbol();
 const minValue = 1e-11;
 const maxValue = 1e12;
 const K = 1e3;
-const maxFps = 120;
+const maxFps = 240;
 
 // Strings
 

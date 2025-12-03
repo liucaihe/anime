@@ -1,8 +1,8 @@
 export const isBrowser: boolean;
-/** @type {Window & {AnimeJS: Array}|null} */
-export const win: (Window & {
-    AnimeJS: any[];
-}) | null;
+/** @typedef {Window & {AnimeJS: Array} & {AnimeJSDevTools: any}|null} AnimeJSWindow
+
+/** @type {AnimeJSWindow} */
+export const win: AnimeJSWindow;
 /** @type {Document|null} */
 export const doc: Document | null;
 export type tweenTypes = number;
@@ -41,7 +41,7 @@ export const proxyTargetSymbol: unique symbol;
 export const minValue: 1e-11;
 export const maxValue: 1000000000000;
 export const K: 1000;
-export const maxFps: 120;
+export const maxFps: 240;
 export const emptyString: "";
 export const cssVarPrefix: "var(";
 export const shortTransforms: Map<any, any>;
@@ -59,3 +59,11 @@ export const lowerCaseRgx: RegExp;
 export const transformsExecRgx: RegExp;
 export const relativeValuesExecRgx: RegExp;
 export const cssVariableMatchRgx: RegExp;
+/**
+ * /**
+ */
+export type AnimeJSWindow = (Window & {
+    AnimeJS: any[];
+} & {
+    AnimeJSDevTools: any;
+}) | null;

@@ -7,6 +7,7 @@ export * from "./scope/index.js";
 export * from "./events/index.js";
 export * from "./engine/index.js";
 export * from "./easings/index.js";
+export * from "./layout/index.js";
 export * from "./utils/index.js";
 export * from "./svg/index.js";
 export * from "./text/index.js";

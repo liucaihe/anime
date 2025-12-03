@@ -1,6 +1,6 @@
 /**
  * Anime.js - CJS
- * @version v4.2.2
+ * @version v4.3.0-beta.0
  * @license MIT
  * @copyright 2025 - Julian Garnier
  */
@@ -16,6 +16,7 @@ var scope = require('./scope/scope.cjs');
 var scroll = require('./events/scroll.cjs');
 var engine = require('./engine/engine.cjs');
 var index = require('./easings/index.cjs');
+var layout = require('./layout/layout.cjs');
 var index$1 = require('./utils/index.cjs');
 var index$2 = require('./svg/index.cjs');
 var index$3 = require('./text/index.cjs');
@@ -57,6 +58,8 @@ exports.onScroll = scroll.onScroll;
 exports.scrollContainers = scroll.scrollContainers;
 exports.engine = engine.engine;
 exports.easings = index;
+exports.AutoLayout = layout.AutoLayout;
+exports.createLayout = layout.createLayout;
 exports.utils = index$1;
 exports.svg = index$2;
 exports.text = index$3;

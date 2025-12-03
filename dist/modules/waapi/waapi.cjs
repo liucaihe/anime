@@ -1,6 +1,6 @@
 /**
  * Anime.js - waapi - CJS
- * @version v4.2.2
+ * @version v4.3.0-beta.0
  * @license MIT
  * @copyright 2025 - Julian Garnier
  */
@@ -333,9 +333,10 @@ class WAAPIAnimation {
    * @return {this}
    */
   forEach(callback) {
-    const cb = helpers.isStr(callback) ? (/** @type {globalThis.Animation} */a) => a[callback]() : callback;
-    this.animations.forEach(cb);
-    return this;
+    try {
+      const cb = helpers.isStr(callback) ? (/** @type {globalThis.Animation} */a) => a[callback]() : callback;
+      this.animations.forEach(cb);
+    } catch {}    return this;
   }
 
   get speed() {
@@ -431,14 +432,21 @@ class WAAPIAnimation {
 
   cancel() {
     this.muteCallbacks = true; // This prevents triggering the onComplete callback and resolving the Promise
-    return this.commitStyles().forEach('cancel');
+    this.commitStyles().forEach('cancel');
+    this.animations.length = 0; // Needed to release all animations from memory
+    requestAnimationFrame(() => {
+      this.targets.forEach(($el) => { // Needed to avoid unecessary inline transorms
+        if ($el.style.transform === 'none') $el.style.removeProperty('transform');
+      });
+    });
+    return this;
   }
 
   revert() {
     // NOTE: We need a better way to revert the transforms, since right now the entire transform property value is reverted,
     // This means if you have multiple animations animating different transforms on the same target,
     // reverting one of them will also override the transform property of the other animations.
-    // A better approach would be to store the original custom property values is they exist instead of the entire transform value,
+    // A better approach would be to store the original custom property values if they exist instead of the entire transform value,
     // and update the CSS variables with the orignal value
     this.cancel().targets.forEach(($el, i) => {
       const targetStyle = $el.style;
@@ -448,7 +456,7 @@ class WAAPIAnimation {
         if (helpers.isUnd(originalInlinedValue) || originalInlinedValue === consts.emptyString) {
           targetStyle.removeProperty(helpers.toLowerCase(name));
         } else {
-          targetStyle[name] = originalInlinedValue;
+          $el.style[name] = originalInlinedValue;
         }
       }
       // Remove style attribute if empty

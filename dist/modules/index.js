@@ -1,6 +1,6 @@
 /**
  * Anime.js - ESM
- * @version v4.2.2
+ * @version v4.3.0-beta.0
  * @license MIT
  * @copyright 2025 - Julian Garnier
  */
@@ -15,6 +15,7 @@ export { ScrollObserver, onScroll, scrollContainers } from './events/scroll.js';
 export { engine } from './engine/engine.js';
 import * as index from './easings/index.js';
 export { index as easings };
+export { AutoLayout, createLayout } from './layout/layout.js';
 import * as index$1 from './utils/index.js';
 export { index$1 as utils };
 import * as index$2 from './svg/index.js';

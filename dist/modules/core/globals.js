@@ -1,6 +1,6 @@
 /**
  * Anime.js - core - ESM
- * @version v4.2.2
+ * @version v4.3.0-beta.0
  * @license MIT
  * @copyright 2025 - Julian Garnier
  */
@@ -63,11 +63,13 @@ const globals = {
   tickThreshold: 200,
 };
 
-const globalVersions = { version: '4.2.2', engine: null };
+const devTools = isBrowser && win.AnimeJSDevTools;
+
+const globalVersions = { version: '4.3.0-beta.0', engine: null };
 
 if (isBrowser) {
   if (!win.AnimeJS) win.AnimeJS = [];
   win.AnimeJS.push(globalVersions);
 }
 
-export { defaults, globalVersions, globals, scope };
+export { defaults, devTools, globalVersions, globals, scope };

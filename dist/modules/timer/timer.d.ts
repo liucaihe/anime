@@ -8,6 +8,7 @@ export class Timer extends Clock {
      * @param {Number} [parentPosition]
      */
     constructor(parameters?: TimerParams, parent?: Timeline, parentPosition?: number);
+    /** @type {String|Number} */
     id: string | number;
     /** @type {Timeline} */
     parent: Timeline;

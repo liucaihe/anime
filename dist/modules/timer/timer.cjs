@@ -1,6 +1,6 @@
 /**
  * Anime.js - timer - CJS
- * @version v4.2.2
+ * @version v4.3.0-beta.0
  * @license MIT
  * @copyright 2025 - Julian Garnier
  */
@@ -82,6 +82,8 @@ class Timer extends clock.Clock {
 
     super(0);
 
+    ++timerId;
+
     const {
       id,
       delay,
@@ -103,31 +105,42 @@ class Timer extends clock.Clock {
 
     if (globals.scope.current) globals.scope.current.register(this);
 
-    const timerInitTime = parent ? 0 : engine.engine._elapsedTime;
+    const timerInitTime = parent ? 0 : engine.engine._lastTickTime;
     const timerDefaults = parent ? parent.defaults : globals.globals.defaults;
     const timerDelay = /** @type {Number} */(helpers.isFnc(delay) || helpers.isUnd(delay) ? timerDefaults.delay : +delay);
     const timerDuration = helpers.isFnc(duration) || helpers.isUnd(duration) ? Infinity : +duration;
     const timerLoop = values.setValue(loop, timerDefaults.loop);
     const timerLoopDelay = values.setValue(loopDelay, timerDefaults.loopDelay);
-    const timerIterationCount = timerLoop === true ||
-                                timerLoop === Infinity ||
-                                /** @type {Number} */(timerLoop) < 0 ? Infinity :
-                                /** @type {Number} */(timerLoop) + 1;
+    let timerIterationCount = timerLoop === true ||
+                              timerLoop === Infinity ||
+                              /** @type {Number} */(timerLoop) < 0 ? Infinity :
+                              /** @type {Number} */(timerLoop) + 1;
+
+    if (globals.devTools) {
+      const isInfinite = timerIterationCount === Infinity;
+      const registered = globals.devTools.register(this, parameters, isInfinite);
+      if (registered && isInfinite) {
+        const minIterations = alternate ? 2 : 1;
+        const iterations = parent ? globals.devTools.maxNestedInfiniteLoops : globals.devTools.maxInfiniteLoops;
+        timerIterationCount = Math.max(iterations, minIterations);
+      }
+    }
 
     let offsetPosition = 0;
 
     if (parent) {
       offsetPosition = parentPosition;
     } else {
-      // Make sure to tick the engine once if not currently running to get up to date engine._elapsedTime
+      // Make sure to tick the engine once if not currently running to get up to date engine._lastTickTime
       // to avoid big gaps with the following offsetPosition calculation
       if (!engine.engine.reqId) engine.engine.requestTick(helpers.now());
       // Make sure to scale the offset position with globals.timeScale to properly handle seconds unit
-      offsetPosition = (engine.engine._elapsedTime - engine.engine._startTime) * globals.globals.timeScale;
+      offsetPosition = (engine.engine._lastTickTime - engine.engine._startTime) * globals.globals.timeScale;
     }
 
     // Timer's parameters
-    this.id = !helpers.isUnd(id) ? id : ++timerId;
+    /** @type {String|Number} */
+    this.id = !helpers.isUnd(id) ? id : timerId;
     /** @type {Timeline} */
     this.parent = parent;
     // Total duration of the timer
@@ -187,7 +200,7 @@ class Timer extends clock.Clock {
 
     // Clock's parameters
     /** @type {Number} */
-    this._elapsedTime = timerInitTime;
+    this._lastTickTime = timerInitTime;
     /** @type {Number} */
     this._startTime = timerInitTime;
     /** @type {Number} */
@@ -218,7 +231,7 @@ class Timer extends clock.Clock {
   }
 
   get iterationCurrentTime() {
-    return helpers.round(this._iterationTime, globals.globals.precision);
+    return helpers.clamp(helpers.round(this._iterationTime, globals.globals.precision), 0, this.iterationDuration);
   }
 
   set iterationCurrentTime(time) {
@@ -316,9 +329,9 @@ class Timer extends clock.Clock {
   /** @return {this} */
   resetTime() {
     const timeScale = 1 / (this._speed * engine.engine._speed);
-    // TODO: See if we can safely use engine._elapsedTime here
+    // TODO: See if we can safely use engine._lastTickTime here
     // if (!engine.reqId) engine.requestTick(now())
-    // this._startTime = engine._elapsedTime - (this._currentTime + this._delay) * timeScale;
+    // this._startTime = engine._lastTickTime - (this._currentTime + this._delay) * timeScale;
     this._startTime = helpers.now() - (this._currentTime + this._delay) * timeScale;
     return this;
   }
