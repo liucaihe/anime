@@ -1047,26 +1047,16 @@ export class AutoLayout {
 
       // Recalculate postion relative to their parent for elements that have been moved
       if (!oldStateNode.measuredIsRemoved && !isRemovedNow && !hasNoOldState && (parentChanged || elementChanged)) {
-        let offsetX = 0;
-        let offsetY = 0;
-        let current = node.parentNode;
-        while (current) {
-          offsetX += current.properties.x || 0;
-          offsetY += current.properties.y || 0;
-          if (current.parentNode === newState.rootNode) break;
-          current = current.parentNode;
-        }
-        let oldOffsetX = 0;
-        let oldOffsetY = 0;
-        let oldCurrent = oldStateNode.parentNode;
-        while (oldCurrent) {
-          oldOffsetX += oldCurrent.properties.x || 0;
-          oldOffsetY += oldCurrent.properties.y || 0;
-          if (oldCurrent.parentNode === oldState.rootNode) break;
-          oldCurrent = oldCurrent.parentNode;
-        }
-        oldStateNode.properties.x += oldOffsetX - offsetX;
-        oldStateNode.properties.y += oldOffsetY - offsetY;
+        const oldAbsoluteLeft = oldStateNode.properties.left;
+        const oldAbsoluteTop = oldStateNode.properties.top;
+        const newParent = parent || newState.rootNode;
+        const oldParent = newParent.id ? oldState.nodes.get(newParent.id) : null;
+        const parentLeft = oldParent ? oldParent.properties.left : newParent.properties.left;
+        const parentTop = oldParent ? oldParent.properties.top : newParent.properties.top;
+        const borderLeft = oldParent ? oldParent.properties.clientLeft : newParent.properties.clientLeft;
+        const borderTop = oldParent ? oldParent.properties.clientTop : newParent.properties.clientTop;
+        oldStateNode.properties.x = oldAbsoluteLeft - parentLeft - borderLeft;
+        oldStateNode.properties.y = oldAbsoluteTop - parentTop - borderTop;
       }
 
       if (node.hasVisibilitySwap) {
@@ -1216,8 +1206,7 @@ export class AutoLayout {
         // Don't animate dimensions and positions of inlined elements
         if (!newNode.isInlined) {
           // Display grid can mess with the absolute positioning, so set it to block during transition
-          // if (oldNode.measuredDisplay === 'grid' || newNode.measuredDisplay === 'grid') $el.style.display = 'block';
-          $el.style.display = 'block';
+          if (oldNode.measuredDisplay === 'grid' || newNode.measuredDisplay === 'grid') $el.style.display = 'block';
           // All children must be in position absolue
           if ($el !== root || this.absoluteCoords) {
             $el.style.position = this.absoluteCoords ? 'fixed' : 'absolute';

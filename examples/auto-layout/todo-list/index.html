@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Auto layout / Todo list / Anime.js</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link href="../../assets/css/styles.css" rel="stylesheet">
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      min-height: 100lvh;
+    }
+    .app {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      width: 100%;
+      max-width: 32rem;
+      background: var(--bg-2);
+      padding: 1rem 1rem;
+      border-radius: 1rem;
+    }
+    #create {
+      width: 100%;
+      border: none;
+      color: #FFF;
+      background-color: transparent;
+    }
+    .block {
+      width: 100%;
+      list-style: none;
+    }
+    .block:not(:last-child) {
+      margin-bottom: 1rem;
+    }
+    .icon {
+      display: inline;
+      flex-shrink: 0;
+      width: 1rem;
+      height: 1rem;
+      text-align: center;
+    }
+    .list {
+      position: relative;
+      gap: 1px;
+      display: flex;
+      flex-direction: column;
+    }
+    .item {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      height: calc(3rem - 1px);
+      background: var(--bg-4);
+      padding: .5rem 1rem;
+    }
+    .item:first-child {
+      border-top-left-radius: .5rem;
+      border-top-right-radius: .5rem;
+    }
+    .item:last-child {
+      border-bottom-left-radius: .5rem;
+      border-bottom-right-radius: .5rem;
+    }
+    .list { z-index: 0; }
+    .list.is-active { z-index: 1; }
+
+    .item { z-index: 0; }
+    .item.is-floating { z-index: 2; }
+    .item,
+    label {
+      gap: 1rem;
+      align-items: center;
+    }
+    label {
+      display: flex;
+      flex: 1;
+    }
+    .delete {
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.5rem;
+      height: 1.5rem;
+      border: none;
+      background: transparent;
+      color: var(--text-2);
+      font-size: 1.25rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .delete:hover {
+      color: var(--text-1);
+    }
+    h2 {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      height: 2rem;
+      gap: .5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <form class="block create" autocomplete="off">
+      <div class="item">
+        <span class="icon">+</span>
+        <input id="create" type="text" placeholder="What needs to be done?" />
+      </div>
+    </form>
+    <h2>Pending</h2>
+    <ul class="block list pending">
+
+    </ul>
+    <h2>Completed</h2>
+    <ul class="block list completed">
+
+    </ul>
+  </div>
+  <script type="module" src="./index.js"></script>
+</body>
+</html>
