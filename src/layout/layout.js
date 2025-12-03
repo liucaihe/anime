@@ -70,8 +70,8 @@ import {
 
 /**
  * @typedef {Object} LayoutAnimationParams
- * @property {Number} [duration]
  * @property {Number|FunctionValue} [delay]
+ * @property {Number|FunctionValue} [duration]
  * @property {EasingParam} [ease]
  * @property {LayoutStateParams} [frozen]
  * @property {LayoutStateParams} [added]
@@ -874,12 +874,12 @@ export class AutoLayout {
     this.children = params.children || '*';
     /** @type {Boolean} */
     this.absoluteCoords = false;
-    /** @type {Number} */
+    /** @type {Number|FunctionValue} */
     this.duration = setValue(params.duration, 500);
     /** @type {Number|FunctionValue} */
     this.delay = setValue(params.delay, 0);
     /** @type {EasingParam} */
-    this.ease = setValue(params.ease, 'inOutExpo');
+    this.ease = setValue(params.ease, 'inOut(3.5)');
     /** @type {Callback<this>} */
     this.onComplete = setValue(params.onComplete, /** @type {Callback<this>} */(noop));
     /** @type {LayoutStateParams} */

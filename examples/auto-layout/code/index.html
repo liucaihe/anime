@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Auto layout / Code / anime.js</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link href="../../assets/css/styles.css" rel="stylesheet">
+
+<style>
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100lvh;
+  }
+
+  .kw   { color: var(--white-1); }   /* keywords / properties */
+  .fn   { color: var(--sky-1); }     /* functions */
+  .str  { color: var(--lime-1); }    /* strings */
+  .var  { color: var(--orange-1); }  /* variables / identifiers */
+
+  .container {
+    position: relative;
+    width: 72ch;
+    padding: 1ch 4ch;
+    overflow: hidden;
+    background: var(--bg-3);
+    border-radius: 1rem;
+  }
+
+  .container .waapi,
+  .container.show-animejs .animejs {
+    position: relative;
+    top: 0;
+    left: 0;
+  }
+
+  .container .animejs,
+  .container.show-animejs .waapi {
+    position: absolute;
+    top: 1ch;
+    left: 4ch;
+  }
+
+  .container .waapi span,
+  .container.show-animejs .animejs span {
+    display: inline-block;
+    will-change: translate;
+  }
+
+  .container .animejs span,
+  .container.show-animejs .waapi span {
+    display: none;
+  }
+
+</style>
+
+<div class="container">
+
+<pre class="waapi">
+<code>
+/* WAAPI */
+
+document.querySelectorAll('.circle').forEach(($el, i) => {
+  el.animate({
+    translate: '100px',
+  }, {
+    duration: 1000,
+    delay: i * 100,
+    easing: 'ease-out',
+  }).finished.then(() => {
+    $el.style.translate = '100px';
+  })
+});
+</code>
+</pre>
+
+<pre class="animejs">
+<code>
+/* ANIMEJS */
+
+waapi.animate('.circle', {
+  translate: '100px',
+  duration: 1000,
+  delay: stagger(100),
+  ease: 'ease-out',
+});
+</code>
+</pre>
+
+</div>
+
+<script type="module" src="./index.js"></script>
+</body>
+</html>
