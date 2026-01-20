@@ -64,7 +64,7 @@ Help the project become sustainable by sponsoring us on <a target="_blank" href=
   <tbody>
     <tr>
       <td>
-        <a target="_blank" href="https://https://www.testmu.ai?utm_source=animeJS&utm_medium=organic&utm_campaign=july_08&utm_term=sk&utm_content=opensource">
+        <a target="_blank" href="https://www.testmu.ai?utm_source=animeJS&utm_medium=organic&utm_campaign=july_08&utm_term=sk&utm_content=opensource">
           <picture>
             <source media="(prefers-color-scheme: dark)" srcset="./assets/sponsors/testmu-ai-logomark.png?v=200126">
             <img align="center" src="./assets/sponsors/testmu-ai-logomark-dark.png?v=200126" width="141">
