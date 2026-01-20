@@ -34,23 +34,23 @@ Help the project become sustainable by sponsoring us on <a target="_blank" href=
       <td>
         <a target="_blank" href="https://ice.io/?ref=animejs">
           <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="./assets/sponsors/ice-open-network-logomark.png?v=251108">
-            <img align="center" src="./assets/sponsors/ice-open-network-logomark-dark.png?v=251108" width="310">
+            <source media="(prefers-color-scheme: dark)" srcset="./assets/sponsors/ice-open-network-logomark.png?v=200126">
+            <img align="center" src="./assets/sponsors/ice-open-network-logomark-dark.png?v=200126" width="310">
           </picture>
         </a>
       </td>
       <td>
         <a target="_blank" href="https://hyperswitch.io/?utm_source=julian&utm_medium=github&utm_campaign=animejs_sponsorship">
           <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="./assets/sponsors/juspay-logomark.png?v=251108">
-            <img align="center" src="./assets/sponsors/juspay-logomark-dark.png?v=251108" width="310">
+            <source media="(prefers-color-scheme: dark)" srcset="./assets/sponsors/juspay-logomark.png?v=200126">
+            <img align="center" src="./assets/sponsors/juspay-logomark-dark.png?v=200126" width="310">
           </picture>
         </a>
       </td>
       <td>
         <a target="_blank" href="https://github.com/sponsors/juliangarnier">
           <picture>
-            <img align="center" src="./assets/sponsors/placeholder-large.png?v=251108" width="310">
+            <img align="center" src="./assets/sponsors/placeholder-large.png?v=200126" width="310">
           </picture>
         </a>
       </td>
@@ -66,44 +66,44 @@ Help the project become sustainable by sponsoring us on <a target="_blank" href=
       <td>
         <a target="_blank" href="https://https://www.testmu.ai?utm_source=animeJS&utm_medium=organic&utm_campaign=july_08&utm_term=sk&utm_content=opensource">
           <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="./assets/sponsors/testmu-ai-logomark.png?v=251108">
-            <img align="center" src="./assets/sponsors/testmu-ai-logomark-dark.png?v=251108" width="141">
+            <source media="(prefers-color-scheme: dark)" srcset="./assets/sponsors/testmu-ai-logomark.png?v=200126">
+            <img align="center" src="./assets/sponsors/testmu-ai-logomark-dark.png?v=200126" width="141">
           </picture>
         </a>
       </td>
       <td>
         <a target="_blank" href="https://inspatialapp.com/?ref=animejs">
           <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="./assets/sponsors/inspatial-logomark.png?v=251108">
-            <img align="center" src="./assets/sponsors/inspatial-logomark-dark.png?v=251108" width="141">
+            <source media="(prefers-color-scheme: dark)" srcset="./assets/sponsors/inspatial-logomark.png?v=200126">
+            <img align="center" src="./assets/sponsors/inspatial-logomark-dark.png?v=200126" width="141">
           </picture>
         </a>
       </td>
       <td>
         <a target="_blank" href="https://github.com/sponsors/juliangarnier">
           <picture>
-            <img align="center" src="./assets/sponsors/placeholder-small.png?v=251108" width="141">
+            <img align="center" src="./assets/sponsors/placeholder-small.png?v=200126" width="141">
           </picture>
         </a>
       </td>
       <td>
         <a target="_blank" href="https://github.com/sponsors/juliangarnier">
           <picture>
-            <img align="center" src="./assets/sponsors/placeholder-small.png?v=251108" width="141">
+            <img align="center" src="./assets/sponsors/placeholder-small.png?v=200126" width="141">
           </picture>
         </a>
       </td>
       <td>
         <a target="_blank" href="https://github.com/sponsors/juliangarnier">
           <picture>
-            <img align="center" src="./assets/sponsors/placeholder-small.png?v=251108" width="141">
+            <img align="center" src="./assets/sponsors/placeholder-small.png?v=200126" width="141">
           </picture>
         </a>
       </td>
       <td>
         <a target="_blank" href="https://github.com/sponsors/juliangarnier">
           <picture>
-            <img align="center" src="./assets/sponsors/placeholder-small.png?v=251108" width="141">
+            <img align="center" src="./assets/sponsors/placeholder-small.png?v=200126" width="141">
           </picture>
         </a>
       </td>
