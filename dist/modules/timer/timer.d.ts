@@ -124,9 +124,10 @@ export class Timer extends Clock {
     revert(): this;
     /**
       * Imediatly completes the timer, cancels it and triggers the onComplete callback
+      * @param  {Boolean|Number} [muteCallbacks]
       * @return {this}
       */
-    complete(): this;
+    complete(muteCallbacks?: boolean | number): this;
     /**
      * @typedef {this & {then: null}} ResolvedTimer
      */

@@ -28,8 +28,7 @@ const latin = [
 function loremIpsum(words = 100) {
   let text = [];
   for (let i = 0; i < words; i++) {
-    const w = latin[Math.floor(Math.random() * latin.length)];
-    text.push(w);
+    text.push(latin[Math.floor(Math.random() * latin.length)]);
   }
   let sentence = text.join(" ");
   return sentence.charAt(0).toUpperCase() + sentence.slice(1) + ".";
@@ -82,6 +81,9 @@ const actions = {
   remove: () => {
     const $lastCard = utils.$('#root .card:not(.is-removed)').pop();
     if ($lastCard) $lastCard.classList.add('is-removed');
+  },
+  shuffle: () => {
+    utils.shuffle(utils.$('.card:not(.is-removed)')).forEach($el => $el.parentElement.appendChild($el));
   }
 }
 
@@ -91,46 +93,55 @@ for (let i = 0; i < initialPlanets; i++) {
 
 const cardsLayout = createLayout($root, {
   properties: ['font-size'],
-  added: {
+  enterFrom: {
     opacity: $el => $el.classList.contains('card') ? `1` : '0',
     transform: $el => $el.classList.contains('card') ? `translateY(150%) scale(.5)` : 'none',
   },
-  removed: {
+  leaveTo: {
     opacity: 0,
-    transform: ($el, i) => {
-      const r = utils.createSeededRandom(i);
-      const d = r(0, 1) ? -1 : 1;
-      return $el.classList.contains('card') ? `translate(${100 * d}%, 50%) rotate(${r(35, 90) * d}deg) scale(.5)` : 'none';
+    transform: ($el) => {
+      const i = [...$el.parentElement.children].indexOf($el);
+      const d = i % 2 ? -1 : 1;
+      return $el.classList.contains('card') ? `translate(${50 * d}%, 50%) rotate(${20 * d}deg) scale(.5)` : 'none';
     },
   },
 });
 
 const modalLayout = createLayout($overlay, {
   children: ['.card', '.card-image', '.card-image-grid', '.card-title', '.card-type', '.close-overlay'],
-  properties: ['font-size', '--overlay-alpha'],
+  properties: ['--overlay-alpha'],
+  duration: 500,
 });
 
 const closeModal = () => {
+  let $card;
   modalLayout.update(() => {
     $overlay.close();
-    utils.$('#root .card.is-open').forEach($card => {
-      $card.classList.remove('is-open');
-    });
-  });
+    $card = utils.$('#root .card.is-open')[0];
+    $card.classList.remove('is-open');
+    $card.focus();
+  }).then(() => {
+    $card.focus();
+  })
 };
 
 const handleClick = e => {
   const $target = e.target;
   const $card = $target.closest('#root .card');
   if ($card) {
-    const $clone = $card.cloneNode(true);
+    e.preventDefault();
+    const $clone = document.createElement('div');
+    $clone.innerHTML = $card.cloneNode(true).innerHTML;
+    $clone.classList = $card.classList;
+    $clone.dataset.layoutId = $card.dataset.layoutId;
+    $clone.dataset.color = $card.dataset.color;
     $overlay.innerHTML = '';
     const cloneChildren = $clone.querySelectorAll('*');
-    $clone.removeAttribute('style');
-    cloneChildren.forEach(el => el.removeAttribute('style'));
+    cloneChildren.forEach($el => $el.removeAttribute('style'));
     $overlay.appendChild($clone);
     modalLayout.update(() => {
       $overlay.showModal();
+      $clone.querySelector('button').disabled = false;
       $card.classList.add('is-open');
     });
   }

@@ -14,42 +14,36 @@ export class AutoLayout {
     children: LayoutChildrenParam;
     /** @type {Boolean} */
     absoluteCoords: boolean;
-    /** @type {Number|FunctionValue} */
-    duration: number | FunctionValue;
-    /** @type {Number|FunctionValue} */
-    delay: number | FunctionValue;
-    /** @type {EasingParam} */
-    ease: EasingParam;
-    /** @type {Callback<this>} */
-    onComplete: Callback<this>;
     /** @type {LayoutStateParams} */
-    frozenParams: LayoutStateParams;
+    swapAtParams: LayoutStateParams;
     /** @type {LayoutStateParams} */
-    addedParams: LayoutStateParams;
+    enterFromParams: LayoutStateParams;
     /** @type {LayoutStateParams} */
-    removedParams: LayoutStateParams;
+    leaveToParams: LayoutStateParams;
     /** @type {Set<String>} */
     properties: Set<string>;
     /** @type {Set<String>} */
     recordedProperties: Set<string>;
     /** @type {WeakSet<DOMTarget>} */
-    pendingRemoved: WeakSet<DOMTarget>;
+    pendingRemoval: WeakSet<DOMTarget>;
     /** @type {Map<DOMTarget, String|null>} */
     transitionMuteStore: Map<DOMTarget, string | null>;
     /** @type {LayoutSnapshot} */
     oldState: LayoutSnapshot;
     /** @type {LayoutSnapshot} */
     newState: LayoutSnapshot;
-    /** @type {Timeline|null} */
-    timeline: Timeline | null;
-    /** @type {WAAPIAnimation|null} */
-    transformAnimation: WAAPIAnimation | null;
+    /** @type {Timeline} */
+    timeline: Timeline;
+    /** @type {WAAPIAnimation} */
+    transformAnimation: WAAPIAnimation;
     /** @type {Array<DOMTarget>} */
-    frozen: Array<DOMTarget>;
+    animating: Array<DOMTarget>;
     /** @type {Array<DOMTarget>} */
-    removed: Array<DOMTarget>;
+    swapping: Array<DOMTarget>;
     /** @type {Array<DOMTarget>} */
-    added: Array<DOMTarget>;
+    leaving: Array<DOMTarget>;
+    /** @type {Array<DOMTarget>} */
+    entering: Array<DOMTarget>;
     /**
      * @return {this}
      */
@@ -66,27 +60,35 @@ export class AutoLayout {
     /**
      * @param {(layout: this) => void} callback
      * @param {LayoutAnimationParams} [params]
-     * @return {this}
+     * @return {Timeline}
      */
-    update(callback: (layout: this) => void, params?: LayoutAnimationParams): this;
+    update(callback: (layout: this) => void, params?: LayoutAnimationParams): Timeline;
 }
 export function createLayout(root: DOMTargetSelector, params?: AutoLayoutParams): AutoLayout;
 export type LayoutChildrenParam = DOMTargetSelector | Array<DOMTargetSelector>;
-export type LayoutStateParams = Record<string, number | string>;
-export type LayoutAnimationParams = {
+export type LayoutAnimationTimingsParams = {
     delay?: number | FunctionValue;
     duration?: number | FunctionValue;
-    ease?: EasingParam;
-    frozen?: LayoutStateParams;
-    added?: LayoutStateParams;
-    removed?: LayoutStateParams;
-    onComplete?: Callback<AutoLayout>;
+    ease?: EasingParam | FunctionValue;
 };
-export type AutoLayoutParams = LayoutAnimationParams & {
+export type LayoutStateAnimationProperties = Record<string, number | string | FunctionValue>;
+export type LayoutStateParams = LayoutStateAnimationProperties & LayoutAnimationTimingsParams;
+export type LayoutSpecificAnimationParams = {
+    delay?: number | FunctionValue;
+    duration?: number | FunctionValue;
+    ease?: EasingParam | FunctionValue;
+    playbackEase?: EasingParam;
+    swapAt?: LayoutStateParams;
+    enterFrom?: LayoutStateParams;
+    leaveTo?: LayoutStateParams;
+};
+export type LayoutAnimationParams = LayoutSpecificAnimationParams & TimerParams & TickableCallbacks<Timeline> & RenderableCallbacks<Timeline>;
+export type LayoutOptions = {
     children?: LayoutChildrenParam;
     properties?: Array<string>;
 };
-export type LayoutNodeProperties = Record<string, number | string> & {
+export type AutoLayoutParams = LayoutAnimationParams & LayoutOptions;
+export type LayoutNodeProperties = Record<string, number | string | FunctionValue> & {
     transform: string;
     x: number;
     y: number;
@@ -104,13 +106,15 @@ export type LayoutNode = {
     total: number;
     delay: number;
     duration: number;
+    ease: EasingParam;
     $measure: DOMTarget;
     state: LayoutSnapshot;
     layout: AutoLayout;
     parentNode: LayoutNode | null;
     isTarget: boolean;
+    isEntering: boolean;
+    isLeaving: boolean;
     hasTransform: boolean;
-    isAnimated: boolean;
     inlineStyles: Array<string>;
     inlineTransforms: string | null;
     inlineTransition: string | null;
@@ -140,9 +144,6 @@ export type LayoutNode = {
 };
 export type LayoutNodeIterator = (node: LayoutNode, index: number) => void;
 import type { DOMTarget } from '../types/index.js';
-import type { FunctionValue } from '../types/index.js';
-import type { EasingParam } from '../types/index.js';
-import type { Callback } from '../types/index.js';
 declare class LayoutSnapshot {
     /**
      * @param {AutoLayout} layout
@@ -166,15 +167,15 @@ declare class LayoutSnapshot {
     revert(): this;
     /**
      * @param {DOMTarget} $el
-     * @return {LayoutNodeProperties|undefined}
+     * @return {LayoutNode}
      */
-    get($el: DOMTarget): LayoutNodeProperties | undefined;
+    getNode($el: DOMTarget): LayoutNode;
     /**
      * @param {DOMTarget} $el
      * @param {String} prop
-     * @return {Number|String|undefined}
+     * @return {Number|String}
      */
-    getValue($el: DOMTarget, prop: string): number | string | undefined;
+    getComputedValue($el: DOMTarget, prop: string): number | string;
     /**
      * @param {LayoutNode|null} rootNode
      * @param {LayoutNodeIterator} cb
@@ -208,4 +209,9 @@ declare class LayoutSnapshot {
 import type { Timeline } from '../timeline/timeline.js';
 import type { WAAPIAnimation } from '../waapi/waapi.js';
 import type { DOMTargetSelector } from '../types/index.js';
+import type { FunctionValue } from '../types/index.js';
+import type { EasingParam } from '../types/index.js';
+import type { TimerParams } from '../types/index.js';
+import type { TickableCallbacks } from '../types/index.js';
+import type { RenderableCallbacks } from '../types/index.js';
 export {};

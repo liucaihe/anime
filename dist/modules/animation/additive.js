@@ -1,8 +1,8 @@
 /**
  * Anime.js - animation - ESM
- * @version v4.3.0-beta.2
+ * @version v4.3.0
  * @license MIT
- * @copyright 2025 - Julian Garnier
+ * @copyright 2026 - Julian Garnier
  */
 
 import { noop, minValue, valueTypes, tickModes } from '../core/consts.js';

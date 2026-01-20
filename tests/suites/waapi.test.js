@@ -46,7 +46,7 @@ suite('WAAPI', () => {
 
   test('Animate multiple elements', resolve => {
     const targets = utils.$('.target-class');
-    const animation = waapi.animate(targets, {
+    waapi.animate(targets, {
       transform: `translateX(100px)`,
       duration: 10,
       onComplete: anim => {
@@ -62,7 +62,7 @@ suite('WAAPI', () => {
 
   test('Animate multiple elements with stagger', resolve => {
     const targets = utils.$('.target-class');
-    const animation = waapi.animate(targets, {
+    waapi.animate(targets, {
       transform: `translateX(100px)`,
       duration: 10,
       delay: stagger(1),
@@ -79,7 +79,7 @@ suite('WAAPI', () => {
 
   test('Animate with function based values', resolve => {
     const targets = utils.$('.target-class');
-    const animation = waapi.animate(targets, {
+    waapi.animate(targets, {
       transform: (_, i) => `translateX(${i * 100}px)`,
       duration: 10,
       delay: stagger(1),
@@ -93,9 +93,25 @@ suite('WAAPI', () => {
     });
   });
 
-  test('Animate with function based keyframes value', resolve => {
+  test('Animate with function based properties', () => {
     const targets = utils.$('.target-class');
     const animation = waapi.animate(targets, {
+      transform: `translateX(100px)`,
+      duration: (_, i) => i * 20,
+      delay: (_, i) => i * 5,
+      ease: () => (t) => t,
+      autoplay: false
+    });
+    animation.seek(20).commitStyles();
+    expect(utils.get(targets[0], 'x')).to.equal('100px');
+    expect(utils.get(targets[1], 'x')).to.equal('75px');
+    expect(utils.get(targets[2], 'x')).to.equal('25px');
+    expect(utils.get(targets[3], 'x')).to.equal('8.33333px');
+  });
+
+  test('Animate with function based keyframes value', resolve => {
+    const targets = utils.$('.target-class');
+    waapi.animate(targets, {
       transform: ['translateX(200px)', (_, i) => `translateX(${i * 100}px)`],
       duration: 10,
       delay: stagger(1),

@@ -1,8 +1,8 @@
 /**
  * Anime.js - core - CJS
- * @version v4.3.0-beta.2
+ * @version v4.3.0
  * @license MIT
- * @copyright 2025 - Julian Garnier
+ * @copyright 2026 - Julian Garnier
  */
 
 'use strict';
@@ -67,7 +67,7 @@ const globals = {
 
 const devTools = consts.isBrowser && consts.win.AnimeJSDevTools;
 
-const globalVersions = { version: '4.3.0-beta.2', engine: null };
+const globalVersions = { version: '4.3.0', engine: null };
 
 if (consts.isBrowser) {
   if (!consts.win.AnimeJS) consts.win.AnimeJS = [];

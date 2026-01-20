@@ -29,6 +29,9 @@ suite('Function based values', () => {
         const index = parseFloat(el.dataset.index);
         return total + ((i + index) * 100);
       },
+      ease: () => {
+        return (/** @type {Number} */t) => t;
+      },
     });
 
     // Property value
@@ -83,8 +86,8 @@ suite('Function based values', () => {
     const animation = animate($targets, {
       autoplay: false,
       translateX: [
-        { to: el => el.getAttribute('data-index') * 100, duration: stagger(100), delay: stagger(100) },
-        { to: el => el.getAttribute('data-index') * 50, duration: stagger(100), delay: stagger(100) }
+        { to: el => el.getAttribute('data-index') * 100, duration: stagger(100), delay: stagger(100), ease: () => t => t },
+        { to: el => el.getAttribute('data-index') * 50, duration: stagger(100), delay: stagger(100), ease: () => t => t }
       ],
     });
 

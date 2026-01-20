@@ -1,8 +1,8 @@
 /**
  * Anime.js - timer - ESM
- * @version v4.3.0-beta.2
+ * @version v4.3.0
  * @license MIT
- * @copyright 2025 - Julian Garnier
+ * @copyright 2026 - Julian Garnier
  */
 
 import { minValue, noop, maxValue, compositionTypes, tickModes } from '../core/consts.js';
@@ -461,10 +461,11 @@ class Timer extends Clock {
 
  /**
    * Imediatly completes the timer, cancels it and triggers the onComplete callback
+   * @param  {Boolean|Number} [muteCallbacks]
    * @return {this}
    */
-  complete() {
-    return this.seek(this.duration).cancel();
+  complete(muteCallbacks = 0) {
+    return this.seek(this.duration, muteCallbacks).cancel();
   }
 
   /**

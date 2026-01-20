@@ -1,8 +1,8 @@
 /**
  * Anime.js - animation - CJS
- * @version v4.3.0-beta.2
+ * @version v4.3.0
  * @license MIT
- * @copyright 2025 - Julian Garnier
+ * @copyright 2026 - Julian Garnier
  */
 
 'use strict';
@@ -307,10 +307,13 @@ class JSAnimation extends timer.Timer {
               tweenToValue = computedToValue;
             }
             const tweenFromValue = values.getFunctionValue(key.from, target, ti, tl);
-            const keyEasing = key.ease;
+            const easeToParse = key.ease || tEasing;
+
+            const easeFunctionResult = values.getFunctionValue(easeToParse, target, ti, tl);
+            const keyEasing = helpers.isFnc(easeFunctionResult) || helpers.isStr(easeFunctionResult) ? easeFunctionResult : easeToParse;
+
             const hasSpring = !helpers.isUnd(keyEasing) && !helpers.isUnd(/** @type {Spring} */(keyEasing).ease);
-            // Easing are treated differently and don't accept function based value to prevent having to pass a function wrapper that returns an other function all the time
-            const tweenEasing = hasSpring ? /** @type {Spring} */(keyEasing).ease : keyEasing || tEasing;
+            const tweenEasing = hasSpring ? /** @type {Spring} */(keyEasing).ease : keyEasing;
             // Calculate default individual keyframe duration by dividing the tl of keyframes
             const tweenDuration = hasSpring ? /** @type {Spring} */(keyEasing).settlingDuration : values.getFunctionValue(values.setValue(key.duration, (l > 1 ? values.getFunctionValue(tDuration, target, ti, tl) / l : tDuration)), target, ti, tl);
             // Default delay value should only be applied to the first tween

@@ -145,6 +145,8 @@
   --border-width: 1px;
 }
 
+[data-color="fg"] { --color-1: var(--fg-1); --color-2: var(--fg-2); --color-3: var(--fg-3); --color-4: var(--fg-4); --color-5: var(--fg-5);}
+[data-color="bg"] { --color-1: var(--bg-1); --color-2: var(--bg-2); --color-3: var(--bg-3); --color-4: var(--bg-4); --color-5: var(--bg-5);}
 [data-color="0"] { --color-1: var(--red-1); --color-2: var(--red-2); --color-3: var(--red-3); --color-4: var(--red-4); --color-5: var(--red-5);}
 [data-color="1"] { --color-1: var(--corail-1); --color-2: var(--corail-2); --color-3: var(--corail-3); --color-4: var(--corail-4); --color-5: var(--corail-5);}
 [data-color="2"] { --color-1: var(--orange-1); --color-2: var(--orange-2); --color-3: var(--orange-3); --color-4: var(--orange-4); --color-5: var(--orange-5);}

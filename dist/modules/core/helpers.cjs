@@ -1,8 +1,8 @@
 /**
  * Anime.js - core - CJS
- * @version v4.3.0-beta.2
+ * @version v4.3.0
  * @license MIT
- * @copyright 2025 - Julian Garnier
+ * @copyright 2026 - Julian Garnier
  */
 
 'use strict';
@@ -56,9 +56,9 @@ const isSvg = a => consts.isBrowser && a instanceof SVGElement;
 /**@param {any} a @return {Boolean} */
 const isHex = a => consts.hexTestRgx.test(a);
 /**@param {any} a @return {Boolean} */
-const isRgb = a => stringStartsWith(a, 'rgb');
+const isRgb = a => stringStartsWith(a, 'rgb') && a[a.length - 1] === ')';
 /**@param {any} a @return {Boolean} */
-const isHsl = a => stringStartsWith(a, 'hsl');
+const isHsl = a => stringStartsWith(a, 'hsl') && a[a.length - 1] === ')';
 /**@param {any} a @return {Boolean} */
 const isCol = a => isHex(a) || isRgb(a) || isHsl(a);
 /**@param {any} a @return {Boolean} */

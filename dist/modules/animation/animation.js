@@ -1,12 +1,12 @@
 /**
  * Anime.js - animation - ESM
- * @version v4.3.0-beta.2
+ * @version v4.3.0
  * @license MIT
- * @copyright 2025 - Julian Garnier
+ * @copyright 2026 - Julian Garnier
  */
 
 import { K, compositionTypes, valueTypes, minValue, tweenTypes } from '../core/consts.js';
-import { mergeObjects, isUnd, isKey, isObj, round, cloneArray, isNil, addChild, forEachChildren, clampInfinity, normalizeTime, isArr, isNum } from '../core/helpers.js';
+import { mergeObjects, isUnd, isKey, isObj, round, cloneArray, isNil, addChild, forEachChildren, clampInfinity, normalizeTime, isArr, isFnc, isStr, isNum } from '../core/helpers.js';
 import { globals } from '../core/globals.js';
 import { registerTargets } from '../core/targets.js';
 import { setValue, getTweenType, getFunctionValue, decomposeRawValue, getOriginalAnimatableValue, createDecomposedValueTargetObject, decomposedOriginalValue, getRelativeValue, decomposeTweenValue } from '../core/values.js';
@@ -305,10 +305,13 @@ class JSAnimation extends Timer {
               tweenToValue = computedToValue;
             }
             const tweenFromValue = getFunctionValue(key.from, target, ti, tl);
-            const keyEasing = key.ease;
+            const easeToParse = key.ease || tEasing;
+
+            const easeFunctionResult = getFunctionValue(easeToParse, target, ti, tl);
+            const keyEasing = isFnc(easeFunctionResult) || isStr(easeFunctionResult) ? easeFunctionResult : easeToParse;
+
             const hasSpring = !isUnd(keyEasing) && !isUnd(/** @type {Spring} */(keyEasing).ease);
-            // Easing are treated differently and don't accept function based value to prevent having to pass a function wrapper that returns an other function all the time
-            const tweenEasing = hasSpring ? /** @type {Spring} */(keyEasing).ease : keyEasing || tEasing;
+            const tweenEasing = hasSpring ? /** @type {Spring} */(keyEasing).ease : keyEasing;
             // Calculate default individual keyframe duration by dividing the tl of keyframes
             const tweenDuration = hasSpring ? /** @type {Spring} */(keyEasing).settlingDuration : getFunctionValue(setValue(key.duration, (l > 1 ? getFunctionValue(tDuration, target, ti, tl) / l : tDuration)), target, ti, tl);
             // Default delay value should only be applied to the first tween

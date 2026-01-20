@@ -61,7 +61,6 @@
       background: transparent;
     }
     .close-overlay {
-      opacity: 0;
       position: absolute;
       align-self: flex-end;
       width: 3rem;
@@ -77,6 +76,10 @@
       font-size: 1.5rem;
       transform: rotate(-90deg) scale(.5);
       transition: scale .125s ease-out;
+    }
+    button.close-overlay:disabled {
+      background: var(--color-4);
+      opacity: 0;
     }
     button.close-overlay:hover {
       background: var(--color-3);
@@ -139,10 +142,11 @@
       color: var(--color-1);
       transform-style: preserve-3d;
       transition: transform .1s ease-out;
+      text-decoration: none;
     }
     #root .card:hover {
       cursor: pointer;
-      transform: scale(1.025);
+      transform: scale(1.0125);
     }
     #overlay .card,
     #root .card:hover {
@@ -347,11 +351,12 @@
     <div class="controls-group actions br">
       <button class="action" id="add">add</button>
       <button class="action" id="remove">remove</button>
+      <button class="action" id="shuffle">shuffle</button>
     </div>
   </div>
   <template id="card">
-    <div class="card br" data-color="0">
-      <button class="close-overlay">×</button>
+    <a href="#" class="card br" data-color="0">
+      <button disabled class="close-overlay">×</button>
       <div class="card-image"><div class="card-image-grid"></div></div>
       <div class="card-text">
         <h2 class="card-title"></h2>
@@ -361,7 +366,7 @@
           <span class="card-more-info"></span>
         </p>
       </div>
-    </div>
+    </a>
   </template>
   <div id="root" class="container" data-layout="grid">
   </div>

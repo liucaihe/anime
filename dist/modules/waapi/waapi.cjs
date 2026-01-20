@@ -1,8 +1,8 @@
 /**
  * Anime.js - waapi - CJS
- * @version v4.3.0-beta.2
+ * @version v4.3.0
  * @license MIT
- * @copyright 2025 - Julian Garnier
+ * @copyright 2026 - Julian Garnier
  */
 
 'use strict';
@@ -190,8 +190,6 @@ class WAAPIAnimation {
       console.warn(`No target found. Make sure the element you're trying to animate is accessible before creating your animation.`);
     }
 
-    const ease = values.setValue(params.ease, parseWAAPIEasing(globals.globals.defaults.ease));
-    const spring = /** @type {Spring} */(ease).ease && ease;
     const autoplay = values.setValue(params.autoplay, globals.globals.defaults.autoplay);
     const scroll = autoplay && /** @type {ScrollObserver} */(autoplay).link ? autoplay : false;
     const alternate = params.alternate && /** @type {Boolean} */(params.alternate) === true;
@@ -202,8 +200,6 @@ class WAAPIAnimation {
     const direction = alternate ? reversed ? 'alternate-reverse' : 'alternate' : reversed ? 'reverse' : 'normal';
     /** @type {FillMode} */
     const fill = 'both'; // We use 'both' here because the animation can be reversed during playback
-    /** @type {String} */
-    const easing = parseWAAPIEasing(ease);
     const timeScale = (globals.globals.timeScale === 1 ? 1 : consts.K);
 
     /** @type {DOMTargetsArray}] */
@@ -244,6 +240,15 @@ class WAAPIAnimation {
       const elStyle = $el.style;
       const inlineStyles = this._inlineStyles[i] = {};
 
+      const easeToParse = values.setValue(params.ease, globals.globals.defaults.ease);
+
+      const easeFunctionResult = values.getFunctionValue(easeToParse, $el, i, targetsLength);
+      const keyEasing = helpers.isFnc(easeFunctionResult) || helpers.isStr(easeFunctionResult) ? easeFunctionResult : easeToParse;
+
+      const spring = /** @type {Spring} */(easeToParse).ease && easeToParse;
+      /** @type {String} */
+      const easing = parseWAAPIEasing(keyEasing);
+
       /** @type {Number} */
       const duration = (spring ? /** @type {Spring} */(spring).settlingDuration : values.getFunctionValue(values.setValue(params.duration, globals.globals.defaults.duration), $el, i, targetsLength)) * timeScale;
       /** @type {Number} */
@@ -268,7 +273,7 @@ class WAAPIAnimation {
         let parsedPropertyValue;
         if (helpers.isObj(propertyValue)) {
           const tweenOptions = /** @type {WAAPITweenOptions} */(propertyValue);
-          const tweenOptionsEase = values.setValue(tweenOptions.ease, ease);
+          const tweenOptionsEase = values.setValue(tweenOptions.ease, easing);
           const tweenOptionsSpring = /** @type {Spring} */(tweenOptionsEase).ease && tweenOptionsEase;
           const to = /** @type {WAAPITweenOptions} */(tweenOptions).to;
           const from = /** @type {WAAPITweenOptions} */(tweenOptions).from;

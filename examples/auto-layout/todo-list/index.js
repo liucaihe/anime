@@ -1,79 +1,71 @@
-import { createLayout, $ } from '../../../dist/modules/index.js';
+import { createLayout, spring, stagger, $ } from '../../../dist/modules/index.js';
 
-const $app = document.querySelector('.app');
-const $form = document.querySelector('.create');
-const $input = document.querySelector('#create');
-const $pending = document.querySelector('.pending');
-const $completed = document.querySelector('.completed');
-
-const layout = createLayout($app, {
-  duration: 500
+const layout = createLayout($container, {
+  properties: ['backgroundColor', 'color', 'accent-color'],
+  ease: spring({ bounce: .3, duration: 450 }),
+  leaveTo: {
+    opacity: 0,
+    transform: 'translateY(.5rem) scale(.9)',
+  }
 });
 
-let ids = 0;
-
-const createItem = (text, checked) => {
-  const todoId = `todo-${ids}`;
-  const $item = document.createElement('li');
-  const $label = document.createElement('label');
-  const $checkbox = document.createElement('input');
-  const $delete = document.createElement('button');
-  $item.className = 'item';
-  $label.setAttribute('for', todoId);
-  $label.append(text);
-  $checkbox.id = todoId;
-  $checkbox.type = 'checkbox';
-  $checkbox.className = 'icon';
-  $checkbox.checked = checked;
+const createItem = (text) => {
+  const $item = /** @type {HTMLLIElement} */($todoTemplate.content.firstElementChild.cloneNode(true));
+  const $checkbox = $item.querySelector('input[type="checkbox"]');
+  const $labelText = $item.querySelector('.text');
+  $labelText.textContent = text;
   $checkbox.addEventListener('change', handleToggle);
-  $delete.type = 'button';
-  $delete.className = 'delete icon';
-  $delete.textContent = '×';
-  $delete.addEventListener('click', handleDelete);
-  $item.append($checkbox);
-  $item.append($label);
-  $item.append($delete);
-  ids++;
   return $item;
-};
+}
 
 const handleToggle = event => {
-  const checkbox = /** @type {HTMLInputElement} */(event.currentTarget);
-  const $item = checkbox.closest('.item');
+  const $checkbox = /** @type {HTMLInputElement} */(event.currentTarget);
+  const $item = $checkbox.closest('.item');
   if (!$item) return;
-  const $targetList = checkbox.checked ? $completed : $pending;
+  const $targetList = $checkbox.checked ? $completed : $pending;
   $('.list').forEach($el => $el.classList.toggle('is-active', $el === $targetList));
   $('.item').forEach($el => $el.classList.toggle('is-floating', $el === $item));
-  layout.update(() => {
-    $targetList.insertBefore($item, $targetList.firstElementChild);
-  });
-};
+  layout.update(() => $targetList.insertBefore($item, $targetList.firstElementChild), { ease: 'inOutExpo' });
+}
 
-const handleDelete = event => {
-  const button = /** @type {HTMLButtonElement} */(event.currentTarget);
-  const $item = button.closest('.item');
-  if (!$item) return;
-  layout.update(() => {
-    $item.style.display = 'none';
-  }, {
-    onComplete: () => $item.remove()
-  });
-};
-
-$form.addEventListener('submit', event => {
-  event.preventDefault();
-  const value = $input.value.trim();
+const addItem = () => {
+  const value = $addInput.value.trim();
   if (!value) return;
-  const newItem = createItem(value, false);
-  layout.update(() => {
-    $pending.insertBefore(newItem, $pending.firstElementChild);
-  });
-  $input.value = '';
+  const $item = createItem(value);
+  // debugger;
+  $new.appendChild($item);
+  layout.update(() => $pending.insertBefore($item, $pending.firstElementChild));
+  $addInput.value = '';
+}
+
+const handleAction = event => {
+  const $button = /** @type {HTMLButtonElement} */(event.target);
+  const $item = $button.closest('.item');
+  if (!$item) return;
+  const $parent = $item.parentElement;
+  if ($parent.id === '$createForm') {
+    addItem();
+  } else {
+    layout.update(() => {
+      $item.classList.add('is-removed');
+    }, {
+      ease: 'out(3.5)',
+      onComplete: () => {
+        if ($parent.children.length > 1) { // If there are more than one element left remove the element directly
+          $item.remove();
+        } else { // Otherwise wrap the removal into a layout.update() to avoid abrupt list resizing
+          layout.update(() => $item.remove())
+        }
+      }
+    });
+  }
+}
+
+$createForm.addEventListener('submit', event => {
+  event.preventDefault();
+  addItem();
 });
 
-document.querySelectorAll('.item input[type="checkbox"]').forEach(checkbox => {
-  checkbox.addEventListener('change', handleToggle);
-});
-document.querySelectorAll('.item .delete').forEach(button => {
-  button.addEventListener('click', handleDelete);
+document.addEventListener('click', event => {
+  if (event.target.classList.contains('action')) handleAction(event);
 });

@@ -1,8 +1,8 @@
 /**
  * Anime.js - svg - ESM
- * @version v4.3.0-beta.2
+ * @version v4.3.0
  * @license MIT
- * @copyright 2025 - Julian Garnier
+ * @copyright 2026 - Julian Garnier
  */
 
 import { isSvgSymbol } from '../core/consts.js';

@@ -224,8 +224,6 @@ export class WAAPIAnimation {
       console.warn(`No target found. Make sure the element you're trying to animate is accessible before creating your animation.`);
     }
 
-    const ease = setValue(params.ease, parseWAAPIEasing(globals.defaults.ease));
-    const spring = /** @type {Spring} */(ease).ease && ease;
     const autoplay = setValue(params.autoplay, globals.defaults.autoplay);
     const scroll = autoplay && /** @type {ScrollObserver} */(autoplay).link ? autoplay : false;
     const alternate = params.alternate && /** @type {Boolean} */(params.alternate) === true;
@@ -236,8 +234,6 @@ export class WAAPIAnimation {
     const direction = alternate ? reversed ? 'alternate-reverse' : 'alternate' : reversed ? 'reverse' : 'normal';
     /** @type {FillMode} */
     const fill = 'both'; // We use 'both' here because the animation can be reversed during playback
-    /** @type {String} */
-    const easing = parseWAAPIEasing(ease);
     const timeScale = (globals.timeScale === 1 ? 1 : K);
 
     /** @type {DOMTargetsArray}] */
@@ -278,6 +274,15 @@ export class WAAPIAnimation {
       const elStyle = $el.style;
       const inlineStyles = this._inlineStyles[i] = {};
 
+      const easeToParse = setValue(params.ease, globals.defaults.ease);
+
+      const easeFunctionResult = getFunctionValue(easeToParse, $el, i, targetsLength);
+      const keyEasing = isFnc(easeFunctionResult) || isStr(easeFunctionResult) ? easeFunctionResult : easeToParse;
+
+      const spring = /** @type {Spring} */(easeToParse).ease && easeToParse;
+      /** @type {String} */
+      const easing = parseWAAPIEasing(keyEasing);
+
       /** @type {Number} */
       const duration = (spring ? /** @type {Spring} */(spring).settlingDuration : getFunctionValue(setValue(params.duration, globals.defaults.duration), $el, i, targetsLength)) * timeScale;
       /** @type {Number} */
@@ -302,7 +307,7 @@ export class WAAPIAnimation {
         let parsedPropertyValue;
         if (isObj(propertyValue)) {
           const tweenOptions = /** @type {WAAPITweenOptions} */(propertyValue);
-          const tweenOptionsEase = setValue(tweenOptions.ease, ease);
+          const tweenOptionsEase = setValue(tweenOptions.ease, easing);
           const tweenOptionsSpring = /** @type {Spring} */(tweenOptionsEase).ease && tweenOptionsEase;
           const to = /** @type {WAAPITweenOptions} */(tweenOptions).to;
           const from = /** @type {WAAPITweenOptions} */(tweenOptions).from;

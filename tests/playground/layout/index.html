@@ -161,6 +161,9 @@
     .vertical {
       flex-direction: column;
     }
+    .vertical.reverse {
+      flex-direction: column-reverse;
+    }
     .horizontal {
       flex-direction: row;
     }
@@ -438,6 +441,56 @@
         <div class="container container-b target-container">
           <div class="child" data-layout-id="c">A direct <span data-layout-id="c-1">child</span> element. <div class="sub-child" data-layout-id="c-2"> And a <span data-layout-id="c-3">sub child</span> element</div></div>
           <div class="child" data-layout-id="d">A direct <span data-layout-id="d-1">child</span> element. <div class="sub-child" data-layout-id="d-2"> And a <span data-layout-id="d-3">sub child</span> element</div></div>
+        </div>
+      </div>
+    </div>
+    <div id="stagger-timings" class="test fixed-height">
+      <div class="test-header">
+        <h2>Stagger timings</h2>
+        <button>Animate</button>
+      </div>
+      <div class="demo">
+        <div class="container vertical reverse">
+          <div class="child child-animated"><div>anim</div></div>
+          <div class="child child-removed"><div>rem</div></div>
+          <div class="child child-added" style="display: none"><div>add</div></div>
+          <div class="child child-animated"><div>anim</div></div>
+          <div class="child child-removed"><div>rem</div></div>
+          <div class="child child-added" style="display: none"><div>add</div></div>
+          <div class="child child-animated"><div>anim</div></div>
+          <div class="child child-removed"><div>rem</div></div>
+          <div class="child child-added" style="display: none"><div>add</div></div>
+        </div>
+      </div>
+    </div>
+    <div id="stagger-values" class="test fixed-height">
+      <div class="test-header">
+        <h2>Stagger values</h2>
+        <button>Animate</button>
+      </div>
+      <div class="demo">
+        <div class="container vertical reverse">
+          <div class="child child-animated"><div>anim</div></div>
+          <div class="child child-removed"><div>rem</div></div>
+          <div class="child child-added" style="display: none"><div>add</div></div>
+          <div class="child child-animated"><div>anim</div></div>
+          <div class="child child-removed"><div>rem</div></div>
+          <div class="child child-added" style="display: none"><div>add</div></div>
+          <div class="child child-animated"><div>anim</div></div>
+          <div class="child child-removed"><div>rem</div></div>
+          <div class="child child-added" style="display: none"><div>add</div></div>
+        </div>
+      </div>
+    </div>
+    <div id="transformed-parent" class="test fixed-height">
+      <div class="test-header">
+        <h2>Transformed parent</h2>
+        <button>Animate</button>
+      </div>
+      <div class="demo" style="transform: rotate(20deg) scale(.87); perspective: 1000px;">
+        <div class="container vertical reverse" style="transform: rotateX(-40deg); transform-style: preserve-3d;">
+          <div class="child">A direct <span>child</span> element. <div class="sub-child"> And a <span>sub child</span> element</div></div>
+          <div class="child">A direct <span>child</span> element. <div class="sub-child"> And a <span>sub child</span> element</div></div>
         </div>
       </div>
     </div>

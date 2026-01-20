@@ -12,13 +12,13 @@ import {
 } from '../core/targets.js';
 
 import {
+  parseEase,
+} from '../easings/eases/parser.js';
+
+import {
   getFunctionValue,
   setValue,
 } from '../core/values.js';
-
-import {
-  noop,
-} from '../core/consts.js';
 
 import {
   createTimeline,
@@ -29,12 +29,17 @@ import {
 } from '../waapi/waapi.js';
 
 import {
+  defaults,
   scope,
 } from '../core/globals.js';
 
 /**
  * @import {
  *   AnimationParams,
+ *   RenderableCallbacks,
+ *   TickableCallbacks,
+ *   TimelineParams,
+ *   TimerParams,
  * } from '../types/index.js'
 */
 
@@ -52,11 +57,16 @@ import {
 
 /**
  * @import {
+ *   Spring,
+ } from '../easings/spring/index.js'
+*/
+
+/**
+ * @import {
  *   DOMTarget,
  *   DOMTargetSelector,
  *   FunctionValue,
  *   EasingParam,
- *   Callback,
  } from '../types/index.js'
 */
 
@@ -65,29 +75,47 @@ import {
  */
 
 /**
- * @typedef {Record<String, Number|String>} LayoutStateParams
- */
-
-/**
- * @typedef {Object} LayoutAnimationParams
+ * @typedef {Object} LayoutAnimationTimingsParams
  * @property {Number|FunctionValue} [delay]
  * @property {Number|FunctionValue} [duration]
- * @property {EasingParam} [ease]
- * @property {LayoutStateParams} [frozen]
- * @property {LayoutStateParams} [added]
- * @property {LayoutStateParams} [removed]
- * @property {Callback<AutoLayout>} [onComplete]
+ * @property {EasingParam|FunctionValue} [ease]
  */
 
 /**
- * @typedef {LayoutAnimationParams & {
- *   children?: LayoutChildrenParam,
- *   properties?: Array<String>,
- * }} AutoLayoutParams
+ * @typedef {Record<String, Number|String|FunctionValue>} LayoutStateAnimationProperties
  */
 
 /**
- * @typedef {Record<String, Number|String> & {
+ * @typedef {LayoutStateAnimationProperties & LayoutAnimationTimingsParams} LayoutStateParams
+ */
+
+/**
+ * @typedef {Object} LayoutSpecificAnimationParams
+ * @property {Number|FunctionValue} [delay]
+ * @property {Number|FunctionValue} [duration]
+ * @property {EasingParam|FunctionValue} [ease]
+ * @property {EasingParam} [playbackEase]
+ * @property {LayoutStateParams} [swapAt]
+ * @property {LayoutStateParams} [enterFrom]
+ * @property {LayoutStateParams} [leaveTo]
+ */
+
+/**
+ * @typedef {LayoutSpecificAnimationParams & TimerParams & TickableCallbacks<Timeline> & RenderableCallbacks<Timeline>} LayoutAnimationParams
+ */
+
+/**
+ * @typedef {Object} LayoutOptions
+ * @property {LayoutChildrenParam} [children]
+ * @property {Array<String>} [properties]
+ */
+
+/**
+ * @typedef {LayoutAnimationParams & LayoutOptions} AutoLayoutParams
+ */
+
+/**
+ * @typedef {Record<String, Number|String|FunctionValue> & {
  *   transform: String,
  *   x: Number,
  *   y: Number,
@@ -108,13 +136,15 @@ import {
  * @property {Number} total
  * @property {Number} delay
  * @property {Number} duration
+ * @property {EasingParam} ease
  * @property {DOMTarget} $measure
  * @property {LayoutSnapshot} state
  * @property {AutoLayout} layout
  * @property {LayoutNode|null} parentNode
  * @property {Boolean} isTarget
+ * @property {Boolean} isEntering
+ * @property {Boolean} isLeaving
  * @property {Boolean} hasTransform
- * @property {Boolean} isAnimated
  * @property {Array<String>} inlineStyles
  * @property {String|null} inlineTransforms
  * @property {String|null} inlineTransition
@@ -255,7 +285,7 @@ const detachNode = node => {
  * @param {DOMTarget} $el
  * @param {LayoutNode|null} parentNode
  * @param {LayoutSnapshot} state
- * @param {LayoutNode} [recycledNode]
+ * @param {LayoutNode} recycledNode
  * @return {LayoutNode}
  */
 const createNode = ($el, parentNode, state, recycledNode) => {
@@ -269,12 +299,15 @@ const createNode = ($el, parentNode, state, recycledNode) => {
   node.total = 1;
   node.delay = 0;
   node.duration = 0;
+  node.ease = null;
   node.state = state;
   node.layout = state.layout;
   node.parentNode = parentNode || null;
   node.isTarget = false;
+  node.isEntering = false;
+  node.isLeaving = false;
+  node.isInlined = false;
   node.hasTransform = false;
-  node.isAnimated = false;
   node.inlineStyles = [];
   node.inlineTransforms = null;
   node.inlineTransition = null;
@@ -282,7 +315,6 @@ const createNode = ($el, parentNode, state, recycledNode) => {
   node.branchRemoved = false;
   node.branchNotRendered = false;
   node.sizeChanged = false;
-  node.isInlined = false;
   node.hasVisibilitySwap = false;
   node.hasDisplayNone = false;
   node.hasVisibilityHidden = false;
@@ -425,13 +457,26 @@ const recordNodeState = (node, $measure, computedStyle, skipMeasurements) => {
 
 /**
  * @param {LayoutNode} node
- * @param {LayoutStateParams} [props]
+ * @param {LayoutStateAnimationProperties} [props]
  */
 const updateNodeProperties = (node, props) => {
   if (!props) return;
   for (let name in props) {
     node.properties[name] = props[name];
   }
+}
+
+/**
+ * @param  {LayoutNode} node
+ * @param  {LayoutAnimationTimingsParams} params
+ */
+const updateNodeTimingParams = (node, params) => {
+  const easeFunctionResult = getFunctionValue(params.ease, node.$el, node.index, node.total);
+  const keyEasing = isFnc(easeFunctionResult) ? easeFunctionResult : params.ease;
+  const hasSpring = !isUnd(keyEasing) && !isUnd(/** @type {Spring} */(keyEasing).ease);
+  node.ease = hasSpring ? /** @type {Spring} */(keyEasing).ease : keyEasing;
+  node.duration = hasSpring ? /** @type {Spring} */(keyEasing).settlingDuration : getFunctionValue(params.duration, node.$el, node.index, node.total);
+  node.delay = getFunctionValue(params.delay, node.$el, node.index, node.total);
 }
 
 /**
@@ -508,9 +553,9 @@ const restoreNodeVisualState = node => {
       node.$measure.style.removeProperty('visibility');
     }
   }
-  if (node.measuredIsRemoved) {
-    node.layout.pendingRemoved.delete(node.$el);
-  }
+  // if (node.measuredIsRemoved) {
+  node.layout.pendingRemoval.delete(node.$el);
+  // }
 }
 
 /**
@@ -560,6 +605,7 @@ class LayoutSnapshot {
    */
   revert() {
     this.forEachNode(node => {
+      this.layout.pendingRemoval.delete(node.$el);
       node.$el.removeAttribute('data-layout-id');
       node.$measure.removeAttribute('data-layout-id');
     });
@@ -571,34 +617,22 @@ class LayoutSnapshot {
 
   /**
    * @param {DOMTarget} $el
-   * @return {LayoutNodeProperties|undefined}
+   * @return {LayoutNode}
    */
-  get($el) {
-    const node = this.nodes.get($el.dataset.layoutId);
-    if (!node) {
-      console.warn(`No node found on state`);
-      return;
-    }
-    return node.properties;
+  getNode($el) {
+    if (!$el || !$el.dataset) return;
+    return this.nodes.get($el.dataset.layoutId);
   }
 
   /**
    * @param {DOMTarget} $el
    * @param {String} prop
-   * @return {Number|String|undefined}
+   * @return {Number|String}
    */
-  getValue($el, prop) {
-    if (!$el || !$el.dataset) {
-      console.warn(`No element found on state (${$el})`);
-      return;
-    }
-    const node = this.nodes.get($el.dataset.layoutId);
-    if (!node) {
-      console.warn(`No node found on state`);
-      return;
-    }
-    const value = node.properties[prop];
-    if (!isUnd(value)) return getFunctionValue(value, $el, node.index, node.total);
+  getComputedValue($el, prop) {
+    const node = this.getNode($el);
+    if (!node) return;
+    return /** @type {Number|String} */(node.properties[prop]);
   }
 
   /**
@@ -659,10 +693,10 @@ class LayoutSnapshot {
       const $parent = /** @type {LayoutNode|null} */(stack.pop());
       /** @type {DOMTarget|null} */
       const $current = /** @type {DOMTarget|null} */(stack.pop());
+
       if (!$current || $current.nodeType !== 1 || isSvg($current)) continue;
 
       const skipMeasurements = $parent ? $parent.measuredIsRemoved : false;
-
       const computedStyle = skipMeasurements ? hiddenComputedStyle : getComputedStyle($current);
       const hasDisplayNone = skipMeasurements ? true : computedStyle.display === 'none';
       const hasVisibilityHidden = skipMeasurements ? true : computedStyle.visibility === 'hidden';
@@ -709,11 +743,10 @@ class LayoutSnapshot {
       node.branchRemoved = false;
       node.branchNotRendered = false;
       node.isTarget = false;
-      node.isAnimated = false;
+      node.sizeChanged = false;
       node.hasVisibilityHidden = hasVisibilityHidden;
       node.hasDisplayNone = hasDisplayNone;
       node.hasVisibilitySwap = (hasVisibilityHidden && !node.measuredHasVisibilityHidden) || (hasDisplayNone && !node.measuredHasDisplayNone);
-      // node.hasVisibilitySwap = (hasVisibilityHidden !== node.measuredHasVisibilityHidden) || (hasDisplayNone !== node.measuredHasDisplayNone);
 
       this.nodes.set(node.id, node);
 
@@ -732,6 +765,7 @@ class LayoutSnapshot {
           $parent._tail = node;
         }
       } else {
+        // Each disconnected subtree becomes its own root in the snapshot graph
         this.rootNodes.add(node);
       }
 
@@ -775,10 +809,28 @@ class LayoutSnapshot {
    * @return {this}
    */
   record() {
-    const { children, root } = this.layout;
+    const layout = this.layout;
+    const children = layout.children;
+    const root = layout.root;
     const toParse = isArr(children) ? children : [children];
     const scoped = [];
     const scopeRoot = children === '*' ? root : scope.root;
+
+    // Mute transition and transforms of root ancestors before recording the state
+
+    /** @type {Array<DOMTarget|String|null>} */
+    const rootAncestorTransformStore = [];
+    let $ancestor = root.parentElement;
+    while ($ancestor && $ancestor.nodeType === 1) {
+      const computedStyle = getComputedStyle($ancestor);
+      if (computedStyle.transform && computedStyle.transform !== 'none') {
+        const inlineTransform = $ancestor.style.transform || '';
+        const inlineTransition = muteElementTransition($ancestor);
+        rootAncestorTransformStore.push($ancestor, inlineTransform, inlineTransition);
+        $ancestor.style.transform = 'none';
+      }
+      $ancestor = $ancestor.parentElement;
+    }
 
     for (let i = 0, l = toParse.length; i < l; i++) {
       const child = toParse[i];
@@ -795,9 +847,13 @@ class LayoutSnapshot {
     rootNode.isTarget = true;
     this.rootNode = rootNode;
 
-    // Track ids of nodes that belong to the current root to filter detached matches
     const inRootNodeIds = new Set();
+    // Update index and total for inital timing calculation
+    let index = 0, total = this.nodes.size;
     this.nodes.forEach((node, id) => {
+      node.index = index++;
+      node.total = total;
+      // Track ids of nodes that belong to the current root to filter detached matches
       if (node && node.measuredIsInsideRoot) {
         inRootNodeIds.add(id);
       }
@@ -827,7 +883,7 @@ class LayoutSnapshot {
 
     for (let i = 0, l = parsedChildren.length; i < l; i++) {
       const $el = parsedChildren[i];
-      const node = this.nodes.get($el.dataset.layoutId);
+      const node = this.getNode($el);
       if (node) {
         let cur = node;
         while (cur) {
@@ -841,16 +897,50 @@ class LayoutSnapshot {
     this.scrollX = window.scrollX;
     this.scrollY = window.scrollY;
 
-    const total = this.nodes.size;
-
     this.forEachNode(restoreNodeTransform);
-    this.forEachNode((node, i) => {
-      node.index = i;
-      node.total = total;
-    });
+
+    // Restore transition and transforms of root ancestors
+
+    for (let i = 0, l = rootAncestorTransformStore.length; i < l; i += 3) {
+      const $el = /** @type {DOMTarget} */(rootAncestorTransformStore[i]);
+      const inlineTransform = /** @type {String} */(rootAncestorTransformStore[i + 1]);
+      const inlineTransition = /** @type {String|null} */(rootAncestorTransformStore[i + 2]);
+      if (inlineTransform && inlineTransform !== '') {
+        $el.style.transform = inlineTransform;
+      } else {
+        $el.style.removeProperty('transform');
+      }
+      restoreElementTransition($el, inlineTransition);
+    }
 
     return this;
   }
+}
+
+/**
+ * @param  {LayoutStateParams} params
+ * @return {[LayoutStateAnimationProperties, LayoutAnimationTimingsParams]}
+ */
+function splitPropertiesFromParams(params) {
+  /** @type {LayoutStateAnimationProperties} */
+  const properties = {};
+  /** @type {LayoutAnimationTimingsParams} */
+  const parameters = {};
+  for (let name in params) {
+    const value = params[name];
+    const isEase = name === 'ease';
+    const isTiming = name === 'duration' || name === 'delay';
+    if (isTiming || isEase) {
+      if (isEase) {
+        parameters[name] = /** @type {EasingParam} */(value);
+      } else {
+        parameters[name] = /** @type {Number|FunctionValue} */(value);
+      }
+    } else {
+      properties[name] = /** @type {Number|String} */(value);
+    }
+  }
+  return [properties, parameters];
 }
 
 export class AutoLayout {
@@ -860,10 +950,16 @@ export class AutoLayout {
    */
   constructor(root, params = {}) {
     if (scope.current) scope.current.register(this);
-    const frozenParams = params.frozen;
-    const addedParams = params.added;
-    const removedParams = params.removed;
-    const propsParams = params.properties;
+    const swapAtSplitParams = splitPropertiesFromParams(params.swapAt);
+    const enterFromSplitParams = splitPropertiesFromParams(params.enterFrom);
+    const leaveToSplitParams = splitPropertiesFromParams(params.leaveTo);
+    const transitionProperties = params.properties;
+    /** @type {Number|FunctionValue} */
+    params.duration = setValue(params.duration, 350);
+    /** @type {Number|FunctionValue} */
+    params.delay = setValue(params.delay, 0);
+    /** @type {EasingParam|FunctionValue} */
+    params.ease = setValue(params.ease, 'inOut(3.5)');
     /** @type {AutoLayoutParams} */
     this.params = params;
     /** @type {DOMTarget} */
@@ -874,29 +970,27 @@ export class AutoLayout {
     this.children = params.children || '*';
     /** @type {Boolean} */
     this.absoluteCoords = false;
-    /** @type {Number|FunctionValue} */
-    this.duration = setValue(params.duration, 500);
-    /** @type {Number|FunctionValue} */
-    this.delay = setValue(params.delay, 0);
-    /** @type {EasingParam} */
-    this.ease = setValue(params.ease, 'inOut(3.5)');
-    /** @type {Callback<this>} */
-    this.onComplete = setValue(params.onComplete, /** @type {Callback<this>} */(noop));
     /** @type {LayoutStateParams} */
-    this.frozenParams = frozenParams || { opacity: 0 };
+    this.swapAtParams = mergeObjects(params.swapAt || { opacity: 0 }, { ease: 'inOut(1.75)' });
     /** @type {LayoutStateParams} */
-    this.addedParams = addedParams || { opacity: 0 };
+    this.enterFromParams = params.enterFrom || { opacity: 0 };
     /** @type {LayoutStateParams} */
-    this.removedParams = removedParams || { opacity: 0 };
+    this.leaveToParams = params.leaveTo || { opacity: 0 };
     /** @type {Set<String>} */
     this.properties = new Set([
       'opacity',
+      'fontSize',
+      'color',
+      'backgroundColor',
       'borderRadius',
+      'border',
+      'filter',
+      'clipPath',
     ]);
-    if (frozenParams) for (let name in frozenParams) this.properties.add(name);
-    if (addedParams) for (let name in addedParams) this.properties.add(name);
-    if (removedParams) for (let name in removedParams) this.properties.add(name);
-    if (propsParams) for (let i = 0, l = propsParams.length; i < l; i++) this.properties.add(propsParams[i]);
+    if (swapAtSplitParams[0]) for (let name in swapAtSplitParams[0]) this.properties.add(name);
+    if (enterFromSplitParams[0]) for (let name in enterFromSplitParams[0]) this.properties.add(name);
+    if (leaveToSplitParams[0]) for (let name in leaveToSplitParams[0]) this.properties.add(name);
+    if (transitionProperties) for (let i = 0, l = transitionProperties.length; i < l; i++) this.properties.add(transitionProperties[i]);
     /** @type {Set<String>} */
     this.recordedProperties = new Set([
       'display',
@@ -916,24 +1010,26 @@ export class AutoLayout {
     ]);
     this.properties.forEach(prop => this.recordedProperties.add(prop));
     /** @type {WeakSet<DOMTarget>} */
-    this.pendingRemoved = new WeakSet();
+    this.pendingRemoval = new WeakSet();
     /** @type {Map<DOMTarget, String|null>} */
     this.transitionMuteStore = new Map();
     /** @type {LayoutSnapshot} */
     this.oldState = new LayoutSnapshot(this);
     /** @type {LayoutSnapshot} */
     this.newState = new LayoutSnapshot(this);
-    /** @type {Timeline|null} */
+    /** @type {Timeline} */
     this.timeline = null;
-    /** @type {WAAPIAnimation|null} */
+    /** @type {WAAPIAnimation} */
     this.transformAnimation = null;
     /** @type {Array<DOMTarget>} */
-    this.frozen = [];
+    this.animating = [];
     /** @type {Array<DOMTarget>} */
-    this.removed = [];
+    this.swapping = [];
     /** @type {Array<DOMTarget>} */
-    this.added = [];
-    // Record the current state as the old state to init the data attributes
+    this.leaving = [];
+    /** @type {Array<DOMTarget>} */
+    this.entering = [];
+    // Record the current state as the old state to init the data attributes and allow imediate .animate()
     this.oldState.record();
     // And all layout transition muted during the record
     restoreLayoutTransition(this.transitionMuteStore);
@@ -943,6 +1039,7 @@ export class AutoLayout {
    * @return {this}
    */
   revert() {
+    this.root.classList.remove('is-animated');
     if (this.timeline) {
       this.timeline.complete();
       this.timeline = null;
@@ -951,8 +1048,7 @@ export class AutoLayout {
       this.transformAnimation.complete();
       this.transformAnimation = null;
     }
-    this.root.classList.remove('is-animated');
-    this.frozen.length = this.removed.length = this.added.length = 0;
+    this.animating.length = this.swapping.length = this.leaving.length = this.entering.length = 0;
     this.oldState.revert();
     this.newState.revert();
     requestAnimationFrame(() => restoreLayoutTransition(this.transitionMuteStore));
@@ -985,20 +1081,72 @@ export class AutoLayout {
    * @return {Timeline}
    */
   animate(params = {}) {
-    const delay = setValue(params.delay, this.delay);
-    const duration = setValue(params.duration, this.duration);
-    const onComplete = setValue(params.onComplete, this.onComplete);
-    const frozenParams = params.frozen ? mergeObjects(params.frozen, this.frozenParams) : this.frozenParams;
-    const addedParams = params.added ? mergeObjects(params.added, this.addedParams) : this.addedParams;
-    const removedParams = params.removed ? mergeObjects(params.removed, this.removedParams) : this.removedParams;
+    /** @type { LayoutAnimationTimingsParams } */
+    const animationTimings = {
+      ease: setValue(params.ease, this.params.ease),
+      delay: setValue(params.delay, this.params.delay),
+      duration: setValue(params.duration, this.params.duration),
+    }
+    /** @type {TimelineParams} */
+    const tlParams = {};
+    const onComplete = setValue(params.onComplete, this.params.onComplete);
+    const onPause = setValue(params.onPause, this.params.onPause);
+    for (let name in defaults) {
+      if (name !== 'ease' && name !== 'duration' && name !== 'delay') {
+        if (!isUnd(params[name])) {
+          tlParams[name] = params[name];
+        } else if (!isUnd(this.params[name])) {
+          tlParams[name] = this.params[name];
+        }
+      }
+    }
+    tlParams.onComplete = () => {
+      // Make sure to call .cancel() after restoreNodeInlineStyles(node); otehrwise the commited styles get reverted
+      if (this.transformAnimation) this.transformAnimation.cancel();
+      newState.forEachRootNode(node => {
+        restoreNodeVisualState(node);
+        restoreNodeInlineStyles(node);
+      });
+      for (let i = 0, l = transformed.length; i < l; i++) {
+        const $el = transformed[i];
+        $el.style.transform = newState.getComputedValue($el, 'transform');
+      }
+      if (this.root.classList.contains('is-animated')) {
+        this.root.classList.remove('is-animated');
+        if (onComplete) onComplete(this.timeline);
+      }
+      // Avoid CSS transitions at the end of the animation by restoring them on the next frame
+      requestAnimationFrame(() => {
+        if (this.root.classList.contains('is-animated')) return;
+        restoreLayoutTransition(this.transitionMuteStore);
+      });
+    };
+    tlParams.onPause = () => {
+      if (!this.root.classList.contains('is-animated')) return;
+      if (this.transformAnimation) this.transformAnimation.cancel();
+      newState.forEachRootNode(restoreNodeVisualState);
+      this.root.classList.remove('is-animated');
+      if (onComplete) onComplete(this.timeline);
+      if (onPause) onPause(this.timeline);
+    };
+    tlParams.composition = false;
+
+    const swapAtParams = mergeObjects(mergeObjects(params.swapAt || {}, this.swapAtParams), animationTimings);
+    const enterFromParams = mergeObjects(mergeObjects(params.enterFrom || {}, this.enterFromParams), animationTimings);
+    const leaveToParams = mergeObjects(mergeObjects(params.leaveTo || {}, this.leaveToParams), animationTimings);
+    const [ swapAtProps, swapAtTimings ] = splitPropertiesFromParams(swapAtParams);
+    const [ enterFromProps, enterFromTimings ] = splitPropertiesFromParams(enterFromParams);
+    const [ leaveToProps, leaveToTimings ] = splitPropertiesFromParams(leaveToParams);
+
     const oldState = this.oldState;
     const newState = this.newState;
-    const added = this.added;
-    const removed = this.removed;
-    const frozen = this.frozen;
-    const pendingRemoved = this.pendingRemoved;
+    const animating = this.animating;
+    const swapping = this.swapping;
+    const entering = this.entering;
+    const leaving = this.leaving;
+    const pendingRemoval = this.pendingRemoval;
 
-    added.length = removed.length = frozen.length = 0;
+    animating.length = swapping.length = entering.length = leaving.length = 0;
 
     // Mute old state CSS transitions to prevent wrong properties calculation
     oldState.forEachRootNode(muteNodeTransition);
@@ -1009,20 +1157,18 @@ export class AutoLayout {
     const targets = [];
     const animated = [];
     const transformed = [];
-    const animatedFrozen = [];
-    const root = newState.rootNode.$el;
+    const animatedSwap = [];
+    const rootNode = newState.rootNode;
+    const $root = rootNode.$el;
 
     newState.forEachRootNode(node => {
+
       const $el = node.$el;
       const id = node.id;
       const parent = node.parentNode;
       const parentAdded = parent ? parent.branchAdded : false;
       const parentRemoved = parent ? parent.branchRemoved : false;
       const parentNotRendered = parent ? parent.branchNotRendered : false;
-
-      // Delay and duration must be calculated in the animate() call to support delay override
-      node.delay = +(isFnc(delay) ? delay($el, node.index, node.total) : delay);
-      node.duration = +(isFnc(duration) ? duration($el, node.index, node.total) : duration);
 
       let oldStateNode = oldState.nodes.get(id);
 
@@ -1073,7 +1219,7 @@ export class AutoLayout {
         }
       }
 
-      const wasPendingRemoval = pendingRemoved.has($el);
+      const wasPendingRemoval = pendingRemoval.has($el);
       const wasVisibleBefore = oldStateNode.measuredIsVisible;
       const isVisibleNow = node.measuredIsVisible;
       const becomeVisible = !wasVisibleBefore && isVisibleNow && !parentNotRendered;
@@ -1081,113 +1227,156 @@ export class AutoLayout {
       const newlyRemoved = isRemovedNow && !wasRemovedBefore && !parentRemoved;
       const topLevelRemoved = newlyRemoved || isRemovedNow && wasPendingRemoval && !parentRemoved;
 
-      if (node.measuredIsRemoved && wasVisibleBefore) {
+      node.branchAdded = parentAdded || topLevelAdded;
+      node.branchRemoved = parentRemoved || topLevelRemoved;
+      node.branchNotRendered = parentNotRendered || isRemovedNow;
+
+      if (isRemovedNow && wasVisibleBefore) {
         node.$el.style.display = oldStateNode.measuredDisplay;
         node.$el.style.visibility = 'visible';
         cloneNodeProperties(oldStateNode, node, newState);
       }
 
+      // Node is leaving
       if (newlyRemoved) {
-        removed.push($el);
-        pendingRemoved.add($el);
+        if (node.isTarget) {
+          leaving.push($el);
+          node.isLeaving = true;
+        }
+        pendingRemoval.add($el);
       } else if (!isRemovedNow && wasPendingRemoval) {
-        pendingRemoved.delete($el);
+        pendingRemoval.delete($el);
       }
 
-      // Node is added
+      // Node is entering
       if ((topLevelAdded && !parentNotRendered) || becomeVisible) {
-        updateNodeProperties(oldStateNode, addedParams);
-        added.push($el);
-      // Node is removed
+        updateNodeProperties(oldStateNode, enterFromProps);
+        if (node.isTarget) {
+          entering.push($el);
+          node.isEntering = true;
+        }
+      // Node is leaving
       } else if (topLevelRemoved && !parentNotRendered) {
-        updateNodeProperties(node, removedParams);
+        updateNodeProperties(node, leaveToProps);
       }
 
-      // Compute function based propety values before cheking for changes
-      for (let name in node.properties) {
-        node.properties[name] = newState.getValue(node.$el, name);
-        // NOTE: I'm using node.$el to get the value of old state, make sure this is valid instead of oldStateNode.$el
-        oldStateNode.properties[name] = oldState.getValue(node.$el, name);
+      // Node is animating
+      // The animating array is used only to calculate delays and duration on root children
+      if (node !== rootNode && node.isTarget && !node.isEntering && !node.isLeaving) {
+        animating.push($el);
       }
 
-      const hiddenStateChanged = (topLevelAdded || newlyRemoved) && wasRemovedBefore !== isRemovedNow;
-      let propertyChanged = false;
+      targets.push($el);
 
+    });
 
-      if (node.isTarget && (!node.measuredIsRemoved && wasVisibleBefore || node.measuredIsRemoved && isVisibleNow)) {
-        if (!node.isInlined && (node.properties.transform !== 'none' || oldStateNode.properties.transform !== 'none')) {
+    let enteringIndex = 0;
+    let leavingIndex = 0;
+    let animatingIndex = 0;
+
+    newState.forEachRootNode(node => {
+
+      const $el = node.$el;
+      const parent = node.parentNode;
+      const oldStateNode = oldState.nodes.get(node.id);
+      const nodeProperties = node.properties;
+      const oldStateNodeProperties = oldStateNode.properties;
+
+      // Use closest animated parent index and total values so that children staggered delays are in sync with their parent
+      let animatedParent = parent !== rootNode && parent;
+      while (animatedParent && !animatedParent.isTarget && animatedParent !== rootNode) {
+        animatedParent = animatedParent.parentNode;
+      }
+
+      const animatingTotal = animating.length;
+
+      // Root is always animated first in sync with the first child (animating.length is the total of children)
+      if (node === rootNode) {
+        node.index = 0;
+        node.total = animatingTotal;
+        updateNodeTimingParams(node, animationTimings);
+      } else if (node.isEntering) {
+        node.index = animatedParent ? animatedParent.index : enteringIndex;
+        node.total = animatedParent ? animatingTotal : entering.length;
+        updateNodeTimingParams(node, enterFromTimings);
+        enteringIndex++;
+      } else if (node.isLeaving) {
+        node.index = animatedParent ? animatedParent.index : leavingIndex;
+        node.total = animatedParent ? animatingTotal : leaving.length;
+        leavingIndex++;
+        updateNodeTimingParams(node, leaveToTimings);
+      } else if (node.isTarget) {
+        node.index = animatingIndex++;
+        node.total = animatingTotal;
+        updateNodeTimingParams(node, animationTimings);
+      } else {
+        node.index = animatedParent ? animatedParent.index : 0;
+        node.total = animatingTotal;
+        updateNodeTimingParams(node, swapAtTimings);
+      }
+
+      // Make sure the old state node has its inex and total values up to date for valid "from" function values calculation
+      oldStateNode.index = node.index;
+      oldStateNode.total = node.total;
+
+      // Computes all values up front so we can check for changes and we don't have to re-compute them inside the animation props
+      for (let prop in nodeProperties) {
+        nodeProperties[prop] = getFunctionValue(nodeProperties[prop], $el, node.index, node.total);
+        oldStateNodeProperties[prop] = getFunctionValue(oldStateNodeProperties[prop], $el, oldStateNode.index, oldStateNode.total);
+      }
+
+      // Use a 1px tolerance to detect dimensions changes to prevent width / height animations on barelly visible elements
+      const sizeTolerance = 1;
+      const widthChanged = Math.abs(nodeProperties.width - oldStateNodeProperties.width) > sizeTolerance;
+      const heightChanged = Math.abs(nodeProperties.height - oldStateNodeProperties.height) > sizeTolerance;
+
+      node.sizeChanged = (widthChanged || heightChanged);
+
+      // const hiddenStateChanged = (topLevelAdded || newlyRemoved) && wasRemovedBefore !== isRemovedNow;
+
+      if (node.isTarget && (!node.measuredIsRemoved && oldStateNode.measuredIsVisible || node.measuredIsRemoved && node.measuredIsVisible)) {
+        if (!node.isInlined && (nodeProperties.transform !== 'none' || oldStateNodeProperties.transform !== 'none')) {
           node.hasTransform = true;
-          propertyChanged = true;
           transformed.push($el);
         }
-        for (let name in node.properties) {
-          if (name !== 'transform' && (node.properties[name] !== oldStateNode.properties[name] || hiddenStateChanged)) {
-            propertyChanged = true;
+        for (let prop in nodeProperties) {
+          // if (prop !== 'transform' && (nodeProperties[prop] !== oldStateNodeProperties[prop] || hiddenStateChanged)) {
+          if (prop !== 'transform' && (nodeProperties[prop] !== oldStateNodeProperties[prop])) {
             animated.push($el);
             break;
           }
         }
       }
 
-      const nodeHasChanged = (propertyChanged || topLevelAdded || topLevelRemoved || becomeVisible);
-      const nodeIsAnimated = node.isTarget && nodeHasChanged;
-
-      node.isAnimated = nodeIsAnimated;
-      node.branchAdded = parentAdded || topLevelAdded;
-      node.branchRemoved = parentRemoved || topLevelRemoved;
-      node.branchNotRendered = parentNotRendered || node.measuredIsRemoved;
-
-      const sizeTolerance = 1;
-      const widthChanged = Math.abs(node.properties.width - oldStateNode.properties.width) > sizeTolerance;
-      const heightChanged = Math.abs(node.properties.height - oldStateNode.properties.height) > sizeTolerance;
-
-      node.sizeChanged = (widthChanged || heightChanged);
-
-      targets.push($el);
-
       if (!node.isTarget) {
-        frozen.push($el);
-        if ((nodeHasChanged || node.sizeChanged) && parent && parent.isTarget && parent.isAnimated && parent.sizeChanged) {
-          animatedFrozen.push($el);
+        swapping.push($el);
+        if (node.sizeChanged && parent && parent.isTarget && parent.sizeChanged) {
+          if (!node.isInlined && swapAtProps.transform) {
+            node.hasTransform = true;
+            transformed.push($el);
+          }
+          animatedSwap.push($el);
         }
       }
+
     });
 
-    const defaults = {
-      ease: setValue(params.ease, this.ease),
-      duration: (/** @type {HTMLElement} */$el) => newState.nodes.get($el.dataset.layoutId).duration,
-      delay: (/** @type {HTMLElement} */$el) => newState.nodes.get($el.dataset.layoutId).delay,
+    const timingParams = {
+      delay: (/** @type {HTMLElement} */$el) => newState.getNode($el).delay,
+      duration: (/** @type {HTMLElement} */$el) => newState.getNode($el).duration,
+      ease: (/** @type {HTMLElement} */$el) => newState.getNode($el).ease,
     }
 
-    this.timeline = createTimeline({
-      onComplete: () => {
-        // Make sure to call .cancel() after restoreNodeInlineStyles(node); otehrwise the commited styles get reverted
-        if (this.transformAnimation) this.transformAnimation.cancel();
-        newState.forEachRootNode(node => {
-          restoreNodeVisualState(node);
-          restoreNodeInlineStyles(node);
-        });
-        for (let i = 0, l = transformed.length; i < l; i++) {
-          const $el = transformed[i];
-          $el.style.transform = newState.getValue($el, 'transform');
-        }
-        this.root.classList.remove('is-animated');
-        if (onComplete) onComplete(this);
-        // Avoid CSS transitions at the end of the animation by restoring them on the next frame
-        requestAnimationFrame(() => {
-          if (this.root.classList.contains('is-animated')) return;
-          restoreLayoutTransition(this.transitionMuteStore);
-        });
-      },
-      onPause: () => {
-        if (this.transformAnimation) this.transformAnimation.cancel();
-        newState.forEachRootNode(restoreNodeVisualState);
-        this.root.classList.remove('is-animated');
-        if (onComplete) onComplete(this);
-      },
-      composition: false,
-      defaults,
-    });
+    tlParams.defaults = timingParams;
+
+    this.timeline = createTimeline(tlParams);
+
+    // Imediatly return the timeline if no layout changes detected
+    if (!animated.length && !transformed.length && !swapping.length) {
+      // Make sure to restore all CSS transition if no animation
+      restoreLayoutTransition(this.transitionMuteStore);
+      return this.timeline.complete();
+    }
 
     if (targets.length) {
 
@@ -1200,15 +1389,14 @@ export class AutoLayout {
         const newNode = newState.nodes.get(id);
         const oldNodeState = oldNode.properties;
 
-        // Make sure to mute all CSS transition before applying the oldState styles back
-        muteNodeTransition(newNode);
+        // muteNodeTransition(newNode);
 
         // Don't animate dimensions and positions of inlined elements
         if (!newNode.isInlined) {
           // Display grid can mess with the absolute positioning, so set it to block during transition
-          if (oldNode.measuredDisplay === 'grid' || newNode.measuredDisplay === 'grid') $el.style.display = 'block';
-          // All children must be in position absolue
-          if ($el !== root || this.absoluteCoords) {
+          if (oldNode.measuredDisplay === 'grid' || newNode.measuredDisplay === 'grid') $el.style.setProperty('display', 'block', 'important');
+          // All children must be in position absolute or fixed
+          if ($el !== $root || this.absoluteCoords) {
             $el.style.position = this.absoluteCoords ? 'fixed' : 'absolute';
             $el.style.left = '0px';
             $el.style.top = '0px';
@@ -1216,7 +1404,7 @@ export class AutoLayout {
             $el.style.marginTop = '0px';
             $el.style.translate = `${oldNodeState.x}px ${oldNodeState.y}px`;
           }
-          if ($el === root && newNode.measuredPosition === 'static') {
+          if ($el === $root && newNode.measuredPosition === 'static') {
             $el.style.position = 'relative';
             // Cancel left / trop in case the static element had muted values now activated by potision relative
             $el.style.left = '0px';
@@ -1235,9 +1423,7 @@ export class AutoLayout {
       // Restore the scroll position if the oldState differs from the current state
       if (oldState.scrollX !== window.scrollX || oldState.scrollY !== window.scrollY) {
         // Restoring in the next frame avoids race conditions if for example a waapi animation commit styles that affect the root height
-        requestAnimationFrame(() => {
-          window.scrollTo(oldState.scrollX, oldState.scrollY);
-        });
+        requestAnimationFrame(() => window.scrollTo(oldState.scrollX, oldState.scrollY));
       }
 
       for (let i = 0, l = animated.length; i < l; i++) {
@@ -1247,25 +1433,25 @@ export class AutoLayout {
         const newNode = newState.nodes.get(id);
         const oldNodeState = oldNode.properties;
         const newNodeState = newNode.properties;
-        let hasChanged = false;
+        let nodeHasChanged = false;
+        /** @type {AnimationParams} */
         const animatedProps = {
           composition: 'none',
-          // delay: (/** @type {HTMLElement} */$el) => newState.nodes.get($el.dataset.layoutId).delay,
         }
         if (!newNode.isInlined) {
           if (oldNodeState.width !== newNodeState.width) {
             animatedProps.width = [oldNodeState.width, newNodeState.width];
-            hasChanged = true;
+            nodeHasChanged = true;
           }
           if (oldNodeState.height !== newNodeState.height) {
             animatedProps.height = [oldNodeState.height, newNodeState.height];
-            hasChanged = true;
+            nodeHasChanged = true;
           }
           // If the node has transforms we handle the translate animation in wappi otherwise translate and other transforms can be out of sync
           // Always animate translate
           if (!newNode.hasTransform) {
             animatedProps.translate = [`${oldNodeState.x}px ${oldNodeState.y}px`, `${newNodeState.x}px ${newNodeState.y}px`];
-            hasChanged = true;
+            nodeHasChanged = true;
           }
         }
         this.properties.forEach(prop => {
@@ -1273,73 +1459,77 @@ export class AutoLayout {
           const newVal = newNodeState[prop];
           if (prop !== 'transform' && oldVal !== newVal) {
             animatedProps[prop] = [oldVal, newVal];
-            hasChanged = true;
+            nodeHasChanged = true;
           }
         });
-        if (hasChanged) {
+        if (nodeHasChanged) {
           this.timeline.add($el, animatedProps, 0);
         }
       }
 
     }
 
-    if (frozen.length) {
+    if (swapping.length) {
 
-      for (let i = 0, l = frozen.length; i < l; i++) {
-        const $el = frozen[i];
-        const oldNode = oldState.nodes.get($el.dataset.layoutId);
+      for (let i = 0, l = swapping.length; i < l; i++) {
+        const $el = swapping[i];
+        const oldNode = oldState.getNode($el);
         if (!oldNode.isInlined) {
-          const oldNodeState = oldState.get($el);
-          $el.style.width = `${oldNodeState.width}px`;
-          $el.style.height = `${oldNodeState.height}px`;
+          const oldNodeProps = oldNode.properties;
+          $el.style.width = `${oldNodeProps.width}px`;
+          $el.style.height = `${oldNodeProps.height}px`;
           // Overrides user defined min and max to prevents width and height clamping
           $el.style.minWidth = `auto`;
           $el.style.minHeight = `auto`;
           $el.style.maxWidth = `none`;
           $el.style.maxHeight = `none`;
-          $el.style.translate = `${oldNodeState.x}px ${oldNodeState.y}px`;
+          $el.style.translate = `${oldNodeProps.x}px ${oldNodeProps.y}px`;
         }
         this.properties.forEach(prop => {
           if (prop !== 'transform') {
-            $el.style[prop] = `${oldState.getValue($el, prop)}`;
+            $el.style[prop] = `${oldState.getComputedValue($el, prop)}`;
           }
         });
       }
 
-      for (let i = 0, l = frozen.length; i < l; i++) {
-        const $el = frozen[i];
-        const newNode = newState.nodes.get($el.dataset.layoutId);
-        const newNodeState = newState.get($el);
+      for (let i = 0, l = swapping.length; i < l; i++) {
+        const $el = swapping[i];
+        const newNode = newState.getNode($el);
+        const newNodeProps = newNode.properties;
         this.timeline.call(() => {
           if (!newNode.isInlined) {
-            $el.style.width = `${newNodeState.width}px`;
-            $el.style.height = `${newNodeState.height}px`;
+            $el.style.width = `${newNodeProps.width}px`;
+            $el.style.height = `${newNodeProps.height}px`;
             // Overrides user defined min and max to prevents width and height clamping
             $el.style.minWidth = `auto`;
             $el.style.minHeight = `auto`;
             $el.style.maxWidth = `none`;
             $el.style.maxHeight = `none`;
-            $el.style.translate = `${newNodeState.x}px ${newNodeState.y}px`;
+            $el.style.translate = `${newNodeProps.x}px ${newNodeProps.y}px`;
           }
           this.properties.forEach(prop => {
             if (prop !== 'transform') {
-              $el.style[prop] = `${newState.getValue($el, prop)}`;
+              $el.style[prop] = `${newState.getComputedValue($el, prop)}`;
             }
           });
         }, newNode.delay + newNode.duration / 2);
       }
 
-      if (animatedFrozen.length) {
-        const animatedFrozenParams = /** @type {AnimationParams} */({});
-        if (frozenParams) {
-          for (let prop in frozenParams) {
-            animatedFrozenParams[prop] = [
-              { from: (/** @type {HTMLElement} */$el) => oldState.getValue($el, prop), ease: 'in(1.75)', to: frozenParams[prop] },
-              { from: frozenParams[prop], to: (/** @type {HTMLElement} */$el) => newState.getValue($el, prop), ease: 'out(1.75)' }
-            ]
+      if (animatedSwap.length) {
+        const ease = parseEase(newState.nodes.get(animatedSwap[0].dataset.layoutId).ease);
+        const inverseEased = t => 1 - ease(1 - t);
+        const animatedSwapParams = /** @type {AnimationParams} */({});
+        if (swapAtProps) {
+          for (let prop in swapAtProps) {
+            if (prop !== 'transform') {
+              animatedSwapParams[prop] = [
+                { from: (/** @type {HTMLElement} */$el) => oldState.getComputedValue($el, prop), to: swapAtProps[prop] },
+                { from: swapAtProps[prop], to: (/** @type {HTMLElement} */$el) => newState.getComputedValue($el, prop), ease: inverseEased }
+              ]
+            }
           }
         }
-        this.timeline.add(animatedFrozen, animatedFrozenParams, 0);
+        this.timeline.add(animatedSwap, animatedSwapParams, 0);
       }
 
     }
@@ -1347,18 +1537,29 @@ export class AutoLayout {
     const transformedLength = transformed.length;
 
     if (transformedLength) {
-      // We only need to set the transform property here since translate is alread defined the targets loop
+      // We only need to set the transform property here since translate is alread defined in the targets loop
       for (let i = 0; i < transformedLength; i++) {
         const $el = transformed[i];
-        $el.style.translate = `${oldState.get($el).x}px ${oldState.get($el).y}px`,
-        $el.style.transform = oldState.getValue($el, 'transform');
+        $el.style.translate = `${oldState.getComputedValue($el, 'x')}px ${oldState.getComputedValue($el, 'y')}px`,
+        $el.style.transform = oldState.getComputedValue($el, 'transform');
+        if (animatedSwap.includes($el)) {
+          const node = newState.getNode($el);
+          node.ease = getFunctionValue(swapAtParams.ease, $el, node.index, node.total);
+          node.duration = getFunctionValue(swapAtParams.duration, $el, node.index, node.total);
+        }
       }
       this.transformAnimation = waapi.animate(transformed, {
-        translate: (/** @type {HTMLElement} */$el) => `${newState.get($el).x}px ${newState.get($el).y}px`,
-        transform: (/** @type {HTMLElement} */$el) => newState.getValue($el, 'transform'),
+        translate: (/** @type {HTMLElement} */$el) => `${newState.getComputedValue($el, 'x')}px ${newState.getComputedValue($el, 'y')}px`,
+        transform: (/** @type {HTMLElement} */$el) => {
+          const newValue = newState.getComputedValue($el, 'transform');
+          if (!animatedSwap.includes($el)) return newValue;
+          const oldValue = oldState.getComputedValue($el, 'transform');
+          const node = newState.getNode($el);
+          return [oldValue, getFunctionValue(swapAtProps.transform, $el, node.index, node.total), newValue]
+        },
         autoplay: false,
         persist: true,
-        ...defaults,
+        ...timingParams,
       });
       this.timeline.sync(this.transformAnimation, 0);
     }
@@ -1369,13 +1570,12 @@ export class AutoLayout {
   /**
    * @param {(layout: this) => void} callback
    * @param {LayoutAnimationParams} [params]
-   * @return {this}
+   * @return {Timeline}
    */
   update(callback, params = {}) {
     this.record();
     callback(this);
-    this.animate(params);
-    return this;
+    return this.animate(params);
   }
 }
 

@@ -1,8 +1,8 @@
 /**
  * Anime.js - core - ESM
- * @version v4.3.0-beta.2
+ * @version v4.3.0
  * @license MIT
- * @copyright 2025 - Julian Garnier
+ * @copyright 2026 - Julian Garnier
  */
 
 import { isBrowser, win, noop, maxFps, K, compositionTypes, doc } from './consts.js';
@@ -65,7 +65,7 @@ const globals = {
 
 const devTools = isBrowser && win.AnimeJSDevTools;
 
-const globalVersions = { version: '4.3.0-beta.2', engine: null };
+const globalVersions = { version: '4.3.0', engine: null };
 
 if (isBrowser) {
   if (!win.AnimeJS) win.AnimeJS = [];

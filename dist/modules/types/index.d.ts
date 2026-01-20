@@ -12,7 +12,7 @@ export type DefaultsParams = {
     duration?: number | FunctionValue;
     delay?: number | FunctionValue;
     loopDelay?: number;
-    ease?: EasingParam;
+    ease?: EasingParam | FunctionValue;
     composition?: "none" | "replace" | "blend" | compositionTypes;
     modifier?: (v: any) => any;
     onBegin?: Callback<Tickable>;
@@ -114,7 +114,7 @@ export type TimerOptions = {
     playbackRate?: number;
 };
 export type TimerParams = TimerOptions & TickableCallbacks<Timer>;
-export type FunctionValue = (target: Target, index: number, length: number) => number | string | TweenObjectValue | Array<number | string | TweenObjectValue>;
+export type FunctionValue = (target: Target, index: number, length: number) => number | string | TweenObjectValue | EasingParam | Array<number | string | TweenObjectValue>;
 export type TweenModifier = (value: number) => number | string;
 export type ColorArray = [number, number, number, number];
 export type Tween = {
@@ -187,13 +187,13 @@ export type TweenPropertySiblings = {
 export type TweenLookups = Record<string, TweenPropertySiblings>;
 export type TweenReplaceLookups = WeakMap<Target, TweenLookups>;
 export type TweenAdditiveLookups = Map<Target, TweenLookups>;
-export type TweenParamValue = number | string | FunctionValue;
+export type TweenParamValue = number | string | FunctionValue | EasingParam;
 export type TweenPropValue = TweenParamValue | [TweenParamValue, TweenParamValue];
 export type TweenComposition = (string & {}) | "none" | "replace" | "blend" | compositionTypes;
 export type TweenParamsOptions = {
     duration?: TweenParamValue;
     delay?: TweenParamValue;
-    ease?: EasingParam;
+    ease?: EasingParam | FunctionValue;
     modifier?: TweenModifier;
     composition?: TweenComposition;
 };
@@ -253,7 +253,7 @@ export type TimelineOptions = {
 };
 export type TimelineParams = TimerOptions & TimelineOptions & TickableCallbacks<Timeline> & RenderableCallbacks<Timeline>;
 export type WAAPITweenValue = string | number | Array<string> | Array<number>;
-export type WAAPIFunctionValue = (target: DOMTarget, index: number, length: number) => WAAPITweenValue;
+export type WAAPIFunctionValue = (target: DOMTarget, index: number, length: number) => WAAPITweenValue | WAAPIEasingParam;
 export type WAAPIKeyframeValue = WAAPITweenValue | WAAPIFunctionValue | Array<string | number | WAAPIFunctionValue>;
 export type WAAPITweenOptions = {
     to?: WAAPIKeyframeValue;
@@ -271,7 +271,7 @@ export type WAAPIAnimationOptions = {
     playbackRate?: number;
     duration?: number | WAAPIFunctionValue;
     delay?: number | WAAPIFunctionValue;
-    ease?: WAAPIEasingParam;
+    ease?: WAAPIEasingParam | WAAPIFunctionValue;
     composition?: CompositeOperation;
     persist?: boolean;
     onComplete?: Callback<WAAPIAnimation>;

@@ -115,11 +115,13 @@ const tests = [
     data.$button = utils.$('button')[0];
     data.layout = createLayout('.container', {
       children: ['.child', '.child > span'],
-      frozen: {
+      swapAt: {
         color: 'var(--red-1)',
         borderColor: 'var(--red-1)',
         filter: 'blur(5px)',
-      }
+        transform: 'scale(.8)',
+        ease: 'inOutExpo'
+      },
     });
     data.$button.addEventListener('click', () => {
       data.layout.update(({ root }) => {
@@ -132,7 +134,7 @@ const tests = [
     data.layout = createLayout('.container', {
       children: ['.child', '.child > span'],
       properties: ['background-color'],
-      removed: {
+      leaveTo: {
         transform: 'rotate(45deg) scale(0)',
       },
     });
@@ -141,7 +143,7 @@ const tests = [
         const $child = root.querySelector('.child');
         root.classList.toggle('vertical');
         $child.style.display = $child.style.display === 'none' ? 'block' : 'none';
-      }, { duration, removed: { 'background-color': 'var(--red-1)' } })
+      }, { duration, leaveTo: { 'background-color': 'var(--red-1)' } })
     });
   }),
   createScope({ root: '#added-properties' }).add(({ data }) => {
@@ -149,7 +151,7 @@ const tests = [
     data.layout = createLayout('.container', {
       properties: ['background-color'],
       children: ['.child', '.child > span'],
-      added: {
+      enterFrom: {
         transform: 'rotate(-45deg) scale(0)',
       },
     });
@@ -158,7 +160,7 @@ const tests = [
         root.classList.toggle('vertical');
         const $child = root.querySelector('.child');
         $child.style.display = $child.style.display === 'none' ? 'block' : 'none';
-      }, { duration, added: { 'background-color': 'var(--green-1)' } })
+      }, { duration, enterFrom: { 'background-color': 'var(--green-1)' } })
     });
   }),
   createScope({ root: '#custom-timings' }).add(({ data }) => {
@@ -207,7 +209,7 @@ const tests = [
     data.$button.addEventListener('click', () => {
       const $newContainer = root.querySelector('.container.target-container');
       const $oldContainer = root.querySelector('.container:not(.target-container)');
-      data.layout.update(({root}) => {
+      data.layout.update(() => {
         $newContainer.classList.remove('target-container');
         $oldContainer.classList.add('target-container');
       }, { duration })
@@ -244,4 +246,87 @@ const tests = [
       }, { duration })
     });
   }),
+  createScope({ root: '#stagger-timings' }).add(({ root, data }) => {
+    data.$button = utils.$('button')[0];
+    const $container = utils.$('.container');
+    data.layout = createLayout('.container', {
+      children: '.child',
+      delay: stagger(200),
+      onBegin: () => {
+        utils.set($container, {
+          background: 'var(--sky-2)',
+        })
+      },
+      onComplete: () => {
+        utils.set($container, {
+          background: 'var(--green-2)',
+        })
+      },
+      enterFrom: {
+        opacity: 0,
+        background: 'var(--green-1)',
+        transform: 'translateX(-100%)',
+      },
+      leaveTo: {
+        opacity: 0,
+        background: 'var(--red-1)',
+        transform: 'translateX(100%)',
+      },
+      swapAt: {
+        opacity: 0,
+        background: 'var(--yellow-1)',
+      }
+    });
+    data.$button.addEventListener('click', () => {
+      const $added = root.querySelectorAll('.child-added');
+      const $removed = root.querySelectorAll('.child-removed');
+      data.layout.update(({root}) => {
+        const isReverse = root.classList.contains('reverse');
+        root.classList.toggle('reverse');
+        root.classList.toggle('vertical');
+        utils.set($added, { display: isReverse ? 'block' : 'none' });
+        utils.set($removed, { display: isReverse ? 'none' : 'block' });
+      }, { duration })
+    });
+  }),
+  createScope({ root: '#stagger-values' }).add(({ root, data }) => {
+    data.$button = utils.$('button')[0];
+    data.layout = createLayout('.container', {
+      children: '.child',
+      delay: stagger(200),
+      enterFrom: {
+        opacity: 0,
+        innerHTML: (_, i, t) => `enter: ${i}, ${t}`,
+      },
+      leaveTo: {
+        opacity: 0,
+        innerHTML: (_, i, t) => `leave: ${i}, ${t}`,
+      },
+      swapAt: {
+        opacity: 0,
+        innerHTML: (_, i, t) => `swap: ${i}, ${t}`,
+      }
+    });
+    data.$button.addEventListener('click', () => {
+      const $added = root.querySelectorAll('.child-added');
+      const $removed = root.querySelectorAll('.child-removed');
+      data.layout.update(({root}) => {
+        const isReverse = root.classList.contains('reverse');
+        root.classList.toggle('reverse');
+        root.classList.toggle('vertical');
+        utils.set($added, { display: isReverse ? 'block' : 'none' });
+        utils.set($removed, { display: isReverse ? 'none' : 'block' });
+      }, { duration })
+    });
+  }),
+  createScope({ root: '#transformed-parent' }).add(({ root, data }) => {
+    data.$button = utils.$('button')[0];
+    data.layout = createLayout('.container');
+    data.$button.addEventListener('click', () => {
+      data.layout.update(({ root }) => {
+        root.classList.toggle('vertical');
+        root.style.transform = `rotateX(${utils.random(-75, 75)}deg) rotateY(${utils.random(-75, 75)}deg) scale(${utils.random(.75, 1, 2)})`;
+      }, { duration })
+    });
+  })
 ]

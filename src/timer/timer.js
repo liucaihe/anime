@@ -494,10 +494,11 @@ export class Timer extends Clock {
 
  /**
    * Imediatly completes the timer, cancels it and triggers the onComplete callback
+   * @param  {Boolean|Number} [muteCallbacks]
    * @return {this}
    */
-  complete() {
-    return this.seek(this.duration).cancel();
+  complete(muteCallbacks = 0) {
+    return this.seek(this.duration, muteCallbacks).cancel();
   }
 
   /**

@@ -1,4 +1,4 @@
-import { createLayout, utils } from '../../../../dist/modules/index.js';
+import { createLayout, utils } from '../../../dist/modules/index.js';
 
 const layout = createLayout('.container', {
   properties: ['color'],
@@ -15,5 +15,6 @@ const moveCard = $card => {
 
 document.addEventListener('click', e => {
   const $card = e.target.closest('.card');
+  console.log($card);
   if ($card) layout.update(() => moveCard($card));
 });

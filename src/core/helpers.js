@@ -56,9 +56,9 @@ export const isSvg = a => isBrowser && a instanceof SVGElement;
 /**@param {any} a @return {Boolean} */
 export const isHex = a => hexTestRgx.test(a);
 /**@param {any} a @return {Boolean} */
-export const isRgb = a => stringStartsWith(a, 'rgb');
+export const isRgb = a => stringStartsWith(a, 'rgb') && a[a.length - 1] === ')';
 /**@param {any} a @return {Boolean} */
-export const isHsl = a => stringStartsWith(a, 'hsl');
+export const isHsl = a => stringStartsWith(a, 'hsl') && a[a.length - 1] === ')';
 /**@param {any} a @return {Boolean} */
 export const isCol = a => isHex(a) || isRgb(a) || isHsl(a);
 /**@param {any} a @return {Boolean} */
