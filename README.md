@@ -40,20 +40,14 @@ Help the project become sustainable by sponsoring us on <a target="_blank" href=
         </a>
       </td>
       <td>
-        <a target="_blank" href="https://go.warp.dev/anime">
-          <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="./assets/sponsors/warp-logomark.png?v=251108">
-            <img align="center" src="./assets/sponsors/warp-logomark-dark.png?v=251108" width="310">
-          </picture>
-        </a>
-      </td>
-      <td>
         <a target="_blank" href="https://hyperswitch.io/?utm_source=julian&utm_medium=github&utm_campaign=animejs_sponsorship">
           <picture>
             <source media="(prefers-color-scheme: dark)" srcset="./assets/sponsors/juspay-logomark.png?v=251108">
             <img align="center" src="./assets/sponsors/juspay-logomark-dark.png?v=251108" width="310">
           </picture>
         </a>
+      </td>
+      <td>
       </td>
     </tr>
   </tbody>
