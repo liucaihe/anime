@@ -1,6 +1,6 @@
 /**
  * Anime.js - layout - CJS
- * @version v4.3.0
+ * @version v4.3.1
  * @license MIT
  * @copyright 2026 - Julian Garnier
  */
@@ -182,17 +182,11 @@ const isElementInRoot = (root, $el) => {
  */
 const hasTextSibling = (node, direction) => {
   let sibling = node[direction];
-  while (sibling && sibling.nodeType === Node.TEXT_NODE && !sibling.textContent.trim()) {
+  while (sibling && (sibling.nodeType === Node.COMMENT_NODE || (sibling.nodeType === Node.TEXT_NODE && !sibling.textContent.trim()))) {
     sibling = sibling[direction];
   }
-  return sibling && sibling.nodeType === Node.TEXT_NODE;
+  return sibling !== null && sibling.nodeType === Node.TEXT_NODE;
 };
-
-/**
- * @param {DOMTarget} $el
- * @return {Boolean}
- */
-const isElementSurroundedByText = $el => hasTextSibling($el, 'previousSibling') || hasTextSibling($el, 'nextSibling');
 
 /**
  * @param {DOMTarget|null} $el
@@ -360,7 +354,7 @@ const recordNodeState = (node, $measure, computedStyle, skipMeasurements) => {
   node.measuredHasVisibilityHidden = computedStyle.visibility === 'hidden';
   node.measuredIsVisible = !(node.measuredHasDisplayNone || node.measuredHasVisibilityHidden);
   node.measuredIsRemoved = node.measuredHasDisplayNone || node.measuredHasVisibilityHidden || parentNotRendered;
-  node.isInlined = node.measuredDisplay.includes('inline') && isElementSurroundedByText($el);
+  node.isInlined = node.measuredDisplay.includes('inline') && (hasTextSibling($el, 'previousSibling') || hasTextSibling($el, 'nextSibling'));
 
   // Mute transforms (and transition to avoid triggering an animation) before the position calculation
   if (node.hasTransform && !skipMeasurements) {
