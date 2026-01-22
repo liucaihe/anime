@@ -655,6 +655,101 @@ suite('Controls', () => {
     expect(utils.get($target, 'rotate')).to.equal('20deg');
   });
 
+  test('Refresh an animation from value', () => {
+    const $target = /** @type {HTMLElement} */(document.querySelector('#target-id'));
+    $target.setAttribute('data-width', '200px');
+    const animation1 = animate($target, {
+      width: [() => $target.dataset.width, '400px'],
+      duration: 100,
+      ease: 'linear',
+      autoplay: false
+    });
+    animation1.seek(0);
+    expect($target.style.width).to.equal('200px');
+    animation1.seek(50);
+    expect($target.style.width).to.equal('300px');
+    animation1.seek(100);
+    expect($target.style.width).to.equal('400px');
+    $target.setAttribute('data-width', '100px');
+    animation1.refresh().restart().seek(0);
+    expect($target.style.width).to.equal('100px');
+    animation1.seek(50);
+    expect($target.style.width).to.equal('250px');
+    animation1.seek(100);
+    expect($target.style.width).to.equal('400px');
+  });
+
+  test('Refresh an animation from value with unit conversion', () => {
+    const $target = /** @type {HTMLElement} */(document.querySelector('#target-id'));
+    $target.setAttribute('data-width', '50vw');
+    const animation1 = animate($target, {
+      width: [() => $target.dataset.width, '400px'],
+      duration: 100,
+      ease: 'linear',
+      autoplay: false
+    });
+    const initialFromWidth = parseFloat($target.style.width);
+    animation1.seek(100);
+    expect($target.style.width).to.equal('400px');
+    $target.setAttribute('data-width', '25vw');
+    animation1.refresh().restart().seek(0);
+    const refreshedFromWidth = parseFloat($target.style.width);
+    // After refresh, from value should be recalculated (25vw converted to px)
+    expect(refreshedFromWidth).to.be.below(initialFromWidth);
+    animation1.seek(100);
+    expect($target.style.width).to.equal('400px');
+  });
+
+  test('Refresh an animation with from / to values', () => {
+    const $target = /** @type {HTMLElement} */(document.querySelector('#target-id'));
+    $target.setAttribute('data-from', '100px');
+    $target.setAttribute('data-to', '200px');
+    const animation1 = animate($target, {
+      width: [() => $target.dataset.from, () => $target.dataset.to],
+      duration: 100,
+      ease: 'linear',
+      autoplay: false
+    });
+    animation1.seek(0);
+    expect($target.style.width).to.equal('100px');
+    animation1.seek(100);
+    expect($target.style.width).to.equal('200px');
+    $target.setAttribute('data-from', '50px');
+    $target.setAttribute('data-to', '150px');
+    animation1.refresh().restart().seek(0);
+    expect($target.style.width).to.equal('50px');
+    animation1.seek(50);
+    expect($target.style.width).to.equal('100px');
+    animation1.seek(100);
+    expect($target.style.width).to.equal('150px');
+  });
+
+  test('Refresh an animation with from, to, unit conversion and relative operator', () => {
+    const $target = /** @type {HTMLElement} */(document.querySelector('#target-id'));
+    $target.setAttribute('data-from', '10vw');
+    const animation1 = animate($target, {
+      width: [() => $target.dataset.from, () => '+=100'],
+      duration: 100,
+      ease: 'linear',
+      autoplay: false
+    });
+    animation1.seek(0);
+    const initialFromWidth = parseFloat($target.style.width);
+    animation1.seek(100);
+    const initialToWidth = parseFloat($target.style.width);
+    // To value should be from + 100px
+    expect(initialToWidth).to.equal(initialFromWidth + 100);
+    $target.setAttribute('data-from', '20vw');
+    animation1.refresh().restart().seek(0);
+    const refreshedFromWidth = parseFloat($target.style.width);
+    // After refresh, from value should be larger (20vw > 10vw)
+    expect(refreshedFromWidth).to.be.above(initialFromWidth);
+    animation1.seek(100);
+    const refreshedToWidth = parseFloat($target.style.width);
+    // To value should still be from + 100px (relative operator applied to new from)
+    expect(refreshedToWidth).to.equal(refreshedFromWidth + 100);
+  });
+
   test('Refresh a timeline', () => {
     const $target = /** @type {HTMLElement} */(document.querySelector('#target-id'));
     $target.setAttribute('data-width', '128px');

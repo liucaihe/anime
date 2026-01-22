@@ -1,6 +1,6 @@
 /**
  * Anime.js - ESM bundle
- * @version v4.3.2
+ * @version v4.3.3
  * @license MIT
  * @copyright 2026 - Julian Garnier
  */
@@ -205,7 +205,8 @@
  * @property {String} property
  * @property {Target} target
  * @property {String|Number} _value
- * @property {Function|null} _func
+ * @property {Function|null} _toFunc
+ * @property {Function|null} _fromFunc
  * @property {EasingFunction} _ease
  * @property {Array.<Number>} _fromNumbers
  * @property {Array.<Number>} _toNumbers
@@ -536,6 +537,7 @@
  * @property {Callback<ScrollObserver>} [onEnterBackward]
  * @property {Callback<ScrollObserver>} [onLeaveBackward]
  * @property {Callback<ScrollObserver>} [onUpdate]
+ * @property {Callback<ScrollObserver>} [onResize]
  * @property {Callback<ScrollObserver>} [onSyncComplete]
  */
 
@@ -801,7 +803,7 @@ const globals = {
 
 const devTools = isBrowser && win.AnimeJSDevTools;
 
-const globalVersions = { version: '4.3.2', engine: null };
+const globalVersions = { version: '4.3.3', engine: null };
 
 if (isBrowser) {
   if (!win.AnimeJS) win.AnimeJS = [];
@@ -3271,6 +3273,7 @@ const fromTargetObject = createDecomposedValueTargetObject();
 const toTargetObject = createDecomposedValueTargetObject();
 const inlineStylesStore = {};
 const toFunctionStore = { func: null };
+const fromFunctionStore = { func: null };
 const keyframesTargetArray = [null];
 const fastSetValuesArray = [null, null];
 /** @type {TweenKeyValue} */
@@ -3512,6 +3515,7 @@ class JSAnimation extends Timer {
             }
 
             toFunctionStore.func = null;
+            fromFunctionStore.func = null;
 
             const computedToValue = getFunctionValue(key.to, target, ti, tl, toFunctionStore);
 
@@ -3572,7 +3576,7 @@ class JSAnimation extends Timer {
 
             // Decompose values
             if (isFromToValue) {
-              decomposeRawValue(isFromToArray ? getFunctionValue(tweenToValue[0], target, ti, tl) : tweenFromValue, fromTargetObject);
+              decomposeRawValue(isFromToArray ? getFunctionValue(tweenToValue[0], target, ti, tl, fromFunctionStore) : tweenFromValue, fromTargetObject);
               decomposeRawValue(isFromToArray ? getFunctionValue(tweenToValue[1], target, ti, tl, toFunctionStore) : tweenToValue, toTargetObject);
               // Needed to force an inline style registration
               const originalValue = getOriginalAnimatableValue(target, propName, tweenType, inlineStylesStore);
@@ -3689,7 +3693,8 @@ class JSAnimation extends Timer {
               property: propName,
               target: target,
               _value: null,
-              _func: toFunctionStore.func,
+              _toFunc: toFunctionStore.func,
+              _fromFunc: fromFunctionStore.func,
               _ease: parseEase(tweenEasing),
               _fromNumbers: cloneArray(fromTargetObject.d),
               _toNumbers: cloneArray(toTargetObject.d),
@@ -3847,18 +3852,29 @@ class JSAnimation extends Timer {
    */
   refresh() {
     forEachChildren(this, (/** @type {Tween} */tween) => {
-      const tweenFunc = tween._func;
-      if (tweenFunc) {
-        const ogValue = getOriginalAnimatableValue(tween.target, tween.property, tween._tweenType);
-        decomposeRawValue(ogValue, decomposedOriginalValue);
-        // TODO: Check for from / to Array based values here,
-        decomposeRawValue(tweenFunc(), toTargetObject);
-        tween._fromNumbers = cloneArray(decomposedOriginalValue.d);
-        tween._fromNumber = decomposedOriginalValue.n;
-        tween._toNumbers = cloneArray(toTargetObject.d);
-        tween._strings = cloneArray(toTargetObject.s);
-        // Make sure to apply relative operators https://github.com/juliangarnier/anime/issues/1025
-        tween._toNumber = toTargetObject.o ? getRelativeValue(decomposedOriginalValue.n, toTargetObject.n, toTargetObject.o) : toTargetObject.n;
+      const toFunc = tween._toFunc;
+      const fromFunc = tween._fromFunc;
+      if (toFunc || fromFunc) {
+        if (fromFunc) {
+          decomposeRawValue(fromFunc(), fromTargetObject);
+          if (fromTargetObject.u !== tween._unit && tween.target[isDomSymbol]) {
+            convertValueUnit(/** @type {DOMTarget} */(tween.target), fromTargetObject, tween._unit, true);
+          }
+          tween._fromNumbers = cloneArray(fromTargetObject.d);
+          tween._fromNumber = fromTargetObject.n;
+        } else if (toFunc) {
+          // When only toFunc exists, get from value from target
+          decomposeRawValue(getOriginalAnimatableValue(tween.target, tween.property, tween._tweenType), decomposedOriginalValue);
+          tween._fromNumbers = cloneArray(decomposedOriginalValue.d);
+          tween._fromNumber = decomposedOriginalValue.n;
+        }
+        if (toFunc) {
+          decomposeRawValue(toFunc(), toTargetObject);
+          tween._toNumbers = cloneArray(toTargetObject.d);
+          tween._strings = cloneArray(toTargetObject.s);
+          // Make sure to apply relative operators https://github.com/juliangarnier/anime/issues/1025
+          tween._toNumber = toTargetObject.o ? getRelativeValue(tween._fromNumber, toTargetObject.n, toTargetObject.o) : toTargetObject.n;
+        }
       }
     });
     // This forces setter animations to render once
@@ -6465,6 +6481,7 @@ class ScrollContainer {
     this.updateBounds();
     forEachChildren(this, (/** @type {ScrollObserver} */child) => {
       child.refresh();
+      child.onResize(child);
       if (child._debug) {
         child.debug();
       }
@@ -6675,6 +6692,8 @@ class ScrollObserver {
     this.onLeaveBackward = parameters.onLeaveBackward || noop;
     /** @type {Callback<ScrollObserver>} */
     this.onUpdate = parameters.onUpdate || noop;
+    /** @type {Callback<ScrollObserver>} */
+    this.onResize = parameters.onResize || noop;
     /** @type {Callback<ScrollObserver>} */
     this.onSyncComplete = parameters.onSyncComplete || noop;
     /** @type {Boolean} */

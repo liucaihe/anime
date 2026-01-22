@@ -1,16 +1,18 @@
-import { animate, utils, stagger, engine } from '../../../dist/modules/index.js';
+import { createTimeline, utils, onScroll } from '../../../dist/modules/index.js';
 
-// engine.fps = 120;
-// engine.defaults.frameRate = 120;
-// engine.pauseOnDocumentHidden = false;
+const $wrapper = utils.$('.hero_wrapper')[0];
+const $hero = utils.$('.hero')[0];
 
-const duration = 1000;
-
-animate('.anim', {
-  marginLeft: [0,"90%"],
-  duration,
-  loop: true,
-  ease: 'linear'
+const timeline = createTimeline({
+  autoplay: onScroll({
+    target: $wrapper,
+    enter: 'top top',
+    leave: 'top bottom',
+    sync: true
+  })
 })
 
-document.querySelector('.css').classList.add('animate');
+timeline.add($hero, { height: [() => '100svh', '8rem'] })
+timeline.init();
+
+window.addEventListener('resize', () => timeline.refresh())

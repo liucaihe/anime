@@ -265,6 +265,7 @@ class ScrollContainer {
     this.updateBounds();
     forEachChildren(this, (/** @type {ScrollObserver} */child) => {
       child.refresh();
+      child.onResize(child);
       if (child._debug) {
         child.debug();
       }
@@ -475,6 +476,8 @@ export class ScrollObserver {
     this.onLeaveBackward = parameters.onLeaveBackward || noop;
     /** @type {Callback<ScrollObserver>} */
     this.onUpdate = parameters.onUpdate || noop;
+    /** @type {Callback<ScrollObserver>} */
+    this.onResize = parameters.onResize || noop;
     /** @type {Callback<ScrollObserver>} */
     this.onSyncComplete = parameters.onSyncComplete || noop;
     /** @type {Boolean} */

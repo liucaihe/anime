@@ -1,6 +1,6 @@
 /**
  * Anime.js - layout - CJS
- * @version v4.3.2
+ * @version v4.3.3
  * @license MIT
  * @copyright 2026 - Julian Garnier
  */

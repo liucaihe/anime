@@ -221,7 +221,8 @@ export {}
  * @property {String} property
  * @property {Target} target
  * @property {String|Number} _value
- * @property {Function|null} _func
+ * @property {Function|null} _toFunc
+ * @property {Function|null} _fromFunc
  * @property {EasingFunction} _ease
  * @property {Array.<Number>} _fromNumbers
  * @property {Array.<Number>} _toNumbers
@@ -552,6 +553,7 @@ export {}
  * @property {Callback<ScrollObserver>} [onEnterBackward]
  * @property {Callback<ScrollObserver>} [onLeaveBackward]
  * @property {Callback<ScrollObserver>} [onUpdate]
+ * @property {Callback<ScrollObserver>} [onResize]
  * @property {Callback<ScrollObserver>} [onSyncComplete]
  */
 

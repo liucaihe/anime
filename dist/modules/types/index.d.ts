@@ -123,7 +123,8 @@ export type Tween = {
     property: string;
     target: Target;
     _value: string | number;
-    _func: Function | null;
+    _toFunc: Function | null;
+    _fromFunc: Function | null;
     _ease: EasingFunction;
     _fromNumbers: Array<number>;
     _toNumbers: Array<number>;
@@ -328,6 +329,7 @@ export type ScrollObserverParams = {
     onEnterBackward?: Callback<ScrollObserver>;
     onLeaveBackward?: Callback<ScrollObserver>;
     onUpdate?: Callback<ScrollObserver>;
+    onResize?: Callback<ScrollObserver>;
     onSyncComplete?: Callback<ScrollObserver>;
 };
 export type DraggableAxisParam = {
