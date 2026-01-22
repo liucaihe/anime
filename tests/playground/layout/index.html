@@ -183,6 +183,7 @@
       color: var(--bg-2);
     }
     .sub-child {
+      width: 100%;
       border: 1px solid var(--white-4);
       margin-top: .5rem;
       padding: .5rem;
@@ -192,6 +193,14 @@
     .sub-child > span {
       background: var(--white-2);
       color: var(--bg-2);
+    }
+    .flex {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: flex-start;
+      gap: .5rem;
     }
     #layout-id .child-b,
     #layout-id .vertical .child-a {
@@ -251,7 +260,7 @@
       </div>
       <div class="demo">
         <div class="container absolute vertical">
-          <div class="child">A direct <!-- --><span>child</span><!-- --> element. <div class="sub-child"> And a <!-- --><strong>sub child</strong><!-- --> element</div></div>
+          <div class="child">A direct <span>child</span>element. <div class="sub-child"> And a <strong>sub child</strong> element</div></div>
           <div class="child">A direct <span>child</span> element. <div class="sub-child"> And a <span>sub child</span> element</div></div>
         </div>
       </div>
@@ -296,6 +305,45 @@
       </div>
     </div>
 
+    <div id="inlined-comments" class="test fixed-height">
+      <div class="test-header">
+        <h2>Inlined HTML comments</h2>
+        <button>Animate</button>
+      </div>
+      <div class="demo">
+        <div class="container static vertical">
+          <div class="child">A direct <span>child</span> element. <div class="sub-child"> And a <span>sub child</span> element</div></div>
+          <div class="child">A direct <span>child</span> element. <div class="sub-child"> And a <span>sub child</span> element</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="simple-flex-root" class="test flex-height">
+      <div class="test-header">
+        <h2>Simple flex root</h2>
+        <button>Animate</button>
+      </div>
+      <div class="demo">
+        <div class="container vertical">
+          <div class="child flex">A direct <span>child</span> element. <div class="sub-child"> And a <span>sub child</span> element</div></div>
+          <div class="child flex">A direct <span>child</span> element. <div class="sub-child"> And a <span>sub child</span> element</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="flex-root-inline-divs" class="test flex-height">
+      <div class="test-header">
+        <h2>Flex root with inlined DIVs</h2>
+        <button>Animate</button>
+      </div>
+      <div class="demo">
+        <div class="container vertical">
+          <div class="child flex">A direct <div>DIV</div> element. <div class="sub-child"> And a <div>sub DIV</div> element</div></div>
+          <div class="child flex">A direct <div>DIV</div> element. <div class="sub-child"> And a <div>sub DIV</div> element</div></div>
+        </div>
+      </div>
+    </div>
+
     <div id="simple-static-root" class="test fixed-height">
       <div class="test-header">
         <h2>Simple static root</h2>
@@ -308,6 +356,7 @@
         </div>
       </div>
     </div>
+
     <div id="specific-children" class="test fixed-height">
       <div class="test-header">
         <h2>Specific children</h2>
@@ -320,6 +369,7 @@
         </div>
       </div>
     </div>
+
     <div id="specific-properties" class="test fixed-height">
       <div class="test-header">
         <h2>Specific properties</h2>

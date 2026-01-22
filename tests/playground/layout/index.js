@@ -63,6 +63,33 @@ const tests = [
       }, { duration })
     });
   }),
+  createScope({ root: '#inlined-comments' }).add(({ data }) => {
+    data.$button = utils.$('button')[0];
+    data.layout = createLayout('.container');
+    data.$button.addEventListener('click', () => {
+      data.layout.update(({ root }) => {
+        root.classList.toggle('vertical');
+      }, { duration })
+    });
+  }),
+  createScope({ root: '#simple-flex-root' }).add(({ data }) => {
+    data.$button = utils.$('button')[0];
+    data.layout = createLayout('.container');
+    data.$button.addEventListener('click', () => {
+      data.layout.update(({ root }) => {
+        root.classList.toggle('vertical');
+      }, { duration })
+    });
+  }),
+  createScope({ root: '#flex-root-inline-divs' }).add(({ data }) => {
+    data.$button = utils.$('button')[0];
+    data.layout = createLayout('.container');
+    data.$button.addEventListener('click', () => {
+      data.layout.update(({ root }) => {
+        root.classList.toggle('vertical');
+      }, { duration })
+    });
+  }),
   createScope({ root: '#specific-children' }).add(({ data }) => {
     data.$button = utils.$('button')[0];
     data.layout = createLayout('.container', {

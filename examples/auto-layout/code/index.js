@@ -1,4 +1,4 @@
-import { createLayout, $, stagger, random } from '../../../../dist/modules/index.js';
+import { createLayout, $, stagger, random } from '../../../dist/modules/index.js';
 
 const keywordSet = /^(const|let|var|function|return|if|else|for|while|new|this|true|false|null|undefined|async|await|import|export|from|class|extends)$/;
 const tokenRegex = /(['"`])(?:\\.|[^\\])*?\1|[a-zA-Z_$][a-zA-Z0-9_$]*|\s+|[^a-zA-Z_$'"`\s]+/g;

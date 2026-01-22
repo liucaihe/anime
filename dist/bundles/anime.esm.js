@@ -1,6 +1,6 @@
 /**
  * Anime.js - ESM bundle
- * @version v4.3.1
+ * @version v4.3.2
  * @license MIT
  * @copyright 2026 - Julian Garnier
  */
@@ -801,7 +801,7 @@ const globals = {
 
 const devTools = isBrowser && win.AnimeJSDevTools;
 
-const globalVersions = { version: '4.3.1', engine: null };
+const globalVersions = { version: '4.3.2', engine: null };
 
 if (isBrowser) {
   if (!win.AnimeJS) win.AnimeJS = [];
@@ -7921,19 +7921,6 @@ const isElementInRoot = (root, $el) => {
 };
 
 /**
- * @param {Node} node
- * @param {'previousSibling'|'nextSibling'} direction
- * @return {Boolean}
- */
-const hasTextSibling = (node, direction) => {
-  let sibling = node[direction];
-  while (sibling && (sibling.nodeType === Node.COMMENT_NODE || (sibling.nodeType === Node.TEXT_NODE && !sibling.textContent.trim()))) {
-    sibling = sibling[direction];
-  }
-  return sibling !== null && sibling.nodeType === Node.TEXT_NODE;
-};
-
-/**
  * @param {DOMTarget|null} $el
  * @return {String|null}
  */
@@ -8099,7 +8086,18 @@ const recordNodeState = (node, $measure, computedStyle, skipMeasurements) => {
   node.measuredHasVisibilityHidden = computedStyle.visibility === 'hidden';
   node.measuredIsVisible = !(node.measuredHasDisplayNone || node.measuredHasVisibilityHidden);
   node.measuredIsRemoved = node.measuredHasDisplayNone || node.measuredHasVisibilityHidden || parentNotRendered;
-  node.isInlined = node.measuredDisplay.includes('inline') && (hasTextSibling($el, 'previousSibling') || hasTextSibling($el, 'nextSibling'));
+  // Check if element has adjacent text that would reflow when taken out of flow
+  let hasAdjacentText = false;
+  let s = $el.previousSibling;
+  while (s && (s.nodeType === Node.COMMENT_NODE || (s.nodeType === Node.TEXT_NODE && !s.textContent.trim()))) s = s.previousSibling;
+  if (s && s.nodeType === Node.TEXT_NODE) {
+    hasAdjacentText = true;
+  } else {
+    s = $el.nextSibling;
+    while (s && (s.nodeType === Node.COMMENT_NODE || (s.nodeType === Node.TEXT_NODE && !s.textContent.trim()))) s = s.nextSibling;
+    hasAdjacentText = s !== null && s.nodeType === Node.TEXT_NODE;
+  }
+  node.isInlined = hasAdjacentText;
 
   // Mute transforms (and transition to avoid triggering an animation) before the position calculation
   if (node.hasTransform && !skipMeasurements) {
