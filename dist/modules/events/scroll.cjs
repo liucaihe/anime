@@ -1,6 +1,6 @@
 /**
  * Anime.js - events - CJS
- * @version v4.3.3
+ * @version v4.3.4
  * @license MIT
  * @copyright 2026 - Julian Garnier
  */
@@ -500,7 +500,9 @@ class ScrollObserver {
       linked.pause();
       this.linked = linked;
       // Forces WAAPI Animation to persist; otherwise, they will stop syncing on finish.
-      if (!helpers.isUnd(/** @type {WAAPIAnimation} */(linked))) /** @type {WAAPIAnimation} */(linked).persist = true;
+      if (!helpers.isUnd(linked) && !helpers.isUnd(/** @type {WAAPIAnimation} */(linked).persist)) {
+        /** @type {WAAPIAnimation} */(linked).persist = true;
+      }
       // Try to use a target of the linked object if no target parameters specified
       if (!this._params.target) {
         /** @type {HTMLElement} */
@@ -702,12 +704,11 @@ class ScrollObserver {
     // let offsetX = 0;
     // let offsetY = 0;
     // let $offsetParent = $el;
-    /** @type {Element} */
     if (linked) {
       linkedTime = linked.currentTime;
       linked.seek(0, true);
     }
-    /* Old implementation to get offset and targetSize before fixing https://github.com/juliangarnier/anime/issues/1021
+    // Old implementation to get offset and targetSize before fixing https://github.com/juliangarnier/anime/issues/1021
     // const isContainerStatic = get(container.element, 'position') === 'static' ? set(container.element, { position: 'relative '}) : false;
     // while ($el && $el !== container.element && $el !== doc.body) {
     //   const isSticky = get($el, 'position') === 'sticky' ?

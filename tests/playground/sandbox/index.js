@@ -1,18 +1,10 @@
-import { createTimeline, utils, onScroll } from '../../../dist/modules/index.js';
+import { createTimeline, waapi } from '../../../dist/modules/index.js';
 
-const $wrapper = utils.$('.hero_wrapper')[0];
-const $hero = utils.$('.hero')[0];
+const { animate } = waapi;
 
-const timeline = createTimeline({
-  autoplay: onScroll({
-    target: $wrapper,
-    enter: 'top top',
-    leave: 'top bottom',
-    sync: true
-  })
-})
+const red = animate('.red', { x: '15rem', autoplay: false });
+const blue = animate('.blue', { x: '15rem', autoplay: false });
 
-timeline.add($hero, { height: [() => '100svh', '8rem'] })
-timeline.init();
-
-window.addEventListener('resize', () => timeline.refresh())
+const tl = createTimeline({loop: 1})
+.sync(red, 0)
+.sync(blue, 500);

@@ -1,6 +1,6 @@
 /**
  * Anime.js - timeline - ESM
- * @version v4.3.3
+ * @version v4.3.4
  * @license MIT
  * @copyright 2026 - Julian Garnier
  */
@@ -218,6 +218,10 @@ class Timeline extends Timer {
     if (isUnd(synced) || synced && isUnd(synced.pause)) return this;
     synced.pause();
     const duration = +(/** @type {globalThis.Animation} */(synced).effect ? /** @type {globalThis.Animation} */(synced).effect.getTiming().duration : /** @type {Tickable} */(synced).duration);
+    // Forces WAAPI Animation to persist; otherwise, they will stop syncing on finish.
+    if (!isUnd(synced) && !isUnd(/** @type {WAAPIAnimation} */(synced).persist)) {
+      /** @type {WAAPIAnimation} */(synced).persist = true;
+    }
     return this.add(synced, { currentTime: [0, duration], duration, delay: 0, ease: 'linear', playbackEase: 'linear' }, position);
   }
 
@@ -284,8 +288,8 @@ class Timeline extends Timer {
    * @return {this}
    */
   refresh() {
-    forEachChildren(this, (/** @type {JSAnimation} */child) => {
-      if (child.refresh) child.refresh();
+    forEachChildren(this, (/** @type {JSAnimation|Timer} */child) => {
+      if (/** @type {JSAnimation} */(child).refresh) /** @type {JSAnimation} */(child).refresh();
     });
     return this;
   }
@@ -295,7 +299,7 @@ class Timeline extends Timer {
    */
   revert() {
     super.revert();
-    forEachChildren(this, (/** @type {JSAnimation} */child) => child.revert, true);
+    forEachChildren(this, (/** @type {JSAnimation|Timer} */child) => child.revert, true);
     return cleanInlineStyles(this);
   }
 

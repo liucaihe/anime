@@ -1,6 +1,6 @@
 /**
  * Anime.js - UMD bundle
- * @version v4.3.3
+ * @version v4.3.4
  * @license MIT
  * @copyright 2026 - Julian Garnier
  */
@@ -809,7 +809,7 @@
 
   const devTools = isBrowser && win.AnimeJSDevTools;
 
-  const globalVersions = { version: '4.3.3', engine: null };
+  const globalVersions = { version: '4.3.4', engine: null };
 
   if (isBrowser) {
     if (!win.AnimeJS) win.AnimeJS = [];
@@ -4313,6 +4313,10 @@
       if (isUnd(synced) || synced && isUnd(synced.pause)) return this;
       synced.pause();
       const duration = +(/** @type {globalThis.Animation} */(synced).effect ? /** @type {globalThis.Animation} */(synced).effect.getTiming().duration : /** @type {Tickable} */(synced).duration);
+      // Forces WAAPI Animation to persist; otherwise, they will stop syncing on finish.
+      if (!isUnd(synced) && !isUnd(/** @type {WAAPIAnimation} */(synced).persist)) {
+        /** @type {WAAPIAnimation} */(synced).persist = true;
+      }
       return this.add(synced, { currentTime: [0, duration], duration, delay: 0, ease: 'linear', playbackEase: 'linear' }, position);
     }
 
@@ -4379,8 +4383,8 @@
      * @return {this}
      */
     refresh() {
-      forEachChildren(this, (/** @type {JSAnimation} */child) => {
-        if (child.refresh) child.refresh();
+      forEachChildren(this, (/** @type {JSAnimation|Timer} */child) => {
+        if (/** @type {JSAnimation} */(child).refresh) /** @type {JSAnimation} */(child).refresh();
       });
       return this;
     }
@@ -4390,7 +4394,7 @@
      */
     revert() {
       super.revert();
-      forEachChildren(this, (/** @type {JSAnimation} */child) => child.revert, true);
+      forEachChildren(this, (/** @type {JSAnimation|Timer} */child) => child.revert, true);
       return cleanInlineStyles(this);
     }
 
@@ -6764,7 +6768,9 @@
         linked.pause();
         this.linked = linked;
         // Forces WAAPI Animation to persist; otherwise, they will stop syncing on finish.
-        if (!isUnd(/** @type {WAAPIAnimation} */(linked))) /** @type {WAAPIAnimation} */(linked).persist = true;
+        if (!isUnd(linked) && !isUnd(/** @type {WAAPIAnimation} */(linked).persist)) {
+          /** @type {WAAPIAnimation} */(linked).persist = true;
+        }
         // Try to use a target of the linked object if no target parameters specified
         if (!this._params.target) {
           /** @type {HTMLElement} */
@@ -6966,12 +6972,11 @@
       // let offsetX = 0;
       // let offsetY = 0;
       // let $offsetParent = $el;
-      /** @type {Element} */
       if (linked) {
         linkedTime = linked.currentTime;
         linked.seek(0, true);
       }
-      /* Old implementation to get offset and targetSize before fixing https://github.com/juliangarnier/anime/issues/1021
+      // Old implementation to get offset and targetSize before fixing https://github.com/juliangarnier/anime/issues/1021
       // const isContainerStatic = get(container.element, 'position') === 'static' ? set(container.element, { position: 'relative '}) : false;
       // while ($el && $el !== container.element && $el !== doc.body) {
       //   const isSticky = get($el, 'position') === 'sticky' ?
