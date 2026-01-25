@@ -48,6 +48,7 @@ export const shortTransforms: Map<any, any>;
 export const validTransforms: string[];
 export const transformsFragmentStrings: {};
 export function noop(): void;
+export const validRgbHslRgx: RegExp;
 export const hexTestRgx: RegExp;
 export const rgbExecRgx: RegExp;
 export const rgbaExecRgx: RegExp;

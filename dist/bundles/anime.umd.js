@@ -1,6 +1,6 @@
 /**
  * Anime.js - UMD bundle
- * @version v4.3.4
+ * @version v4.3.5
  * @license MIT
  * @copyright 2026 - Julian Garnier
  */
@@ -746,6 +746,7 @@
 
   // Regex
 
+  const validRgbHslRgx = /\)\s*[-.\d]/;
   const hexTestRgx = /(^#([\da-f]{3}){1,2}$)|(^#([\da-f]{4}){1,2}$)/i;
   const rgbExecRgx = /rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i;
   const rgbaExecRgx = /rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(-?\d+|-?\d*.\d+)\s*\)/i;
@@ -809,7 +810,7 @@
 
   const devTools = isBrowser && win.AnimeJSDevTools;
 
-  const globalVersions = { version: '4.3.4', engine: null };
+  const globalVersions = { version: '4.3.5', engine: null };
 
   if (isBrowser) {
     if (!win.AnimeJS) win.AnimeJS = [];
@@ -857,11 +858,11 @@
   /**@param {any} a @return {Boolean} */
   const isHex = a => hexTestRgx.test(a);
   /**@param {any} a @return {Boolean} */
-  const isRgb = a => stringStartsWith(a, 'rgb') && a[a.length - 1] === ')';
+  const isRgb = a => stringStartsWith(a, 'rgb');
   /**@param {any} a @return {Boolean} */
-  const isHsl = a => stringStartsWith(a, 'hsl') && a[a.length - 1] === ')';
-  /**@param {any} a @return {Boolean} */
-  const isCol = a => isHex(a) || isRgb(a) || isHsl(a);
+  const isHsl = a => stringStartsWith(a, 'hsl');
+  /**@param {any} a @return {Boolean} */ // Make sure boxShadow syntax like 'rgb(255, 0, 0) 0px 0px 6px 0px' is not a valid color type
+  const isCol = a => isHex(a) || ((isRgb(a) || isHsl(a)) && (a[a.length - 1] === ')' || !validRgbHslRgx.test(a)));
   /**@param {any} a @return {Boolean} */
   const isKey = a => !globals.defaults.hasOwnProperty(a);
 
@@ -3983,7 +3984,7 @@
     parent.animations.push(animation);
     removeWAAPIAnimation($el, property);
     addChild(WAAPIAnimationsLookups, { parent, animation, $el, property, _next: null, _prev: null });
-    const handleRemove = () => { removeWAAPIAnimation($el, property, parent); };
+    const handleRemove = () => removeWAAPIAnimation($el, property, parent);
     animation.oncancel = handleRemove;
     animation.onremove = handleRemove;
     if (!parent.persist) {
@@ -9084,7 +9085,7 @@
         // const hiddenStateChanged = (topLevelAdded || newlyRemoved) && wasRemovedBefore !== isRemovedNow;
 
         if (node.isTarget && (!node.measuredIsRemoved && oldStateNode.measuredIsVisible || node.measuredIsRemoved && node.measuredIsVisible)) {
-          if (!node.isInlined && (nodeProperties.transform !== 'none' || oldStateNodeProperties.transform !== 'none')) {
+          if (nodeProperties.transform !== 'none' || oldStateNodeProperties.transform !== 'none') {
             node.hasTransform = true;
             transformed.push($el);
           }
@@ -9100,7 +9101,7 @@
         if (!node.isTarget) {
           swapping.push($el);
           if (node.sizeChanged && parent && parent.isTarget && parent.sizeChanged) {
-            if (!node.isInlined && swapAtProps.transform) {
+            if (swapAtProps.transform) {
               node.hasTransform = true;
               transformed.push($el);
             }
@@ -9140,7 +9141,7 @@
 
           // muteNodeTransition(newNode);
 
-          // Don't animate dimensions and positions of inlined elements
+          // Don't animate positions of inlined elements (to avoid text reflow)
           if (!newNode.isInlined) {
             // Display grid can mess with the absolute positioning, so set it to block during transition
             if (oldNode.measuredDisplay === 'grid' || newNode.measuredDisplay === 'grid') $el.style.setProperty('display', 'block', 'important');
@@ -9159,14 +9160,15 @@
               $el.style.left = '0px';
               $el.style.top = '0px';
             }
-            $el.style.width = `${oldNodeState.width}px`;
-            $el.style.height = `${oldNodeState.height}px`;
-            // Overrides user defined min and max to prevents width and height clamping
-            $el.style.minWidth = `auto`;
-            $el.style.minHeight = `auto`;
-            $el.style.maxWidth = `none`;
-            $el.style.maxHeight = `none`;
           }
+          // Animate dimensions for all elements (including inlined)
+          $el.style.width = `${oldNodeState.width}px`;
+          $el.style.height = `${oldNodeState.height}px`;
+          // Overrides user defined min and max to prevents width and height clamping
+          $el.style.minWidth = `auto`;
+          $el.style.minHeight = `auto`;
+          $el.style.maxWidth = `none`;
+          $el.style.maxHeight = `none`;
         }
 
         // Restore the scroll position if the oldState differs from the current state
@@ -9187,21 +9189,19 @@
           const animatedProps = {
             composition: 'none',
           };
-          if (!newNode.isInlined) {
-            if (oldNodeState.width !== newNodeState.width) {
-              animatedProps.width = [oldNodeState.width, newNodeState.width];
-              nodeHasChanged = true;
-            }
-            if (oldNodeState.height !== newNodeState.height) {
-              animatedProps.height = [oldNodeState.height, newNodeState.height];
-              nodeHasChanged = true;
-            }
-            // If the node has transforms we handle the translate animation in wappi otherwise translate and other transforms can be out of sync
-            // Always animate translate
-            if (!newNode.hasTransform) {
-              animatedProps.translate = [`${oldNodeState.x}px ${oldNodeState.y}px`, `${newNodeState.x}px ${newNodeState.y}px`];
-              nodeHasChanged = true;
-            }
+          if (oldNodeState.width !== newNodeState.width) {
+            animatedProps.width = [oldNodeState.width, newNodeState.width];
+            nodeHasChanged = true;
+          }
+          if (oldNodeState.height !== newNodeState.height) {
+            animatedProps.height = [oldNodeState.height, newNodeState.height];
+            nodeHasChanged = true;
+          }
+          // If the node has transforms we handle the translate animation in waapi otherwise translate and other transforms can be out of sync
+          // And we don't animate the position of inlined elements
+          if (!newNode.hasTransform && !newNode.isInlined) {
+            animatedProps.translate = [`${oldNodeState.x}px ${oldNodeState.y}px`, `${newNodeState.x}px ${newNodeState.y}px`];
+            nodeHasChanged = true;
           }
           this.properties.forEach(prop => {
             const oldVal = oldNodeState[prop];
@@ -9223,15 +9223,16 @@
         for (let i = 0, l = swapping.length; i < l; i++) {
           const $el = swapping[i];
           const oldNode = oldState.getNode($el);
+          const oldNodeProps = oldNode.properties;
+          $el.style.width = `${oldNodeProps.width}px`;
+          $el.style.height = `${oldNodeProps.height}px`;
+          // Overrides user defined min and max to prevents width and height clamping
+          $el.style.minWidth = `auto`;
+          $el.style.minHeight = `auto`;
+          $el.style.maxWidth = `none`;
+          $el.style.maxHeight = `none`;
+          // We don't animate the position of inlined elements
           if (!oldNode.isInlined) {
-            const oldNodeProps = oldNode.properties;
-            $el.style.width = `${oldNodeProps.width}px`;
-            $el.style.height = `${oldNodeProps.height}px`;
-            // Overrides user defined min and max to prevents width and height clamping
-            $el.style.minWidth = `auto`;
-            $el.style.minHeight = `auto`;
-            $el.style.maxWidth = `none`;
-            $el.style.maxHeight = `none`;
             $el.style.translate = `${oldNodeProps.x}px ${oldNodeProps.y}px`;
           }
           this.properties.forEach(prop => {
@@ -9246,14 +9247,15 @@
           const newNode = newState.getNode($el);
           const newNodeProps = newNode.properties;
           this.timeline.call(() => {
+            $el.style.width = `${newNodeProps.width}px`;
+            $el.style.height = `${newNodeProps.height}px`;
+            // Overrides user defined min and max to prevents width and height clamping
+            $el.style.minWidth = `auto`;
+            $el.style.minHeight = `auto`;
+            $el.style.maxWidth = `none`;
+            $el.style.maxHeight = `none`;
+            // Don't set translate for inlined elements (to avoid text reflow)
             if (!newNode.isInlined) {
-              $el.style.width = `${newNodeProps.width}px`;
-              $el.style.height = `${newNodeProps.height}px`;
-              // Overrides user defined min and max to prevents width and height clamping
-              $el.style.minWidth = `auto`;
-              $el.style.minHeight = `auto`;
-              $el.style.maxWidth = `none`;
-              $el.style.maxHeight = `none`;
               $el.style.translate = `${newNodeProps.x}px ${newNodeProps.y}px`;
             }
             this.properties.forEach(prop => {
@@ -9286,19 +9288,27 @@
       const transformedLength = transformed.length;
 
       if (transformedLength) {
-        // We only need to set the transform property here since translate is alread defined in the targets loop
+        // We only need to set the transform property here since translate is already defined in the targets loop
         for (let i = 0; i < transformedLength; i++) {
           const $el = transformed[i];
-          $el.style.translate = `${oldState.getComputedValue($el, 'x')}px ${oldState.getComputedValue($el, 'y')}px`,
+          const node = newState.getNode($el);
+          // Don't set translate for inlined elements (to avoid text reflow)
+          if (!node.isInlined) {
+            $el.style.translate = `${oldState.getComputedValue($el, 'x')}px ${oldState.getComputedValue($el, 'y')}px`;
+          }
           $el.style.transform = oldState.getComputedValue($el, 'transform');
           if (animatedSwap.includes($el)) {
-            const node = newState.getNode($el);
             node.ease = getFunctionValue(swapAtParams.ease, $el, node.index, node.total);
             node.duration = getFunctionValue(swapAtParams.duration, $el, node.index, node.total);
           }
         }
         this.transformAnimation = waapi.animate(transformed, {
-          translate: (/** @type {HTMLElement} */$el) => `${newState.getComputedValue($el, 'x')}px ${newState.getComputedValue($el, 'y')}px`,
+          translate: (/** @type {HTMLElement} */$el) => {
+            const node = newState.getNode($el);
+            // Don't animate translate for inlined elements (to avoid text reflow)
+            if (node.isInlined) return '0px 0px';
+            return `${newState.getComputedValue($el, 'x')}px ${newState.getComputedValue($el, 'y')}px`;
+          },
           transform: (/** @type {HTMLElement} */$el) => {
             const newValue = newState.getComputedValue($el, 'transform');
             if (!animatedSwap.includes($el)) return newValue;
@@ -9307,7 +9317,7 @@
             return [oldValue, getFunctionValue(swapAtProps.transform, $el, node.index, node.total), newValue]
           },
           autoplay: false,
-          persist: true,
+          // persist: true,
           ...timingParams,
         });
         this.timeline.sync(this.transformAnimation, 0);

@@ -1,6 +1,6 @@
 /**
  * Anime.js - core - ESM
- * @version v4.3.4
+ * @version v4.3.5
  * @license MIT
  * @copyright 2026 - Julian Garnier
  */
@@ -109,6 +109,7 @@ const noop = () => {};
 
 // Regex
 
+const validRgbHslRgx = /\)\s*[-.\d]/;
 const hexTestRgx = /(^#([\da-f]{3}){1,2}$)|(^#([\da-f]{4}){1,2}$)/i;
 const rgbExecRgx = /rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i;
 const rgbaExecRgx = /rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(-?\d+|-?\d*.\d+)\s*\)/i;
@@ -123,4 +124,4 @@ const transformsExecRgx = /(\w+)(\([^)]+\)+)/g; // Match inline transforms with 
 const relativeValuesExecRgx = /(\*=|\+=|-=)/;
 const cssVariableMatchRgx = /var\(\s*(--[\w-]+)(?:\s*,\s*([^)]+))?\s*\)/;
 
-export { K, compositionTypes, cssVarPrefix, cssVariableMatchRgx, digitWithExponentRgx, doc, emptyString, hexTestRgx, hslExecRgx, hslaExecRgx, isBrowser, isDomSymbol, isRegisteredTargetSymbol, isSvgSymbol, lowerCaseRgx, maxFps, maxValue, minValue, morphPointsSymbol, noop, proxyTargetSymbol, relativeValuesExecRgx, rgbExecRgx, rgbaExecRgx, shortTransforms, tickModes, transformsExecRgx, transformsFragmentStrings, transformsSymbol, tweenTypes, unitsExecRgx, validTransforms, valueTypes, win };
+export { K, compositionTypes, cssVarPrefix, cssVariableMatchRgx, digitWithExponentRgx, doc, emptyString, hexTestRgx, hslExecRgx, hslaExecRgx, isBrowser, isDomSymbol, isRegisteredTargetSymbol, isSvgSymbol, lowerCaseRgx, maxFps, maxValue, minValue, morphPointsSymbol, noop, proxyTargetSymbol, relativeValuesExecRgx, rgbExecRgx, rgbaExecRgx, shortTransforms, tickModes, transformsExecRgx, transformsFragmentStrings, transformsSymbol, tweenTypes, unitsExecRgx, validRgbHslRgx, validTransforms, valueTypes, win };

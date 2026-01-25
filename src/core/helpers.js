@@ -1,5 +1,6 @@
 import {
   isBrowser,
+  validRgbHslRgx,
   lowerCaseRgx,
   hexTestRgx,
   maxValue,
@@ -56,11 +57,11 @@ export const isSvg = a => isBrowser && a instanceof SVGElement;
 /**@param {any} a @return {Boolean} */
 export const isHex = a => hexTestRgx.test(a);
 /**@param {any} a @return {Boolean} */
-export const isRgb = a => stringStartsWith(a, 'rgb') && a[a.length - 1] === ')';
+export const isRgb = a => stringStartsWith(a, 'rgb');
 /**@param {any} a @return {Boolean} */
-export const isHsl = a => stringStartsWith(a, 'hsl') && a[a.length - 1] === ')';
-/**@param {any} a @return {Boolean} */
-export const isCol = a => isHex(a) || isRgb(a) || isHsl(a);
+export const isHsl = a => stringStartsWith(a, 'hsl');
+/**@param {any} a @return {Boolean} */ // Make sure boxShadow syntax like 'rgb(255, 0, 0) 0px 0px 6px 0px' is not a valid color type
+export const isCol = a => isHex(a) || ((isRgb(a) || isHsl(a)) && (a[a.length - 1] === ')' || !validRgbHslRgx.test(a)));
 /**@param {any} a @return {Boolean} */
 export const isKey = a => !globals.defaults.hasOwnProperty(a);
 

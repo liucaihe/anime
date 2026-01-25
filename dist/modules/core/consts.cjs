@@ -1,6 +1,6 @@
 /**
  * Anime.js - core - CJS
- * @version v4.3.4
+ * @version v4.3.5
  * @license MIT
  * @copyright 2026 - Julian Garnier
  */
@@ -111,6 +111,7 @@ const noop = () => {};
 
 // Regex
 
+const validRgbHslRgx = /\)\s*[-.\d]/;
 const hexTestRgx = /(^#([\da-f]{3}){1,2}$)|(^#([\da-f]{4}){1,2}$)/i;
 const rgbExecRgx = /rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i;
 const rgbaExecRgx = /rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(-?\d+|-?\d*.\d+)\s*\)/i;
@@ -156,6 +157,7 @@ exports.transformsFragmentStrings = transformsFragmentStrings;
 exports.transformsSymbol = transformsSymbol;
 exports.tweenTypes = tweenTypes;
 exports.unitsExecRgx = unitsExecRgx;
+exports.validRgbHslRgx = validRgbHslRgx;
 exports.validTransforms = validTransforms;
 exports.valueTypes = valueTypes;
 exports.win = win;

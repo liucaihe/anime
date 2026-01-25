@@ -1,6 +1,6 @@
 /**
  * Anime.js - svg - ESM
- * @version v4.3.4
+ * @version v4.3.5
  * @license MIT
  * @copyright 2026 - Julian Garnier
  */
