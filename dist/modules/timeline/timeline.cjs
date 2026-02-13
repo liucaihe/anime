@@ -1,6 +1,6 @@
 /**
  * Anime.js - timeline - CJS
- * @version v4.3.5
+ * @version v4.3.6
  * @license MIT
  * @copyright 2026 - Julian Garnier
  */

@@ -45,6 +45,12 @@ import {
 
 /**
  * @import {
+ *   ScrollObserver,
+ * } from '../events/scroll.js'
+*/
+
+/**
+ * @import {
  *   Timeline,
  * } from '../timeline/timeline.js'
 */
@@ -1093,6 +1099,12 @@ export class AutoLayout {
       }
     }
     tlParams.onComplete = () => {
+      const ap = /** @type {ScrollObserver} */(params.autoplay);
+      const isScrollControled = ap && ap.linked;
+      if (isScrollControled) {
+        if (onComplete) onComplete(this.timeline);
+        return;
+      }
       // Make sure to call .cancel() after restoreNodeInlineStyles(node); otehrwise the commited styles get reverted
       if (this.transformAnimation) this.transformAnimation.cancel();
       newState.forEachRootNode(node => {
@@ -1114,6 +1126,13 @@ export class AutoLayout {
       });
     };
     tlParams.onPause = () => {
+      const ap = /** @type {ScrollObserver} */(params.autoplay);
+      const isScrollControled = ap && ap.linked;
+      if (isScrollControled) {
+        if (onComplete) onComplete(this.timeline);
+        if (onPause) onPause(this.timeline);
+        return;
+      }
       if (!this.root.classList.contains('is-animated')) return;
       if (this.transformAnimation) this.transformAnimation.cancel();
       newState.forEachRootNode(restoreNodeVisualState);

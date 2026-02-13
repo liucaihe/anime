@@ -1,6 +1,6 @@
 /**
  * Anime.js - UMD bundle
- * @version v4.3.5
+ * @version v4.3.6
  * @license MIT
  * @copyright 2026 - Julian Garnier
  */
@@ -810,7 +810,7 @@
 
   const devTools = isBrowser && win.AnimeJSDevTools;
 
-  const globalVersions = { version: '4.3.5', engine: null };
+  const globalVersions = { version: '4.3.6', engine: null };
 
   if (isBrowser) {
     if (!win.AnimeJS) win.AnimeJS = [];
@@ -7828,6 +7828,8 @@
 
   
 
+  
+
   /**
    * @typedef {DOMTargetSelector|Array<DOMTargetSelector>} LayoutChildrenParam
    */
@@ -8851,6 +8853,12 @@
         }
       }
       tlParams.onComplete = () => {
+        const ap = /** @type {ScrollObserver} */(params.autoplay);
+        const isScrollControled = ap && ap.linked;
+        if (isScrollControled) {
+          if (onComplete) onComplete(this.timeline);
+          return;
+        }
         // Make sure to call .cancel() after restoreNodeInlineStyles(node); otehrwise the commited styles get reverted
         if (this.transformAnimation) this.transformAnimation.cancel();
         newState.forEachRootNode(node => {
@@ -8872,6 +8880,13 @@
         });
       };
       tlParams.onPause = () => {
+        const ap = /** @type {ScrollObserver} */(params.autoplay);
+        const isScrollControled = ap && ap.linked;
+        if (isScrollControled) {
+          if (onComplete) onComplete(this.timeline);
+          if (onPause) onPause(this.timeline);
+          return;
+        }
         if (!this.root.classList.contains('is-animated')) return;
         if (this.transformAnimation) this.transformAnimation.cancel();
         newState.forEachRootNode(restoreNodeVisualState);
